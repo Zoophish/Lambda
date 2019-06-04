@@ -1,5 +1,5 @@
 #include <iostream>
-#include <Lambda_maths/maths.h>
+#include <maths/maths.h>
 
 int main() {
 
