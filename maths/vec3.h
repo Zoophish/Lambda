@@ -1,5 +1,5 @@
 //----	By Sam Warren 2019	----
-//----	Template class for 3-dimensional vectors of any numerical type. Includes basic operators utilities.	----
+//----	Template class for 3-dimensional vectors of any numerical type. Includes basic operators and utilities.	----
 
 #pragma once
 #include <type_traits>
@@ -17,8 +17,6 @@ class vec3 {
 			y = _y;
 			z = _z;
 		}
-
-		inline operator T() const { return *this; }
 
 		inline void operator=(const vec3<T> &_rhs) {
 			x = _rhs.x;

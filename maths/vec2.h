@@ -1,5 +1,5 @@
 //----	By Sam Warren 2019	----
-//----	Template class for 2-dimensional vectors of any numerical type. Includes basic operators utilities.	----
+//----	Template class for 2-dimensional vectors of any numerical type. Includes basic operators and utilities.	----
 
 #pragma once
 #include <type_traits>
@@ -16,8 +16,6 @@ public:
 		x = _x;
 		y = _y;
 	}
-
-	inline operator T() const { return *this; }
 
 	inline void operator=(const vec2<T> &_rhs) {
 		x = _rhs.x;
