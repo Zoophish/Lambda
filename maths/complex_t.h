@@ -41,6 +41,34 @@ class complex_t {
 			return complex_t<T>(r * inv, i * inv);
 		}
 
+		inline void operator+=(const complex_t<T> &_rhs) {
+			r += _rhs.r;
+			i += _rhs.i;
+		}
+		inline void operator-=(const complex_t<T> &_rhs) {
+			r -= _rhs.r;
+			i -= _rhs.i;
+		}
+		inline void operator*=(const complex_t<T> &_rhs) {
+			r = r * _rhs.r - i * _rhs.i;
+			i = r * _rhs.i + i * _rhs.r;
+		}
+		inline void operator*=(const T _rhs) {
+			r *= _rhs;
+			i *= _rhs;
+		}
+		inline void operator/=(const complex_t<T> &_rhs) {
+			const T invR = (T)1 / _rhs.r;
+			const T invI = (T)1 / _rhs.i;
+			r = r * invR - i * invI;
+			i = r * invI + i * invR;
+		}
+		inline void operator/=(const T _rhs) {
+			const T inv = 1 / _rhs;
+			r *= inv;
+			i *= inv;
+		}
+
 		inline bool operator==(const complex_t<T> &_rhs) const { return r == _rhs.r && i == _rhs.i; }
 		inline bool operator!=(const complex_t<T> &_rhs) const { return r != _rhs.r || i != _rhs.i; }
 
