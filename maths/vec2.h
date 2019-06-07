@@ -17,11 +17,6 @@ public:
 		y = _y;
 	}
 
-	inline void operator=(const vec2<T> &_rhs) {
-		x = _rhs.x;
-		y = _rhs.y;
-	}
-
 	inline vec2<T> operator+(const vec2<T> &_rhs) const { return vec2<T>(x + _rhs.x, y + _rhs.y); }
 	inline vec2<T> operator-(const vec2<T> &_rhs) const { return vec2<T>(x - _rhs.x, y - _rhs.y); }
 	inline vec2<T> operator*(const vec2<T> &_rhs) const { return vec2<T>(x * _rhs.x, y * _rhs.y); }

@@ -17,8 +17,6 @@ class complex_t {
 			i = _i;
 		}
 
-		inline void operator=(const complex_t<T> &_rhs) { r = _rhs.r; i = _rhs.i; }
-
 		inline complex_t<T> operator+(const complex_t<T> &_rhs) const {
 			return complex_t<T>(r + _rhs.r, i + _rhs.i);
 		}
@@ -72,7 +70,7 @@ class complex_t {
 		inline bool operator==(const complex_t<T> &_rhs) const { return r == _rhs.r && i == _rhs.i; }
 		inline bool operator!=(const complex_t<T> &_rhs) const { return r != _rhs.r || i != _rhs.i; }
 
-		static complex_t<T> Pow(const complex_t<T> &_c) const {
+		static complex_t<T> Pow(const complex_t<T> &_c) {
 			return 0;
 		}
 };

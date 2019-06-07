@@ -18,12 +18,6 @@ class vec3 {
 			z = _z;
 		}
 
-		inline void operator=(const vec3<T> &_rhs) {
-			x = _rhs.x;
-			y = _rhs.y;
-			z = _rhs.z;
-		}
-
 		inline vec3<T> operator+(const vec3<T> &_rhs) const { return vec3<T>(x + _rhs.x, y + _rhs.y, z + _rhs.z); }
 		inline vec3<T> operator-(const vec3<T> &_rhs) const { return vec3<T>(x - _rhs.x, y - _rhs.y, z - _rhs.z); }
 		inline vec3<T> operator*(const vec3<T> &_rhs) const { return vec3<T>(x * _rhs.x, y * _rhs.y, z * _rhs.z); }
