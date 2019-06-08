@@ -11,16 +11,15 @@
 #define DEFAULT_IMPORT_FLAGS aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenSmoothNormals
 
 class AssetImporter {
+	protected:
+		Assimp::Importer importer;
+
 	public:
 		const aiScene* scene;
-		bool hasScene;
 
-		AssetImporter() {
-			hasScene = false;
-		}
+		AssetImporter() {}
 
 		bool Import(const std::string &_path) {
-			Assimp::Importer importer;
 			scene = importer.ReadFile(_path, DEFAULT_IMPORT_FLAGS);
 			if (!scene) {
 				std::cout << importer.GetErrorString();

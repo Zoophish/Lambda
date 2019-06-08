@@ -25,7 +25,7 @@ class TriangleMesh : public Object {
 		TriangleMesh() {}
 
 		void LoadFromImport(RTCDevice &_device, const AssetImporter &_ai, const unsigned _index = 0) {
-			if (_ai.hasScene && _ai.scene->HasMeshes()) {
+			if (_ai.scene && _ai.scene->HasMeshes()) {
 				const aiMesh* mesh = _ai.scene->mMeshes[_index];
 
 				//----	VERTICES	----
@@ -53,7 +53,7 @@ class TriangleMesh : public Object {
 				triangles = std::vector<Triangle>(t, t + trianglesSize);
 
 				//----	NORMALS	----
-				if (mesh->HasNormals) {
+				if (mesh->HasNormals()) {
 					vertexNormals.resize(vertexSize);
 					for (unsigned i = 0; i < vertexSize; ++i) {
 						vertexNormals[i].x = mesh->mNormals[i].x;
@@ -63,7 +63,7 @@ class TriangleMesh : public Object {
 				}
 
 				//----	TANGENTS, BITANGENTS	----
-				if (mesh->HasTangentsAndBitangents) {
+				if (mesh->HasTangentsAndBitangents()) {
 					vertexTangents.resize(vertexSize);
 					vertexBitangents.resize(vertexSize);
 					for (unsigned i = 0; i < vertexSize; ++i) {
@@ -77,7 +77,7 @@ class TriangleMesh : public Object {
 				}
 
 				//----	TEXTURE COORDINATES	----
-				if (mesh->HasTextureCoords) {
+				if (mesh->HasTextureCoords(0)) {
 					hasUVs = true;
 					uvs.resize(vertexSize);
 					for (unsigned i = 0; i < vertexSize; ++i) {
@@ -97,7 +97,7 @@ class TriangleMesh : public Object {
 	
 		template<class T>
 		inline T BarycentricInterpolation(const T &_t0, const T &_t1, const T &_t2, const float _u, const float _v) const {
-			return t0 + u * (t1 - t0) + v * (t2 - t0);
+			return _t0 + (_t1 - _t0) * _u + (_t2 - _t0) * _v;
 		}
 	
 		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override {
