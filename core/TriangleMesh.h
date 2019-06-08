@@ -99,7 +99,7 @@ class TriangleMesh : public Object {
 		inline T BarycentricInterpolation(const T &_t0, const T &_t1, const T &_t2, const float _u, const float _v) const {
 			return _t0 + (_t1 - _t0) * _u + (_t2 - _t0) * _v;
 		}
-	
+
 		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override {
 			if (hasUVs) {
 				_hit.uvCoords = BarycentricInterpolation (
