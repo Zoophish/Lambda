@@ -1,22 +1,42 @@
 //----	By Sam Warren 2019	----
-//----	Single include header for mathematics library. Typdefs of general numerical types with overall precision control can be put here.	----
+//----	Single include header for basic mathematics library needed in Lambda.	----
 
+//----	Define the general numerical precision here:
+#define LAMBDA_MATHS_PRECISION_MODE float
+
+//----	Optional basic typdefs for mathematical types:
+//#define LAMBDA_MATHS_COMMON_TYPES
+
+
+
+//----	Don't make changes below here.
 #pragma once
+#include <algorithm>
 #include "real_t.h"
 #include "complex_t.h"
 #include "vec3.h"
 #include "vec2.h"
 
+typedef LAMBDA_MATHS_PRECISION_MODE Real;
+typedef complex_t<Real> Complex;
+typedef vec3<Real> Vec3;
+typedef vec2<Real> Vec2;
+
 #define PI 3.14159265358979323846264338
 #define INV_PI 1 / PI
 
-#define LAMBDA_PRECISION_MODE float
-#define LAMBDA_MATHS_COMMON_TYPES
+namespace maths {
 
-typedef real_t<LAMBDA_PRECISION_MODE> Real;
-typedef complex_t<LAMBDA_PRECISION_MODE> Complex;
-typedef vec3<LAMBDA_PRECISION_MODE> Vec3;
-typedef vec2<LAMBDA_PRECISION_MODE> Vec2;
+	template<class T>
+	static T Lerp(const T &_a, const T &_b, const Real _r) {
+		return _a + (_b - _a) * _r;
+	}
+
+	static Real Clamp(const Real _value, const Real _min, const Real _max) {
+		return std::max(std::min(_value, _max), _min);
+	}
+
+}
 
 #ifdef LAMBDA_MATHS_COMMON_TYPES
 typedef real_t<float> realf;
