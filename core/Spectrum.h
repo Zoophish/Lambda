@@ -5,12 +5,20 @@
 #include <vector>
 #include <core/SPD_Data.h>
 
+//	Define which type of spectrum is used in Lambda here.
+//	 -	RGBSpectrum for performance.
+//	 -	SampledSpectrum for accuracy.
+typedef RGBSpectrum Spectrum;
+//typedef SampledSpectrum Spectrum;
+
 static const unsigned sampledLambdaStart = 400;
 static const unsigned sampledLambdaEnd = 700;
 static const unsigned nSpectralSamples = 60;
 static const float invNSpectralSamples = 1. / Real(nSpectralSamples);
 
-namespace Spectrum {
+enum class SpectrumType { Reflectance, Illuminant };
+
+namespace SpectrumUtils {
 
 	static void XYZToRGB(const Real _xyz[3], Real _rgb[3]) {
 		_rgb[0] = 3.240479 * _xyz[0] - 1.537150 * _xyz[1] - 0.498535 * _xyz[2];
@@ -24,8 +32,19 @@ namespace Spectrum {
 		_xyz[2] = 0.019334 * _rgb[0] + 0.119193 * _rgb[1] + 0.950227 * _rgb[2];
 	}
 
-	enum class SpectrumType { Reflectance, Illuminant };
+	static Spectrum Lerp(const Spectrum &_a, const Spectrum &_b, const Real _r) {
+		return _a + (_b - _a) * _r;
+	}
 
+	static Real InterpolateSpectrumSamples(const Real *_lambda, const Real *_vals, const unsigned _n, const Real _l) {
+		// Handle cases outside of samples' range
+		if (_l <= _lambda[0]) return _lambda[0];
+		if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
+		// Find the sample interval that _l lies within
+		unsigned i;
+		while (_l > _lambda[i + 1]) ++i;
+		return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
+	}
 }
 
 template<unsigned spectrumSamples>
@@ -207,6 +226,12 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 
 		SampledSpectrum(const CoefficientSpectrum &_s) : CoefficientSpectrum(_s) {}
 
+		//SampledSpectrum(const RGBSpectrum &_r, const Spectrum::SpectrumType _type) {
+		//	Real rgb[3];
+		//	_r.ToRGB(rgb);
+		//	*this = FromRGB(rgb, _type);
+		//}
+
 		// Luminance measure of this SampledSpectrum
 		Real y() const {
 			Real yy = 0.;
@@ -231,7 +256,7 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 		void ToRGB(Real _rgb[3]) const {
 			Real xyz[3];
 			ToXYZ(xyz);
-			Spectrum::XYZToRGB(xyz, _rgb);
+			SpectrumUtils::XYZToRGB(xyz, _rgb);
 		}
 
 		static SampledSpectrum FromSampled(const Real* _lambda, const Real* _v, const unsigned _n) {
@@ -250,9 +275,9 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 			return tmp;
 		}
 
-		static SampledSpectrum FromRGB(const Real _rgb[3], const Spectrum::SpectrumType _type) {
+		static SampledSpectrum FromRGB(const Real _rgb[3], const SpectrumType _type) {
 			SampledSpectrum r;
-			if (_type == Spectrum::SpectrumType::Reflectance) {
+			if (_type == SpectrumType::Reflectance) {
 				// Convert reflectance spectrum to RGB
 				if (_rgb[0] <= _rgb[1] && _rgb[0] <= _rgb[2]) {
 					// Compute reflectance _SampledSpectrum_ with __rgb[0]_ as minimum
@@ -324,6 +349,12 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 			return r.Clamp();
 		}
 
+		static SampledSpectrum FromXYZ(const Real _xyz[3], const SpectrumType _type = SpectrumType::Reflectance) {
+			Real rgb[3];
+			SpectrumUtils::XYZToRGB(_xyz, rgb);
+			return FromRGB(rgb, _type);
+		}
+
 		// Convert data from CIE and Berge lookup tables to static SampledSpectrum objects so data can be used with other SPDs.
 		static void Init() {
 			using namespace CIEData;
@@ -357,8 +388,64 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 		rgbRefl2SpectRed, rgbRefl2SpectGreen, rgbRefl2SpectBlue, rgbIllum2SpectWhite, rgbIllum2SpectCyan,
 		rgbIllum2SpectMagenta, rgbIllum2SpectYellow, rgbIllum2SpectRed, rgbIllum2SpectGreen, rgbIllum2SpectBlue; 
 };
-//typedef RGBSpectrum Spectrum;
 
-//static Spectrum Lerp(const Spectrum &_a, const Spectrum &_b, const Real _r) {
-//	return _a + (_b - _a) * _r;
-//}
+
+class RGBSpectrum : public CoefficientSpectrum<3> {
+	public:
+		RGBSpectrum(const Real _v = 0.) : CoefficientSpectrum(_v) {}
+
+		RGBSpectrum(const CoefficientSpectrum<3> &_s) : CoefficientSpectrum<3>(_s) {}
+
+		void ToRGB(Real *_rgb) const {
+			_rgb[0] = c[0];
+			_rgb[1] = c[1];
+			_rgb[2] = c[2];
+		}
+
+		void ToXYZ(Real _xyz[3]) const {
+			SpectrumUtils::RGBToXYZ(c, _xyz);
+		}
+
+		Real y() const {
+			const Real YWeight[3] = { 0.212671f, 0.715160f, 0.072169f };
+			return YWeight[0] * c[0] + YWeight[1] * c[1] + YWeight[2] * c[2];
+		}
+
+		const RGBSpectrum &ToRGBSpectrum() const { return *this; }
+
+		static RGBSpectrum FromRGB(const Real _rgb[3], SpectrumType _type = SpectrumType::Reflectance) {
+			RGBSpectrum s;
+			s[0] = _rgb[0];
+			s[1] = _rgb[1];
+			s[2] = _rgb[2];
+			return s;
+		}
+
+		static RGBSpectrum FromXYZ(const Real _xyz[3], SpectrumType type = SpectrumType::Reflectance) {
+			RGBSpectrum r;
+			SpectrumUtils::XYZToRGB(_xyz, r.c);
+			return r;
+		}
+
+		static RGBSpectrum FromSampled(const Real *_lambda, const Real *_v, const unsigned _n) {
+			using namespace CIEData;
+			if (!SpectrumSamplesSorted(_lambda, _v, _n)) {
+				std::vector<Real> slambda(&_lambda[0], &_lambda[_n]);
+				std::vector<Real> sv(&_v[0], &_v[_n]);
+				SortSpectrumSamples(&slambda[0], &sv[0], _n);
+				return FromSampled(&slambda[0], &sv[0], _n);
+			}
+			Real xyz[3] = {0, 0, 0};
+			for (unsigned i = 0; i < nCIESamples; ++i) {
+				Real val = SpectrumUtils::InterpolateSpectrumSamples(_lambda, _v, _n, CIE_lambda[i]);
+				xyz[0] += val * CIE_X[i];
+				xyz[1] += val * CIE_Y[i];
+				xyz[2] += val * CIE_Z[i];
+			}
+			Real scale = (Real)(CIE_lambda[nCIESamples - 1] - CIE_lambda[0]) / (Real)(CIE_Y_integral * nCIESamples);
+			xyz[0] *= scale;
+			xyz[1] *= scale;
+			xyz[2] *= scale;
+			return FromXYZ(xyz);
+		}
+};
