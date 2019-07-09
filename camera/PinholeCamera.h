@@ -7,8 +7,7 @@
 
 */
 #pragma once
-#include <algorithm>
-#include "Camera.h"
+#include <camera/Camera.h>
 
 class PinholeCamera : public Camera {
 	public:
@@ -20,14 +19,14 @@ class PinholeCamera : public Camera {
 
 		inline void SetRotation(const float _phi, const float _theta) {
 			zHat = Vec3(std::cos(_theta) * std::sin(_phi), std::sin(_theta), std::cos(_theta) * std::cos(_phi)).Normalised();
-			xHat = Vec3::Cross(zHat, Vec3(0, 1, 0));
-			yHat = Vec3::Cross(zHat, xHat);
+			xHat = maths::Cross(zHat, Vec3(0, 1, 0));
+			yHat = maths::Cross(zHat, xHat);
 		}
 
 		inline void SetForwards(const Vec3 &_forwards) {
 			zHat = _forwards.Normalised();
-			xHat = Vec3::Cross(zHat, Vec3(0, 1, 0));
-			yHat = Vec3::Cross(zHat, xHat);
+			xHat = maths::Cross(zHat, Vec3(0, 1, 0));
+			yHat = maths::Cross(zHat, xHat);
 		}
 
 		inline void SetFov(const float _fov) {

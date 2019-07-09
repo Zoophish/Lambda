@@ -60,5 +60,13 @@ public:
 
 	inline T Magnitude() const { return std::sqrt(x*x + y*y); }
 
-	static T Dot(const vec2<T> &_a, const vec2<T> &_b) { return _a.x*_b.x + _a.y*_b.y; }
 };
+
+namespace maths {
+
+	template<class T>
+	inline T Dot(const vec2<T> &_a, const vec2<T> &_b) {
+		return _a.x*_b.x + _a.y*_b.y;
+	}
+
+}

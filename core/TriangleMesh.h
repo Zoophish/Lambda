@@ -128,8 +128,8 @@ class TriangleMesh : public Object {
 			}
 			else {
 				_hit.normal = Vec3(_h.hit.Ng_x, _h.hit.Ng_y, _h.hit.Ng_z);
-				_hit.tangent = Vec3::Cross(_hit.normal, Vec3(0, 1, 0));
-				_hit.bitangent = Vec3::Cross(_hit.normal, _hit.tangent);
+				_hit.tangent = maths::Cross(_hit.normal, Vec3(0, 1, 0));
+				_hit.bitangent = maths::Cross(_hit.normal, _hit.tangent);
 			}
 		}
 };

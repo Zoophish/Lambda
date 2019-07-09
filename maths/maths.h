@@ -11,6 +11,7 @@
 
 //----	Don't make changes below here.
 #pragma once
+#include <cmath>
 #include <algorithm>
 #include "real_t.h"
 #include "complex_t.h"
@@ -28,11 +29,12 @@ typedef vec2<Real> Vec2;
 namespace maths {
 
 	template<class T>
-	static T Lerp(const T &_a, const T &_b, const Real _r) {
+	inline T Lerp(const T &_a, const T &_b, const Real _r) {
 		return _a + (_b - _a) * _r;
 	}
 
-	static Real Clamp(const Real _value, const Real _min, const Real _max) {
+	template<class T>
+	inline T Clamp(const T _value, const T _min, const T _max) {
 		return std::max(std::min(_value, _max), _min);
 	}
 
