@@ -4,12 +4,7 @@
 #pragma once
 #include <vector>
 #include <core/SPD_Data.h>
-
-//	Define which type of spectrum is used in Lambda here.
-//	 -	RGBSpectrum for performance.
-//	 -	SampledSpectrum for accuracy.
-typedef RGBSpectrum Spectrum;
-//typedef SampledSpectrum Spectrum;
+#include <omp.h>
 
 static const unsigned sampledLambdaStart = 400;
 static const unsigned sampledLambdaEnd = 700;
@@ -17,35 +12,6 @@ static const unsigned nSpectralSamples = 60;
 static const float invNSpectralSamples = 1. / Real(nSpectralSamples);
 
 enum class SpectrumType { Reflectance, Illuminant };
-
-namespace SpectrumUtils {
-
-	static void XYZToRGB(const Real _xyz[3], Real _rgb[3]) {
-		_rgb[0] = 3.240479 * _xyz[0] - 1.537150 * _xyz[1] - 0.498535 * _xyz[2];
-		_rgb[1] = -0.969256 * _xyz[0] + 1.875991 * _xyz[1] + 0.041556 * _xyz[2];
-		_rgb[2] = 0.055648 * _xyz[0] - 0.204043 * _xyz[1] + 1.057311 * _xyz[2];
-	}
-
-	static void RGBToXYZ(const Real _rgb[3], Real _xyz[3]) {
-		_xyz[0] = 0.412453 * _rgb[0] + 0.357580 * _rgb[1] + 0.180423 * _rgb[2];
-		_xyz[1] = 0.212671 * _rgb[0] + 0.715160 * _rgb[1] + 0.072169 * _rgb[2];
-		_xyz[2] = 0.019334 * _rgb[0] + 0.119193 * _rgb[1] + 0.950227 * _rgb[2];
-	}
-
-	static Spectrum Lerp(const Spectrum &_a, const Spectrum &_b, const Real _r) {
-		return _a + (_b - _a) * _r;
-	}
-
-	static Real InterpolateSpectrumSamples(const Real *_lambda, const Real *_vals, const unsigned _n, const Real _l) {
-		// Handle cases outside of samples' range
-		if (_l <= _lambda[0]) return _lambda[0];
-		if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
-		// Find the sample interval that _l lies within
-		unsigned i;
-		while (_l > _lambda[i + 1]) ++i;
-		return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
-	}
-}
 
 template<unsigned spectrumSamples>
 class CoefficientSpectrum {
@@ -57,7 +23,15 @@ class CoefficientSpectrum {
 				c[i] = _v;
 		}
 
+		inline Real &operator[](const unsigned _i) {
+			return c[_i];
+		}
+		inline Real operator[](const unsigned _i) const {
+			return c[_i];
+		}
+
 		CoefficientSpectrum &operator+=(const CoefficientSpectrum &_s) {
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] += _s[i];
 			return *this;
@@ -127,9 +101,6 @@ class CoefficientSpectrum {
 				tmp[i] *= inv;
 			return tmp;
 		}
-		inline Real &operator[](const unsigned _i) {
-			return c[_i];
-		}
 
 		bool IsBlack() const {
 			for (unsigned i = 0; i < spectrumSamples; ++i)
@@ -142,19 +113,19 @@ class CoefficientSpectrum {
 			return false;
 		}
 
-		static friend CoefficientSpectrum Sqrt(const CoefficientSpectrum &_s) const {
+		static friend CoefficientSpectrum Sqrt(const CoefficientSpectrum &_s) {
 			CoefficientSpectrum tmp;
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::sqrt(_s.c[i]);
 			return tmp;
 		}
-		static friend CoefficientSpectrum Pow(const CoefficientSpectrum &_s, const Real _p) const {
+		static friend CoefficientSpectrum Pow(const CoefficientSpectrum &_s, const Real _p) {
 			CoefficientSpectrum tmp;
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::pow(_s.c[i], _p);
 			return tmp;
 		}
-		static friend CoefficientSpectrum Exp(const CoefficientSpectrum &_s) const {
+		static friend CoefficientSpectrum Exp(const CoefficientSpectrum &_s) {
 			CoefficientSpectrum tmp;
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::exp(_s.c[i]);
@@ -219,6 +190,35 @@ static Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const
 	return sum / (_lambdaEnd - _lambdaStart);
 }
 
+namespace SpectrumUtils {
+
+	static void XYZToRGB(const Real _xyz[3], Real _rgb[3]) {
+		_rgb[0] = 3.240479 * _xyz[0] - 1.537150 * _xyz[1] - 0.498535 * _xyz[2];
+		_rgb[1] = -0.969256 * _xyz[0] + 1.875991 * _xyz[1] + 0.041556 * _xyz[2];
+		_rgb[2] = 0.055648 * _xyz[0] - 0.204043 * _xyz[1] + 1.057311 * _xyz[2];
+	}
+
+	static void RGBToXYZ(const Real _rgb[3], Real _xyz[3]) {
+		_xyz[0] = 0.412453 * _rgb[0] + 0.357580 * _rgb[1] + 0.180423 * _rgb[2];
+		_xyz[1] = 0.212671 * _rgb[0] + 0.715160 * _rgb[1] + 0.072169 * _rgb[2];
+		_xyz[2] = 0.019334 * _rgb[0] + 0.119193 * _rgb[1] + 0.950227 * _rgb[2];
+	}
+
+	template<unsigned n>
+	static CoefficientSpectrum<n> Lerp(const CoefficientSpectrum<n>& _a, const CoefficientSpectrum<n>& _b, const Real _r) {
+		return _a + (_b - _a) * _r;
+	}
+
+	static Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _l) {
+		// Handle cases outside of samples' range
+		if (_l <= _lambda[0]) return _lambda[0];
+		if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
+		// Find the sample interval that _l lies within
+		unsigned i;
+		while (_l > _lambda[i + 1]) ++i;
+		return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
+	}
+}
 
 class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 	public:
@@ -259,6 +259,33 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 			SpectrumUtils::XYZToRGB(xyz, _rgb);
 		}
 
+		// Convert data from CIE and Berge lookup tables to static SampledSpectrum objects so data can be used with other SPDs.
+		static void Init() {
+			using namespace CIEData;
+			using namespace BergeData;
+			for (unsigned i = 0; i < nSpectralSamples; ++i) {
+				const Real l0 = maths::Lerp(sampledLambdaStart, sampledLambdaEnd, (Real)i * invNSpectralSamples);
+				const Real l1 = maths::Lerp(sampledLambdaStart, sampledLambdaEnd, (Real)(i + 1) * invNSpectralSamples);
+				X[i] = AverageSpectrumSamples(CIE_lambda, CIE_X, nCIESamples, l0, l1);
+				Y[i] = AverageSpectrumSamples(CIE_lambda, CIE_Y, nCIESamples, l0, l1);
+				Z[i] = AverageSpectrumSamples(CIE_lambda, CIE_Z, nCIESamples, l0, l1);
+				rgbRefl2SpectWhite[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectWhite, nRGB2SpectSamples, l0, l1);
+				rgbRefl2SpectCyan[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectCyan, nRGB2SpectSamples, l0, l1);
+				rgbRefl2SpectMagenta[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectMagenta, nRGB2SpectSamples, l0, l1);
+				rgbRefl2SpectYellow[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectYellow, nRGB2SpectSamples, l0, l1);
+				rgbRefl2SpectRed[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectRed, nRGB2SpectSamples, l0, l1);
+				rgbRefl2SpectGreen[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectGreen, nRGB2SpectSamples, l0, l1);
+				rgbRefl2SpectBlue[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectBlue, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectWhite[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectWhite, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectCyan[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectCyan, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectMagenta[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectMagenta, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectYellow[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectYellow, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectRed[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectRed, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectGreen[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectGreen, nRGB2SpectSamples, l0, l1);
+				rgbIllum2SpectBlue[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectBlue, nRGB2SpectSamples, l0, l1);
+			}
+		}
+
 		static SampledSpectrum FromSampled(const Real* _lambda, const Real* _v, const unsigned _n) {
 			if (!SpectrumSamplesSorted(_lambda, _v, _n)) {
 				std::vector<Real> slambda(&_lambda[0], &_lambda[_n]);
@@ -275,120 +302,15 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 			return tmp;
 		}
 
-		static SampledSpectrum FromRGB(const Real _rgb[3], const SpectrumType _type) {
-			SampledSpectrum r;
-			if (_type == SpectrumType::Reflectance) {
-				// Convert reflectance spectrum to RGB
-				if (_rgb[0] <= _rgb[1] && _rgb[0] <= _rgb[2]) {
-					// Compute reflectance _SampledSpectrum_ with __rgb[0]_ as minimum
-					r += rgbRefl2SpectWhite * _rgb[0];
-					if (_rgb[1] <= _rgb[2]) {
-						r += rgbRefl2SpectCyan * (_rgb[1] - _rgb[0]);
-						r += rgbRefl2SpectBlue * (_rgb[2] - _rgb[1]);
-					} else {
-						r +=  rgbRefl2SpectCyan  * (_rgb[2] - _rgb[0]);
-						r +=  rgbRefl2SpectGreen * (_rgb[1] - _rgb[2]);
-					}
-				} else if (_rgb[1] <= _rgb[0] && _rgb[1] <= _rgb[2]) {
-					// Compute reflectance _SampledSpectrum_ with __rgb[1]_ as minimum
-					r += rgbRefl2SpectWhite * _rgb[1];
-					if (_rgb[0] <= _rgb[2]) {
-						r +=  rgbRefl2SpectMagenta * (_rgb[0] - _rgb[1]);
-						r +=  rgbRefl2SpectBlue * (_rgb[2] - _rgb[0]);
-					} else {
-						r += rgbRefl2SpectMagenta * (_rgb[2] - _rgb[1]);
-						r += rgbRefl2SpectRed * (_rgb[0] - _rgb[2]);
-					}
-				} else {
-					// Compute reflectance _SampledSpectrum_ with __rgb[2]_ as minimum
-					r += rgbRefl2SpectWhite * _rgb[2];
-					if (_rgb[0] <= _rgb[1]) {
-						r += rgbRefl2SpectYellow * (_rgb[0] - _rgb[2]);
-						r += rgbRefl2SpectGreen  * (_rgb[1] - _rgb[0]);
-					} else {
-						r += rgbRefl2SpectYellow * (_rgb[1] - _rgb[2]);
-						r += rgbRefl2SpectRed * (_rgb[0] - _rgb[1]);
-					}
-				}
-				r *= .94;
-			} else {
-				// Convert illuminant spectrum to RGB
-				if (_rgb[0] <= _rgb[1] && _rgb[0] <= _rgb[2]) {
-					// Compute illuminant _SampledSpectrum_ with __rgb[0]_ as minimum
-					r += rgbIllum2SpectWhite * _rgb[0];
-					if (_rgb[1] <= _rgb[2]) {
-						r += rgbIllum2SpectCyan * (_rgb[1] - _rgb[0]);
-						r += rgbIllum2SpectBlue * (_rgb[2] - _rgb[1]);
-					} else {
-						r += rgbIllum2SpectCyan  * (_rgb[2] - _rgb[0]);
-						r += rgbIllum2SpectGreen * (_rgb[1] - _rgb[2]);
-					}
-				} else if (_rgb[1] <= _rgb[0] && _rgb[1] <= _rgb[2]) {
-					// Compute illuminant _SampledSpectrum_ with __rgb[1]_ as minimum
-					r += rgbIllum2SpectWhite * _rgb[1];
-					if (_rgb[0] <= _rgb[2]) {
-						r += rgbIllum2SpectMagenta * (_rgb[0] - _rgb[1]);
-						r += rgbIllum2SpectBlue * (_rgb[2] - _rgb[0]);
-					} else {
-						r += rgbIllum2SpectMagenta * (_rgb[2] - _rgb[1]);
-						r += rgbIllum2SpectRed * (_rgb[0] - _rgb[2]);
-					}
-				} else {
-					// Compute illuminant _SampledSpectrum_ with __rgb[2]_ as minimum
-					r += rgbIllum2SpectWhite * _rgb[2];
-					if (_rgb[0] <= _rgb[1]) {
-						r += rgbIllum2SpectYellow * (_rgb[0] - _rgb[2]);
-						r += rgbIllum2SpectGreen * (_rgb[1] - _rgb[0]);
-					} else {
-						r += rgbIllum2SpectYellow * (_rgb[1] - _rgb[2]);
-						r += rgbIllum2SpectRed * (_rgb[0] - _rgb[1]);
-					}
-				}
-				r *= .86445f;
-			}
-			return r.Clamp();
-		}
+		static SampledSpectrum FromRGB(const Real _rgb[3], const SpectrumType _type);
 
-		static SampledSpectrum FromXYZ(const Real _xyz[3], const SpectrumType _type = SpectrumType::Reflectance) {
-			Real rgb[3];
-			SpectrumUtils::XYZToRGB(_xyz, rgb);
-			return FromRGB(rgb, _type);
-		}
+		static SampledSpectrum FromXYZ(const Real _xyz[3], const SpectrumType _type = SpectrumType::Reflectance);
 
-		// Convert data from CIE and Berge lookup tables to static SampledSpectrum objects so data can be used with other SPDs.
-		static void Init() {
-			using namespace CIEData;
-			using namespace BergeData;
-			for (unsigned i = 0; i < nSpectralSamples; ++i) {
-				const Real l0 = maths::Lerp(sampledLambdaStart, sampledLambdaEnd, (Real)i * invNSpectralSamples);
-				const Real l1 = maths::Lerp(sampledLambdaStart, sampledLambdaEnd, (Real)(i+1) * invNSpectralSamples);
-				X[i] = AverageSpectrumSamples(CIE_lambda, CIE_X, nCIESamples, l0, l1);
-				Y[i] = AverageSpectrumSamples(CIE_lambda, CIE_Y, nCIESamples, l0, l1);
-				Z[i] = AverageSpectrumSamples(CIE_lambda, CIE_Z, nCIESamples, l0, l1);
-				rgbRefl2SpectWhite[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectWhite, nRGB2SpectSamples, l0, l1);
-				rgbRefl2SpectCyan[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectCyan, nRGB2SpectSamples, l0, l1);
-				rgbRefl2SpectMagenta[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectMagenta, nRGB2SpectSamples, l0, l1);
-				rgbRefl2SpectYellow[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectYellow, nRGB2SpectSamples, l0, l1);
-				rgbRefl2SpectRed[i] = AverageSpectrumSamples( RGB2SpectLambda, RGBRefl2SpectRed, nRGB2SpectSamples, l0, l1);
-				rgbRefl2SpectGreen[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectGreen, nRGB2SpectSamples, l0, l1);
-				rgbRefl2SpectBlue[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBRefl2SpectBlue, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectWhite[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectWhite, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectCyan[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectCyan, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectMagenta[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectMagenta, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectYellow[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectYellow, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectRed[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectRed, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectGreen[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectGreen, nRGB2SpectSamples, l0, l1);
-				rgbIllum2SpectBlue[i] = AverageSpectrumSamples(RGB2SpectLambda, RGBIllum2SpectBlue, nRGB2SpectSamples, l0, l1);
-			}
-		}
-		
-	protected:
-		static SampledSpectrum X, Y, Z;
-		static SampledSpectrum rgbRefl2SpectWhite, rgbRefl2SpectCyan, rgbRefl2SpectMagenta, rgbRefl2SpectYellow,
+	private:
+		static SampledSpectrum X, Y, Z, rgbRefl2SpectWhite, rgbRefl2SpectCyan, rgbRefl2SpectMagenta, rgbRefl2SpectYellow,
 		rgbRefl2SpectRed, rgbRefl2SpectGreen, rgbRefl2SpectBlue, rgbIllum2SpectWhite, rgbIllum2SpectCyan,
 		rgbIllum2SpectMagenta, rgbIllum2SpectYellow, rgbIllum2SpectRed, rgbIllum2SpectGreen, rgbIllum2SpectBlue; 
 };
-
 
 class RGBSpectrum : public CoefficientSpectrum<3> {
 	public:
@@ -449,3 +371,9 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
 			return FromXYZ(xyz);
 		}
 };
+
+//	Define which type of spectrum is used in Lambda here.
+//	 -	RGBSpectrum for performance.
+//	 -	SampledSpectrum for accuracy.
+typedef RGBSpectrum Spectrum;
+//typedef SampledSpectrum Spectrum;

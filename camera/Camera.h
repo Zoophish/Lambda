@@ -6,11 +6,11 @@
 
 class Camera {
 	public:
-		float aperture, shutterSpeed;
+		Real aperture, shutterSpeed;
 		Vec3 origin;
 		//Film film
 
-		Camera(const float _x = 1, const float _y = 1) {
+		Camera(const Real _x = 1, const Real _y = 1) {
 			aspect = _y / _x;
 		}
 
@@ -18,8 +18,8 @@ class Camera {
 			aspect = (float)_y / (float)_x;
 		}
 
-		virtual Ray GenerateRay(const float _u, const float _v) const = 0;
+		virtual Ray GenerateRay(const Real _u, const Real _v) const = 0;
 
 	protected:
-		float aspect;
+		Real aspect;
 };

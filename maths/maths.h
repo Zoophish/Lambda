@@ -24,6 +24,7 @@ typedef vec3<Real> Vec3;
 typedef vec2<Real> Vec2;
 
 #define PI 3.14159265358979323846264338
+#define PI2 2. * PI
 #define INV_PI 1. / PI
 
 namespace maths {

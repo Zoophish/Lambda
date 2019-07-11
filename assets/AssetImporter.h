@@ -17,7 +17,9 @@ class AssetImporter {
 	public:
 		const aiScene* scene;
 
-		AssetImporter() {}
+		AssetImporter() {
+			scene = nullptr;
+		}
 
 		bool Import(const std::string &_path) {
 			scene = importer.ReadFile(_path, DEFAULT_IMPORT_FLAGS);

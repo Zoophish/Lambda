@@ -22,7 +22,10 @@ class TriangleMesh : public Object {
 	public:
 		bool smoothNormals, hasUVs;
 
-		TriangleMesh() {}
+		TriangleMesh() {
+			smoothNormals = true;
+			hasUVs = false;
+		}
 
 		void LoadFromImport(RTCDevice &_device, const AssetImporter &_ai, const unsigned _index = 0) {
 			if (_ai.scene && _ai.scene->HasMeshes()) {

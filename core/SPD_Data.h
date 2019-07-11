@@ -5,6 +5,7 @@
 
 //	On initialisation, all these curve data are converted to their respective SampledSpectrum objects.
 
+#pragma once
 #include <maths/maths.h>
 
 namespace CIEData {
