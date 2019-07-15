@@ -3,8 +3,8 @@
 
 #pragma once
 #include <vector>
-#include <core/SPD_Data.h>
-#include <omp.h>
+#include "SPD_Data.h"
+//#include <omp.h>
 
 static const unsigned sampledLambdaStart = 400;
 static const unsigned sampledLambdaEnd = 700;
@@ -12,6 +12,14 @@ static const unsigned nSpectralSamples = 60;
 static const float invNSpectralSamples = 1. / Real(nSpectralSamples);
 
 enum class SpectrumType { Reflectance, Illuminant };
+
+class RGBSpectrum;
+
+//	Define which type of spectrum is used in Lambda here.
+//	 -	RGBSpectrum for performance.
+//	 -	SampledSpectrum for accuracy.
+//typedef RGBSpectrum Spectrum;
+//typedef SampledSpectrum Spectrum;
 
 template<unsigned spectrumSamples>
 class CoefficientSpectrum {
@@ -23,15 +31,15 @@ class CoefficientSpectrum {
 				c[i] = _v;
 		}
 
-		inline Real &operator[](const unsigned _i) {
+		Real &operator[](const unsigned _i) {
 			return c[_i];
 		}
-		inline Real operator[](const unsigned _i) const {
+		Real operator[](const unsigned _i) const {
 			return c[_i];
 		}
 
 		CoefficientSpectrum &operator+=(const CoefficientSpectrum &_s) {
-			#pragma omp simd
+			//#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] += _s[i];
 			return *this;
@@ -143,52 +151,11 @@ class CoefficientSpectrum {
 		Real c[spectrumSamples];
 };
 
-static bool SpectrumSamplesSorted(const Real *_lambda, const Real *_vals, const unsigned _n) {
-	for (unsigned i = 0; i < _n - 1; ++i)
-		if (_lambda[i] > _lambda[i + 1]) return false;
-	return true;
-}
+extern bool SpectrumSamplesSorted(const Real* _lambda, const Real* _vals, const unsigned _n);
 
-static void SortSpectrumSamples(Real *_lambda, Real *_vals, const unsigned _n) {
-	std::vector<std::pair<Real, Real>> sortVec;
-	sortVec.reserve(_n);
-	for (unsigned i = 0; i < _n; ++i)
-		sortVec.push_back(std::make_pair(_lambda[i], _vals[i]));
-	std::sort(sortVec.begin(), sortVec.end());
-	for (unsigned i = 0; i < _n; ++i) {
-		_lambda[i] = sortVec[i].first;
-		_vals[i] = sortVec[i].second;
-	}
-}
+extern void SortSpectrumSamples(Real* _lambda, Real* _vals, const unsigned _n);
 
-static Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd) {
-	// Handle cases with out-of-bounds range or single sample only
-	if (_n == 1 || _lambdaEnd <= _lambda[0]) return _vals[0];
-	if (_lambdaStart >= _lambda[_n - 1]) return _vals[_n - 1];
-
-	// Add contributions of constant (rectangular) segments before/after samples
-	Real sum = 0.;
-	if (_lambdaStart < _lambda[0]) sum += _vals[0] * (_lambda[0] - _lambdaStart);
-	if (_lambdaEnd > _lambda[_n - 1]) sum += _vals[_n - 1] * (_lambdaEnd - _lambda[_n - 1]);
-
-	// Advance to first relevant wavelength segment
-	unsigned i = 0;
-	while (_lambda[i + 1] < _lambdaStart) ++i;
-
-	// Interpolate vals between first (i) and second (i+1) lambda and add that segment
-	const Real vs = maths::Lerp(_vals[i], _vals[i+1], (_lambdaStart - _lambda[i]) / (_lambda[i+1] - _lambda[i]));
-	sum += .5 * (_lambda[i + 1] - _lambdaStart) * (vs + _vals[i+1]);
-	++i;
-	// Add contributions of middle segments that are not touching start/end boundary
-	for (; i < _n - 1 && _lambdaEnd >= _lambda[i]; ++i)
-		sum += .5 * (_lambda[i + 1] - _lambda[i]) * (_vals[i] + _vals[i+1]);
-
-	// Add end segment using end interpolated value
-	const Real ve = maths::Lerp(_vals[i], _vals[i+1], (_lambdaEnd - _lambda[i]) / (_lambda[i+1] - _lambda[i]));
-	sum += .5 * (_lambda[i+1] - _lambda[i]) * (ve + _vals[i]);
-
-	return sum / (_lambdaEnd - _lambdaStart);
-}
+extern Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd);
 
 namespace SpectrumUtils {
 
@@ -226,17 +193,11 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 
 		SampledSpectrum(const CoefficientSpectrum &_s) : CoefficientSpectrum(_s) {}
 
-		//SampledSpectrum(const RGBSpectrum &_r, const Spectrum::SpectrumType _type) {
-		//	Real rgb[3];
-		//	_r.ToRGB(rgb);
-		//	*this = FromRGB(rgb, _type);
-		//}
-
 		// Luminance measure of this SampledSpectrum
 		Real y() const {
 			Real yy = 0.;
 			for (unsigned i = 0; i < nSpectralSamples; ++i)
-				yy == Y[i] * c[i];
+				yy = Y[i] * c[i];
 			return yy * (Real)(sampledLambdaEnd - sampledLambdaStart) / (Real)(CIEData::CIE_Y_integral * nSpectralSamples);
 		}
 
@@ -302,9 +263,17 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 			return tmp;
 		}
 
+		RGBSpectrum ToRGBSpectrum() const;
+
 		static SampledSpectrum FromRGB(const Real _rgb[3], const SpectrumType _type);
 
-		static SampledSpectrum FromXYZ(const Real _xyz[3], const SpectrumType _type = SpectrumType::Reflectance);
+		static SampledSpectrum FromXYZ(const Real _xyz[3], const SpectrumType _type = SpectrumType::Reflectance) {
+			Real rgb[3];
+			SpectrumUtils::XYZToRGB(_xyz, rgb);
+			return FromRGB(rgb, _type);
+		}
+
+		SampledSpectrum(const RGBSpectrum &_r, SpectrumType _type = SpectrumType::Reflectance);
 
 	private:
 		static SampledSpectrum X, Y, Z, rgbRefl2SpectWhite, rgbRefl2SpectCyan, rgbRefl2SpectMagenta, rgbRefl2SpectYellow,
@@ -313,10 +282,16 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 };
 
 class RGBSpectrum : public CoefficientSpectrum<3> {
+	using CoefficientSpectrum<3>::c;
+
 	public:
 		RGBSpectrum(const Real _v = 0.) : CoefficientSpectrum(_v) {}
 
 		RGBSpectrum(const CoefficientSpectrum<3> &_s) : CoefficientSpectrum<3>(_s) {}
+
+		RGBSpectrum(const RGBSpectrum &_s, SpectrumType _type = SpectrumType::Reflectance) {
+			*this = _s;
+		}
 
 		void ToRGB(Real *_rgb) const {
 			_rgb[0] = c[0];
@@ -371,9 +346,3 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
 			return FromXYZ(xyz);
 		}
 };
-
-//	Define which type of spectrum is used in Lambda here.
-//	 -	RGBSpectrum for performance.
-//	 -	SampledSpectrum for accuracy.
-typedef RGBSpectrum Spectrum;
-//typedef SampledSpectrum Spectrum;
