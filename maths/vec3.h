@@ -1,8 +1,11 @@
 //----	By Sam Warren 2019	----
 //----	Template class for 3-dimensional vectors of any numerical type. Includes basic operators and utilities.	----
 
+#define LAMBDA_MATHS_SSE
+
 #pragma once
 #include <type_traits>
+#include <nmmintrin.h>
 
 template <
 	typename T,
@@ -10,7 +13,12 @@ template <
 >
 class vec3 {
 	public:
-		T x, y, z;
+		union {
+			struct {
+				T x, y, z;
+			};
+			T xyz[3];
+		};
 
 		vec3(const T _x = 0, const T _y = 0, const T _z = 0) {
 			x = _x;
@@ -49,6 +57,7 @@ class vec3 {
 			x /= _rhs.x;
 			y /= _rhs.y;
 			z /= _rhs.z;
+			a /= _rhs.a;
 		}
 		inline void operator/=(const T _rhs) {
 			const T inv = (T)1 / _rhs;
@@ -67,6 +76,87 @@ class vec3 {
 
 		inline T Magnitude() const { return std::sqrt(x*x + y*y + z*z); }
 };
+
+/*
+----	SIMD SSE Vec3 Implementation	----
+Since float will almost always be used, this introduces a large performance boost for basic operators.
+Since SSE uses 128-bit registers, there is a redundant fourth float 'a' to fill the remaining 32 bits in memory.
+*/
+#ifdef LAMBDA_MATHS_SSE
+template<>
+class alignas(16) vec3<float> {
+	public:
+		float x, y, z, a;
+
+		vec3(const float _x = 0, const float _y = 0, const float _z = 0) {
+			x = _x;
+			y = _y;
+			z = _z;
+			a = 0;
+		}
+
+		vec3(const __m128 &_xyza) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _xyza);
+		}
+
+		inline vec3<float> operator+(const vec3<float> &_rhs) const {
+			return vec3<float>(_mm_add_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+		}
+		inline vec3<float> operator-(const vec3<float> &_rhs) const {
+			return vec3<float>(_mm_sub_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+		}
+		inline vec3<float> operator*(const vec3<float> &_rhs) const {
+			return vec3<float>(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+		}
+		inline vec3<float> operator/(const vec3<float> &_rhs) const {
+			return vec3<float>(_mm_div_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+		}
+		inline vec3<float> operator*(const float _rhs) const {
+			return vec3<float>(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_set_ps1(_rhs)));
+		}
+		inline vec3<float> operator/(const float _rhs) const {
+			return vec3<float>(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_set_ps1(1.f / _rhs)));
+		}
+
+		inline vec3<float>& operator+=(const vec3<float> &_rhs) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _mm_add_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+			return *this;
+		}
+		inline vec3<float>& operator-=(const vec3<float> &_rhs) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _mm_sub_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+			return *this;
+		}
+		inline vec3<float>& operator*=(const vec3<float> &_rhs) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+			return *this;
+		}
+		inline vec3<float>& operator/=(const vec3<float> &_rhs) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _mm_div_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
+			return *this;
+		}
+		inline vec3<float>& operator*=(const float _rhs) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_set_ps1(_rhs)));
+			return *this;
+		}
+		inline vec3<float>& operator/=(const float _rhs) {
+			_mm_store_ps(reinterpret_cast<float*>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_set_ps1(1.f / _rhs)));
+			return *this;
+		}
+
+		inline bool operator==(const vec3<float>& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
+		inline bool operator!=(const vec3<float>& _rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
+
+		inline vec3<float> Normalised() const {
+			const float inv = 1.f / Magnitude();
+			return *this * inv;
+		}
+
+		inline float Magnitude() const {
+			const vec3<float> sq = *this * *this;
+			return std::sqrt(sq.x + sq.y + sq.z);
+		}
+};
+#endif
 
 namespace maths {
 

@@ -47,6 +47,12 @@ Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const unsign
 	return sum / (_lambdaEnd - _lambdaStart);
 }
 
+RGBSpectrum SampledSpectrum::ToRGBSpectrum() const {
+	Real rgb[3];
+	ToRGB(rgb);
+	return RGBSpectrum::FromRGB(rgb);
+}
+
 SampledSpectrum SampledSpectrum::FromRGB(const Real _rgb[3], const SpectrumType _type) {
 	SampledSpectrum r;
 	if (_type == SpectrumType::Reflectance) {
@@ -132,16 +138,20 @@ SampledSpectrum SampledSpectrum::FromRGB(const Real _rgb[3], const SpectrumType 
 	return r.Clamp();
 }
 
-RGBSpectrum SampledSpectrum::ToRGBSpectrum() const {
-	Real rgb[3];
-	ToRGB(rgb);
-	return RGBSpectrum::FromRGB(rgb);
-}
-
 SampledSpectrum::SampledSpectrum(const RGBSpectrum& _r, SpectrumType _type) {
 	Real rgb[3];
 	_r.ToRGB(rgb);
 	*this = SampledSpectrum::FromRGB(rgb, _type);
+}
+
+Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _l) {
+	// Handle cases outside of samples' range
+	if (_l <= _lambda[0]) return _lambda[0];
+	if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
+	// Find the sample interval that _l lies within
+	unsigned i;
+	while (_l > _lambda[i + 1]) ++i;
+	return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
 }
 
 SampledSpectrum SampledSpectrum::X;

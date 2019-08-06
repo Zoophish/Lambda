@@ -157,33 +157,25 @@ extern void SortSpectrumSamples(Real* _lambda, Real* _vals, const unsigned _n);
 
 extern Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd);
 
+extern Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _l);
+
 namespace SpectrumUtils {
 
-	static void XYZToRGB(const Real _xyz[3], Real _rgb[3]) {
+	inline void XYZToRGB(const Real _xyz[3], Real _rgb[3]) {
 		_rgb[0] = 3.240479 * _xyz[0] - 1.537150 * _xyz[1] - 0.498535 * _xyz[2];
 		_rgb[1] = -0.969256 * _xyz[0] + 1.875991 * _xyz[1] + 0.041556 * _xyz[2];
 		_rgb[2] = 0.055648 * _xyz[0] - 0.204043 * _xyz[1] + 1.057311 * _xyz[2];
 	}
 
-	static void RGBToXYZ(const Real _rgb[3], Real _xyz[3]) {
+	inline void RGBToXYZ(const Real _rgb[3], Real _xyz[3]) {
 		_xyz[0] = 0.412453 * _rgb[0] + 0.357580 * _rgb[1] + 0.180423 * _rgb[2];
 		_xyz[1] = 0.212671 * _rgb[0] + 0.715160 * _rgb[1] + 0.072169 * _rgb[2];
 		_xyz[2] = 0.019334 * _rgb[0] + 0.119193 * _rgb[1] + 0.950227 * _rgb[2];
 	}
 
 	template<unsigned n>
-	static CoefficientSpectrum<n> Lerp(const CoefficientSpectrum<n>& _a, const CoefficientSpectrum<n>& _b, const Real _r) {
+	inline CoefficientSpectrum<n> Lerp(const CoefficientSpectrum<n>& _a, const CoefficientSpectrum<n>& _b, const Real _r) {
 		return _a + (_b - _a) * _r;
-	}
-
-	static Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _l) {
-		// Handle cases outside of samples' range
-		if (_l <= _lambda[0]) return _lambda[0];
-		if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
-		// Find the sample interval that _l lies within
-		unsigned i;
-		while (_l > _lambda[i + 1]) ++i;
-		return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
 	}
 }
 
@@ -334,7 +326,7 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
 			}
 			Real xyz[3] = {0, 0, 0};
 			for (unsigned i = 0; i < nCIESamples; ++i) {
-				Real val = SpectrumUtils::InterpolateSpectrumSamples(_lambda, _v, _n, CIE_lambda[i]);
+				Real val = InterpolateSpectrumSamples(_lambda, _v, _n, CIE_lambda[i]);
 				xyz[0] += val * CIE_X[i];
 				xyz[1] += val * CIE_Y[i];
 				xyz[2] += val * CIE_Z[i];
