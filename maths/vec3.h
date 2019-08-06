@@ -1,6 +1,7 @@
-//----	By Sam Warren 2019	----
-//----	Template class for 3-dimensional vectors of any numerical type. Includes basic operators and utilities.	----
-
+/*----	By Sam Warren 2019	----
+Template class for 3-dimensional vectors of any numerical type. Includes basic operators and utilities.
+Supports SSE instructions for vec3<float> which offers a significant performance improvement.
+*/
 #define LAMBDA_MATHS_SSE
 
 #pragma once
@@ -13,12 +14,7 @@ template <
 >
 class vec3 {
 	public:
-		union {
-			struct {
-				T x, y, z;
-			};
-			T xyz[3];
-		};
+		T x, y, z;
 
 		vec3(const T _x = 0, const T _y = 0, const T _z = 0) {
 			x = _x;
@@ -95,10 +91,6 @@ class alignas(16) vec3<float> {
 			a = 0;
 		}
 
-		vec3(const __m128 &_xyza) {
-			_mm_store_ps(reinterpret_cast<float*>(this), _xyza);
-		}
-
 		inline vec3<float> operator+(const vec3<float> &_rhs) const {
 			return vec3<float>(_mm_add_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
 		}
@@ -143,8 +135,8 @@ class alignas(16) vec3<float> {
 			return *this;
 		}
 
-		inline bool operator==(const vec3<float>& _rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
-		inline bool operator!=(const vec3<float>& _rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
+		inline bool operator==(const vec3<float> &_rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
+		inline bool operator!=(const vec3<float> &_rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
 
 		inline vec3<float> Normalised() const {
 			const float inv = 1.f / Magnitude();
@@ -155,6 +147,11 @@ class alignas(16) vec3<float> {
 			const vec3<float> sq = *this * *this;
 			return std::sqrt(sq.x + sq.y + sq.z);
 		}
+
+		protected:
+			vec3(const __m128 &_xyza) {
+				_mm_store_ps(reinterpret_cast<float*>(this), _xyza);
+			}
 };
 #endif
 
@@ -185,4 +182,11 @@ namespace maths {
 		const T p = std::atan2(_v.y, _v.x);
 		return (p < 0.) ? (p + 6.2831853) : p;
 	}
+
+	#ifdef LAMBDA_MATHS_SSE
+	inline float Dot(const vec3<float>& _a, const vec3<float>& _b) {
+		const vec3<float> tmp = _a * _b;
+		return tmp.x + tmp.y + tmp.z;
+	}
+	#endif
 }
