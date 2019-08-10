@@ -1,5 +1,4 @@
 /*
-----	By Sam Warren 2019	----
 Structure that provides access to necessary information needed for shading.
 */
 

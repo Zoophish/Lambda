@@ -111,9 +111,9 @@ class TriangleMesh : public Object {
 					uvs[triangles[_h.hit.primID].v2],
 					_h.hit.u, _h.hit.v );
 			}
-
+			_hit.normalG = Vec3(_h.hit.Ng_x, _h.hit.Ng_y, _h.hit.Ng_z);
 			if (smoothNormals) {
-				_hit.normal = BarycentricInterpolation(
+				_hit.normalS = BarycentricInterpolation(
 					vertexNormals[triangles[_h.hit.primID].v0],
 					vertexNormals[triangles[_h.hit.primID].v1],
 					vertexNormals[triangles[_h.hit.primID].v2],
@@ -130,9 +130,9 @@ class TriangleMesh : public Object {
 					_h.hit.u, _h.hit.v );
 			}
 			else {
-				_hit.normal = Vec3(_h.hit.Ng_x, _h.hit.Ng_y, _h.hit.Ng_z);
-				_hit.tangent = maths::Cross(_hit.normal, Vec3(0, 1, 0));
-				_hit.bitangent = maths::Cross(_hit.normal, _hit.tangent);
+				_hit.normalS = _hit.normalG;
 			}
+			_hit.tangent = maths::Cross(_hit.normalS, Vec3(0, 1, 0));
+			_hit.bitangent = maths::Cross(_hit.normalS, _hit.tangent);
 		}
 };

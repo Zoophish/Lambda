@@ -39,8 +39,9 @@ class Ray {
 		inline Vec3 operator()(const float _t) const { return o + d * _t; }
 };
 
+//Tangent and bitangent are shader-surface, not geometry-surface.
 struct RayHit {
-	Vec3 point, normal, tangent, bitangent;
+	Vec3 point, normalG, normalS, tangent, bitangent;
 	Vec2 uvCoords;
 	unsigned geomId;
 };

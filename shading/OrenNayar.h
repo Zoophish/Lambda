@@ -2,11 +2,9 @@
 #include "BxDF.h"
 #include "SurfaceScatterEvent.h"
 
-//REPLACE albedo with pointer to texture.
-
 class OrenNayarBRDF : public BxDF {
 	public:
-		Texture *albedo;
+		TextureAdapter albedo;
 
 		inline void SetSigma(const Real _sigma) {
 			const Real sigma2 = _sigma * _sigma;
@@ -15,7 +13,7 @@ class OrenNayarBRDF : public BxDF {
 		}
 
 		OrenNayarBRDF(Texture *_albedo, const Real _sigma) : BxDF((BxDFType)(BSDF_REFLECTION | BSDF_DIFFUSE)) {
-			albedo = _albedo;
+			albedo.texture = _albedo;
 			SetSigma(_sigma);
 		}
 
@@ -26,7 +24,7 @@ class OrenNayarBRDF : public BxDF {
 			const Real beta = std::min(thetaI, thetaO);
 			const Real phiI = std::acos(BxDF::CosPhi(*_event.wi));
 			const Real phiO = std::acos(BxDF::CosPhi(*_event.wo));
-			return albedo * INV_PI * (A + B * std::max((Real)0, std::cos(phiI - phiO)) * std::sin(alpha) * std::tan(beta));
+			return albedo.GetUV(*_event.uv) * INV_PI * (A + B * std::max((Real)0, std::cos(phiI - phiO)) * std::sin(alpha) * std::tan(beta));
 		}
 
 	protected:
