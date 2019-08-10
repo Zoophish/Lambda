@@ -1,5 +1,23 @@
 #include "Spectrum.h"
 
+SampledSpectrum SampledSpectrum::X;
+SampledSpectrum SampledSpectrum::Y;
+SampledSpectrum SampledSpectrum::Z;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectWhite;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectCyan;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectMagenta;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectYellow;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectRed;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectGreen;
+SampledSpectrum SampledSpectrum::rgbRefl2SpectBlue;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectWhite;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectCyan;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectMagenta;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectYellow;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectRed;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectGreen;
+SampledSpectrum SampledSpectrum::rgbIllum2SpectBlue;
+
 bool SpectrumSamplesSorted(const Real* _lambda, const Real* _vals, const unsigned _n) {
 	for (unsigned i = 0; i < _n - 1; ++i)
 		if (_lambda[i] > _lambda[i + 1]) return false;
@@ -153,21 +171,3 @@ Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const un
 	while (_l > _lambda[i + 1]) ++i;
 	return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
 }
-
-SampledSpectrum SampledSpectrum::X;
-SampledSpectrum SampledSpectrum::Y;
-SampledSpectrum SampledSpectrum::Z;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectWhite;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectCyan;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectMagenta;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectYellow;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectRed;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectGreen;
-SampledSpectrum SampledSpectrum::rgbRefl2SpectBlue;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectWhite;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectCyan;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectMagenta;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectYellow;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectRed;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectGreen;
-SampledSpectrum SampledSpectrum::rgbIllum2SpectBlue;

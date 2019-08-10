@@ -10,6 +10,7 @@
 
 class Ray {
 	public:
+		Real eta;
 		Vec3 o, d;
 
 		Ray() {}

@@ -1,32 +1,35 @@
 //----	By Sam Warren 2019	----
-//----	Generic colour class with 32-bit float precision for use in textures.	----
-
+//----	Generic colour class with 32-bit float precision as well as other colour formats for use in textures.	----
 #pragma once
-#include <type_traits>
 
 class Colour {
 	public:
-		float r, g, b, a;
+		float r, g, b;
 
-		Colour(const float _r = 0, const float _b = 0, const float _g = 0, const float _a = 1) {
+		Colour(const float _r = 0, const float _b = 0, const float _g = 0) {
 			r = _r;
 			b = _b;
 			g = _g;
-			a = _a;
+		}
+
+		Colour(float *_rgb) {
+			r = _rgb[0];
+			g = _rgb[1];
+			b = _rgb[2];
 		}
 
 		inline Colour operator*(const Colour &_rhs) const {
-			return Colour(r * _rhs.r, g * _rhs.g, b * _rhs.b, a * _rhs.a);
+			return Colour(r * _rhs.r, g * _rhs.g, b * _rhs.b);
 		}
 		inline Colour operator*(const float _rhs) const {
-			return Colour(r * _rhs, g * _rhs, b * _rhs, a * _rhs);
+			return Colour(r * _rhs, g * _rhs, b * _rhs);
 		}      
 		inline Colour operator/(const Colour &_rhs) const {
-			return Colour(r / _rhs.r, g / _rhs.g, b / _rhs.b, a / _rhs.a);
+			return Colour(r / _rhs.r, g / _rhs.g, b / _rhs.b);
 		}
 		inline Colour operator/(const float _rhs) const {
 			const float inv = 1.f / _rhs;
-			return Colour(r * inv, g * inv, b * inv, a * inv);
+			return Colour(r * inv, g * inv, b * inv);
 		}      
 		inline Colour operator+(const Colour &_rhs) const {
 			return Colour(r + _rhs.r, g + _rhs.g, b + _rhs.b);
@@ -66,3 +69,31 @@ class Colour {
 			return _a + (_b - _a) * _r;
 		}
 };
+
+namespace ColourFormat {
+
+	typedef Colour RGB32;
+
+	struct RGBA32 {
+		float r, g, b, a;
+
+		RGBA32() {}
+
+		RGBA32(float *_rgba) {
+			r = _rgba[0];
+			g = _rgba[1];
+			b = _rgba[2];
+			a = _rgba[3];
+		}
+	};
+
+	struct R32 {
+		float r;
+
+		R32() {}
+
+		R32(const float _r) {
+			r = _r;
+		}
+	};
+}

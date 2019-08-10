@@ -28,38 +28,44 @@ class vec3 {
 		inline vec3<T> operator*(const T _rhs) const { return vec3<T>(x * _rhs, y * _rhs, z * _rhs); }
 		inline vec3<T> operator/(const vec3<T> &_rhs) const { return vec3<T>(x / _rhs.x, y / _rhs.y, z / _rhs.z); }
 		inline vec3<T> operator/(const T _rhs) const { const T inv = (T)1 / _rhs; return vec3<T>(x * inv, y * inv, z * inv); }
+		inline vec3<T> operator-() const { return *this * -1; }
 
-		inline void operator+=(const vec3<T> &_rhs) {
+		inline vec3<T>& operator+=(const vec3<T> &_rhs) {
 			x += _rhs.x;
 			y += _rhs.y;
 			z += _rhs.z;
+			return *this;
 		}
-		inline void operator-=(const vec3<T> &_rhs) {
+		inline vec3<T>& operator-=(const vec3<T> &_rhs) {
 			x -= _rhs.x;
 			y -= _rhs.y;
 			z -= _rhs.z;
+			return *this;
 		}
-		inline void operator*=(const vec3<T> &_rhs) {
+		inline vec3<T>& operator*=(const vec3<T> &_rhs) {
 			x *= _rhs.x;
 			y *= _rhs.y;
 			z *= _rhs.z;
+			return *this;
 		}
-		inline void operator*=(const T _rhs) {
+		inline vec3<T>& operator*=(const T _rhs) {
 			x *= _rhs;
 			y *= _rhs;
 			z *= _rhs;
+			return *this;
 		}
-		inline void operator/=(const vec3<T> &_rhs) {
+		inline vec3<T>& operator/=(const vec3<T> &_rhs) {
 			x /= _rhs.x;
 			y /= _rhs.y;
 			z /= _rhs.z;
-			a /= _rhs.a;
+			return *this;
 		}
-		inline void operator/=(const T _rhs) {
+		inline vec3<T>& operator/=(const T _rhs) {
 			const T inv = (T)1 / _rhs;
 			x *= inv;
 			y *= inv;
 			z *= inv;
+			return *this;
 		}
 		
 		inline bool operator==(const vec3<T> &_rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
@@ -109,6 +115,7 @@ class alignas(16) vec3<float> {
 		inline vec3<float> operator/(const float _rhs) const {
 			return vec3<float>(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float*>(this)), _mm_set_ps1(1.f / _rhs)));
 		}
+		inline vec3<float> operator-() const { return *this * -1; }
 
 		inline vec3<float>& operator+=(const vec3<float> &_rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_add_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));

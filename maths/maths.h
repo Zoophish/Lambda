@@ -1,7 +1,11 @@
-//----	By Sam Warren 2019	----
-//----	Single include header for basic mathematics library needed in Lambda.	----
+/*
+----	By Sam Warren 2019	----
+	Single include header for foundational mathematics, no precompiled .lib needed.
+	SIMD accellerated with SSE instructions; changing numerical precision type
+from float will disable SSE (double support yet to come).
 
-//----	Define the general numerical precision here:
+----	Define the general numerical precision here:	----
+*/
 #define LAMBDA_MATHS_PRECISION_MODE float
 
 //----	Optional basic typdefs for mathematical types:
@@ -9,7 +13,7 @@
 
 
 
-//----	Don't make changes below here.
+//----	Don't make changes below here.	----
 #pragma once
 #include <cmath>
 #include <algorithm>
@@ -26,6 +30,7 @@ typedef vec2<Real> Vec2;
 #define PI 3.14159265358979323846264338
 #define PI2 2. * PI
 #define INV_PI 1. / PI
+#define BITFLAG(_i) 1 << _i
 
 namespace maths {
 

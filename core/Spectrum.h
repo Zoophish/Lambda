@@ -3,8 +3,8 @@
 
 #pragma once
 #include <vector>
+#include <omp.h>
 #include "SPD_Data.h"
-//#include <omp.h>
 
 static const unsigned sampledLambdaStart = 400;
 static const unsigned sampledLambdaEnd = 700;
@@ -14,6 +14,9 @@ static const float invNSpectralSamples = 1. / Real(nSpectralSamples);
 enum class SpectrumType { Reflectance, Illuminant };
 
 class RGBSpectrum;
+class SampledSpectrum;
+
+typedef SampledSpectrum Spectrum;
 
 //	Define which type of spectrum is used in Lambda here.
 //	 -	RGBSpectrum for performance.
@@ -38,23 +41,26 @@ class CoefficientSpectrum {
 			return c[_i];
 		}
 
-		CoefficientSpectrum &operator+=(const CoefficientSpectrum &_s) {
-			//#pragma omp simd
+		CoefficientSpectrum& operator+=(const CoefficientSpectrum &_s) {
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] += _s[i];
 			return *this;
 		}
-		CoefficientSpectrum &operator-=(const CoefficientSpectrum &_s) {
+		CoefficientSpectrum& operator-=(const CoefficientSpectrum &_s) {
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] -= _s[i];
 			return *this;
 		}
-		CoefficientSpectrum &operator*=(const CoefficientSpectrum &_s) {
+		CoefficientSpectrum& operator*=(const CoefficientSpectrum &_s) {
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] *= _s[i];
 			return *this;
 		}
-		CoefficientSpectrum &operator/=(const CoefficientSpectrum &_s) {
+		CoefficientSpectrum& operator/=(const CoefficientSpectrum &_s) {
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] /= _s[i];
 			return *this;
@@ -62,42 +68,49 @@ class CoefficientSpectrum {
 
 		CoefficientSpectrum operator+(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] += _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator-(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] -= _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator*(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] *= _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator/(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] /= _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator+(const Real _s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] += _s;
 			return tmp;
 		}
 		CoefficientSpectrum operator-(const Real _s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] -= _s;
 			return tmp;
 		}
 		CoefficientSpectrum operator*(const Real _s) const {
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] *= _s;
 			return tmp;
@@ -105,6 +118,7 @@ class CoefficientSpectrum {
 		CoefficientSpectrum operator/(const Real _s) const {
 			const Real inv = 1. / _s;
 			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] *= inv;
 			return tmp;
@@ -121,19 +135,19 @@ class CoefficientSpectrum {
 			return false;
 		}
 
-		static friend CoefficientSpectrum Sqrt(const CoefficientSpectrum &_s) {
+		static CoefficientSpectrum Sqrt(const CoefficientSpectrum &_s) {
 			CoefficientSpectrum tmp;
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::sqrt(_s.c[i]);
 			return tmp;
 		}
-		static friend CoefficientSpectrum Pow(const CoefficientSpectrum &_s, const Real _p) {
+		static CoefficientSpectrum Pow(const CoefficientSpectrum &_s, const Real _p) {
 			CoefficientSpectrum tmp;
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::pow(_s.c[i], _p);
 			return tmp;
 		}
-		static friend CoefficientSpectrum Exp(const CoefficientSpectrum &_s) {
+		static CoefficientSpectrum Exp(const CoefficientSpectrum &_s) {
 			CoefficientSpectrum tmp;
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::exp(_s.c[i]);
