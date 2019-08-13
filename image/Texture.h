@@ -1,21 +1,20 @@
 /*----	By Sam Warren 2019	----
 		Generic texture class for synthesising images of colours. Implements stb_image library for
 		loading / unloading of image files - http://nothings.org/stb. Supports HDR files.
-	Texture types:
-		- TextureRGBAFloat	-	32-bit float per channel, suitable for HDR.
 */
+
+#define GAMMA_POW 1 / 2.2
 
 #pragma once
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include "Colour.h"
+#include "TextureEncoding.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "third_party\stb_image_write.h"
 #define STB_IMAGE_IMPLEMENTATION    
 #include "third_party\stb_image.h"
-
-#define GAMMA_POW 1 / 2.2
 
 enum InterpolationMode {
 	INTERP_NEAREST,
@@ -29,30 +28,32 @@ class texture_t {
 		unsigned width, height;
 		unsigned interpolationMode = INTERP_BILINEAR;
 		std::vector<Format> pixels;
-		const TextureEncoding::TextureEncoder *encoder;
+		size_t (*Map)(const unsigned, const unsigned, const unsigned, const unsigned) = TextureEncoding::ScanlineRowMap;
 	
 	public:
-		texture_t(const unsigned _width = 1, const unsigned _height = 1) {
-			width = _width;
-			height = _height;
+		texture_t<Format>(const unsigned _width = 1, const unsigned _height = 1, const Format &_c = Format()) {
+			Resize(_width, _height, _c);
 		}
 	
 		inline unsigned GetWidth() const { return width; }
 		inline unsigned GetHeight() const { return height; }
 
-		void Resize(const unsigned _width, const unsigned _height, const Format &_c = Format()) {
+		inline void Resize(const unsigned _width, const unsigned _height, const Format &_c = Format()) {
 			width = _width;
 			height = _height;
 			pixels.resize(width * height, _c);
 		}
 
 		inline Format GetPixelCoord(const unsigned _x, const unsigned _y) const {
-			return pixels[encoder->Map(_x, _y)];
+			return pixels[(*Map)(width, height, _x, _y)];
 		}
 
-		inline void SetPixelCoord(const unsigned _x, const unsigned _y, const Colour &_c) {
-			pixels[encoder->Map(_x, _y)] = _c;
+		inline void SetPixelCoord(const unsigned _x, const unsigned _y, const Format &_c) {
+			pixels[(*Map)(width, height, _x, _y)] = _c;
 		}
+
+		Format &operator[](const size_t _i) { return pixels[_i]; }
+		Format operator[](const size_t _i) const { return pixels[_i]; }
 
 		Format GetPixelUV(const float _u, const float _v) const {
 			switch (interpolationMode) {
@@ -72,40 +73,26 @@ class texture_t {
 			std::vector<uint32_t> p(width * height);
 			for (unsigned int y = 0; y < height; ++y)
 				for (unsigned int x = 0; x < width; ++x) {
-					const Format pix = GetPixel(x, y);
-					if (sizeof(Format) >= 32)
-						float _r = pix.r;
-					else
-						_r = 0;
-					if (sizeof(Format) >= 64)
-						float _g = pix.g;
-					else
-						_g = 0;
-					if (sizeof(Format) >= 96)
-						float _b = pix.b;
-					else
-						_b = 0;
-					if (sizeof(Format) >= 128)
-						float _a = pix.a;
-					else
-						_a = 0;
+					const Format pix = GetPixelCoord(x, y);
+					float r, g, b, a;
+						r = pix.r;
+						g = pix.g;
+						b = pix.b;
+						a = 1;
 					if(gammaCorrect) {
-						_r = std::pow(_r, GAMMA_POW) * 256;
-						_g = std::pow(_g, GAMMA_POW) * 256;
-						_b = std::pow(_b, GAMMA_POW) * 256;
-						_a *= 256;
+						r = std::pow(r, GAMMA_POW);
+						g = std::pow(g, GAMMA_POW);
+						b = std::pow(b, GAMMA_POW);
 					}
-					else {
-						_r *= 256;
-						_g *= 256;
-						_b *= 256;
-						_a *= 256;
-					}
-					const int r = std::max(0, std::min(255, (int)_r));
-					const int g = std::max(0, std::min(255, (int)_g));
-					const int b = std::max(0, std::min(255, (int)_b));
-					const int a = std::max(0, std::min(255, (int)_a));
-					p[(y * width) + x] = (r << 24) + (g << 16) + (b << 8) + a;
+					r *= 256;
+					g *= 256;
+					b *= 256;
+					a *= 256;
+					const int rI = std::max(0, std::min(255, (int)r));
+					const int gI = std::max(0, std::min(255, (int)g));
+					const int bI = std::max(0, std::min(255, (int)b));
+					const int aI = std::max(0, std::min(255, (int)a));
+					p[(y * width) + x] = (aI << 24) + (bI << 16) + (gI << 8) + rI;
 				}
 			if (format == "png") { stbi_write_png(name, width, height, 4, &p[0], width * 4); return; }
 			if (format == "jpg") { stbi_write_jpg(name, width, height, 4, &p[0], 100); return; }
@@ -159,41 +146,14 @@ class texture_t {
 			}
 };
 
-namespace TextureEncoding {
-
-	class TextureEncoder {
-		public:
-			virtual size_t Map(const unsigned _x, const unsigned _y) const = 0;
-	};
-
-	class MortonEncoder : public TextureEncoder {
-		public:
-			inline uint64_t ShiftInterleave(const uint32_t _i) const {
-				uint64_t word = _i;
-				word = (word ^ (word << 16)) & 0x0000ffff0000ffff;
-				word = (word ^ (word << 8)) & 0x00ff00ff00ff00ff;
-				word = (word ^ (word << 4)) & 0x0f0f0f0f0f0f0f0f;
-				word = (word ^ (word << 2)) & 0x3333333333333333;
-				word = (word ^ (word << 1)) & 0x5555555555555555;
-				return word;
-			}
-
-			size_t Map(const unsigned _x, const unsigned _y) const override {
-				return ShiftInterleave(_x) | (ShiftInterleave(_y) << 1);
-			}
-	};
-
-}
-
 /*
 Texture is a fast texture class for generic use. Uses Morton-order to improve cache read/write speeds.
 */
 template<class Format>
 class TextureMorton : public texture_t<Format> {
 	public:
-		TextureMorton(const unsigned _width = 1, const unsigned _height = 1, const Format &_c = Format()) : encoder(MortonEncoder()) {
-			Resize(_width, _height, _c);
-		}
+		TextureMorton(const unsigned _width = 1, const unsigned _height = 1, const Format &_c = Format())
+			: texture_t<Format>(_width, _height, _c) {}
 };
 
 typedef TextureMorton<Colour> Texture;

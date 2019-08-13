@@ -67,7 +67,8 @@ class TextureAdapter {
 
 		Spectrum GetUV(const Vec2 &_uv) const {
 			const Colour c = texture->GetPixelUV(_uv.x, _uv.y);
-			return Spectrum::FromRGB(c.rgb, type);
+			const float tmp[3] = { c.r, c.g, c.b };
+			return Spectrum::FromRGB(tmp, type);
 		}
 };
 

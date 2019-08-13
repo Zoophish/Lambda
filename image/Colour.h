@@ -4,10 +4,7 @@
 
 class Colour {
 	public:
-		union {
-			float r, g, b;
-			float rgb[3];
-		};
+		float r, g, b;
 
 		Colour(const float _r = 0, const float _b = 0, const float _g = 0) {
 			r = _r;
@@ -78,18 +75,13 @@ namespace ColourFormat {
 	typedef Colour RGB32;
 
 	struct RGBA32 {
-		union {
-			float r, g, b, a;
-			float rgba[4];
-		};
+		float r, g, b, a;
 
-		RGBA32() {}
-
-		RGBA32(float *_rgba) {
-			r = _rgba[0];
-			g = _rgba[1];
-			b = _rgba[2];
-			a = _rgba[3];
+		RGBA32(const float _r = 0, const float _g = 0, const float _b = 0, const float _a = 0) {
+			r = _r;
+			g = _g;
+			b = _b;
+			a = _a;
 		}
 	};
 
