@@ -18,6 +18,14 @@ class HaltonSampler : public Sampler {
 			++sampleIndex;
 		}
 
+		void SetSample(const unsigned _sampleIndex) override {
+			sampleIndex = _sampleIndex;
+			for (short i = 0; i < maxDimension; ++i) {
+				sequence[i] = Halton(sampleIndex, primes[i]);
+			}
+			dimensionIndex = 0;
+		}
+
 		Real Get1D() override {
 			if (sampleShifter) {
 				return sampleShifter->Shift(sequence[dimensionIndex++ % maxDimension], dimensionIndex);

@@ -83,6 +83,13 @@ namespace ColourFormat {
 			b = _b;
 			a = _a;
 		}
+
+		RGBA32(const float *_rgba) {
+			r = _rgba[0];
+			g = _rgba[1];
+			b = _rgba[2];
+			a = _rgba[3];
+		}
 	};
 
 	struct R32 {

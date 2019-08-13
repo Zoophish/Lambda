@@ -14,7 +14,7 @@ class SampleShifter {
 		unsigned pixelIndex, maxDimension = 512;
 		TextureRGBA32 *mask;
 
-		SampleShifter(const unsigned _pixelIndex = 0, TextureRGBA32 *_mask = nullptr) {
+		SampleShifter(TextureRGBA32 *_mask = nullptr, const unsigned _pixelIndex = 0) {
 			pixelIndex = _pixelIndex;
 			mask = _mask;
 			if(mask)

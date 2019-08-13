@@ -22,15 +22,23 @@ enum InterpolationMode {
 	INTERP_BICUBIC
 };
 
+enum EncoderMode {
+	ENCODE_SCANLINEROW,
+	ENCODE_SCANLINECOL,
+	ENCODE_MORTON,
+	ENCODE_HILBERT,
+};
+
 template<class Format>
 class texture_t {
 	protected:
 		unsigned width, height;
-		unsigned interpolationMode = INTERP_BILINEAR;
 		std::vector<Format> pixels;
 		size_t (*Map)(const unsigned, const unsigned, const unsigned, const unsigned) = TextureEncoding::ScanlineRowMap;
 	
 	public:
+		InterpolationMode interpolationMode = INTERP_BILINEAR;
+
 		texture_t<Format>(const unsigned _width = 1, const unsigned _height = 1, const Format &_c = Format()) {
 			Resize(_width, _height, _c);
 		}
@@ -42,6 +50,21 @@ class texture_t {
 			width = _width;
 			height = _height;
 			pixels.resize(width * height, _c);
+		}
+
+		void SetEncoder(const EncoderMode _encoderMode) {
+			switch (_encoderMode) {
+			case ENCODE_SCANLINEROW :
+				Map = TextureEncoding::ScanlineRowMap; break;
+			case ENCODE_SCANLINECOL :
+				Map = TextureEncoding::ScanlineColMap; break;
+			case ENCODE_MORTON :
+				Map = TextureEncoding::MortonMap; break;
+			case ENCODE_HILBERT :
+				Map = TextureEncoding::HilbertMap; break;
+			default :
+				Map = TextureEncoding::ScanlineRowMap;
+			}
 		}
 
 		inline Format GetPixelCoord(const unsigned _x, const unsigned _y) const {
@@ -105,7 +128,6 @@ class texture_t {
 			int file_width, file_height;
 			if(stbi_info(path, &file_width, &file_height, nullptr)) {
 				Resize(file_width, file_height);
-				width = file_width; height = file_height;
 				std::cout << std::endl << "Loading image...";
 				int w = width, h = height;
 				const float* data = stbi_loadf(path, &w, &h, &channels, 0);
@@ -116,8 +138,7 @@ class texture_t {
 							const int g = channels > 1 ? r + 1 : 0;
 							const int b = channels > 2 ? r + 2 : 0;
 							const int a = channels > 3 ? r + 3 : 0;
-							const Format col(&data[r]);
-							SetPixel(x, y, col);
+							SetPixelCoord(x, y, Format(&data[r]));
 						}
 					}
 					std::cout << std::endl << "Loaded: " << path;
