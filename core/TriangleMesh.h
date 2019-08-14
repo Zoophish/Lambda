@@ -20,6 +20,7 @@ struct Vertex { float x, y, z, a; };
 
 class TriangleMesh : public Object {
 	public:
+		friend class TriangleLight;
 		bool smoothNormals, hasUVs;
 
 		TriangleMesh() {
@@ -99,7 +100,7 @@ class TriangleMesh : public Object {
 		std::vector<Vec3> vertexNormals, vertexTangents, vertexBitangents;
 	
 		template<class T>
-		inline T BarycentricInterpolation(const T &_t0, const T &_t1, const T &_t2, const float _u, const float _v) const {
+		inline T BarycentricInterpolation(const T &_t0, const T &_t1, const T &_t2, const Real _u, const Real _v) const {
 			return _t0 + (_t1 - _t0) * _u + (_t2 - _t0) * _v;
 		}
 

@@ -25,13 +25,13 @@ class SampleShifter {
 			Real tmp = _point;
 			if (mask && (_dimensionIndex <= maskDimensions)) {
 				switch (_dimensionIndex % maskSize) {
-				case 1 :
+				case 0 :
 					ToroidalShift(tmp, (*mask)[pixelIndex].r); break;
-				case 2:
+				case 1:
 					ToroidalShift(tmp, (*mask)[pixelIndex].g); break;
-				case 3:
+				case 2:
 					ToroidalShift(tmp, (*mask)[pixelIndex].b); break;
-				case 4:
+				case 3:
 					ToroidalShift(tmp, (*mask)[pixelIndex].a); break;
 				}
 			}
@@ -49,7 +49,7 @@ class SampleShifter {
 		inline void ToroidalShift(Real &_point, const Real _shift) const {
 			_point += _shift;
 			if (_point >= 1.) 
-				_point -= 1.;
+				_point -= (Real)1;
 		}
 
 		inline uint32_t Hash(uint32_t a) const {

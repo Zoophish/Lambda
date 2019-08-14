@@ -4,8 +4,6 @@
  
 class Sampler {
 	public:
-		unsigned sampleIndex;
-
 		SampleShifter *sampleShifter = nullptr;
 
 		virtual void NextSample() = 0;
@@ -17,5 +15,5 @@ class Sampler {
 		virtual Vec2 Get2D() = 0;
 
 	protected:
-		unsigned dimensionIndex;
+		unsigned sampleIndex, dimensionIndex;
 };

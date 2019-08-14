@@ -2,16 +2,18 @@
 #include <image/Texture.h>
 #include "Fresnel.h"
 #include "SurfaceScatterEvent.h"
+#include "TextureAdapter.h"
 
 class BxDF {
 	public:
 		enum BxDFType {
-			BSDF_REFLECTION = BITFLAG(0),
-			BSDF_TRANSMISSION = BITFLAG(1),
-			BSDF_DIFFUSE = BITFLAG(2),
-			BSDF_GLOSSY = BITFLAG(3),
-			BSDF_SPECULAR = BITFLAG(4),
-			BSDF_ALL = 31
+			BxDF_REFLECTION = BITFLAG(0),
+			BxDF_TRANSMISSION = BITFLAG(1),
+			BxDF_DIFFUSE = BITFLAG(2),
+			BxDF_GLOSSY = BITFLAG(3),
+			BxDF_SPECULAR = BITFLAG(4),
+			EMISSION = BITFLAG(5),
+			BxDF_ALL = 63
 		};
 
 		const BxDFType type;
@@ -36,39 +38,17 @@ class BxDF {
 			const Real sinTheta = SinTheta(_w);
 			return (sinTheta == 0) ? 0 : maths::Clamp(_w.y / sinTheta, (Real)-1, (Real)1);
 		}
-		inline Vec3 SampleCosHemisphere(const Real _r1, const Real _r2, Real *_pdf) const {
-				const Real r = std::sqrt(_r1);
-				const Real theta = PI2 * _r2;
+		inline Vec3 SampleCosHemisphere(const Vec2 &_u) const {
+				const Real r = std::sqrt(_u.x);
+				const Real theta = PI2 * _u.y;
 				const Real cosTheta = std::cos(theta);
-				*_pdf = cosTheta * INV_PI;
-				return Vec3(r * cosTheta, r * std::sin(theta), std::sqrt(1.f - _r1));
+				return Vec3(r * cosTheta, r * std::sin(theta), std::sqrt(1.f - _u.x));
 		}
-		inline Spectrum RGBToSpec(const Real _r, const Real _g, const Real _b, const SpectrumType _type) const {
-			const Real rgb[3] = { _r, _g, _b };
-			return Spectrum::FromRGB(rgb, _type);
+		inline bool SameHemisphere(const Vec3 &_w1, const Vec3 &_w2) const {
+			return _w1.z * _w2.z > 0;
 		}
-};
-
-//Ad hoc interface to deal with RGB textures in a Spectral renderer.
-class TextureAdapter {
-	public:
-		Texture *texture;
-		SpectrumType type;
-
-		TextureAdapter() {
-			texture = nullptr;
-			type = SpectrumType::Reflectance;
-		}
-
-		TextureAdapter(Texture *_texture, const SpectrumType _type = SpectrumType::Reflectance) {
-			texture = _texture;
-			type = _type;
-		}
-
-		Spectrum GetUV(const Vec2 &_uv) const {
-			const Colour c = texture->GetPixelUV(_uv.x, _uv.y);
-			const float tmp[3] = { c.r, c.g, c.b };
-			return Spectrum::FromRGB(tmp, type);
+		inline bool PDF(const Vec3 &_wo, const Vec3 &_wi) const {
+			return SameHemisphere(_wo, _wi) ? std::abs(_wi.z) * INV_PI : 0;
 		}
 };
 

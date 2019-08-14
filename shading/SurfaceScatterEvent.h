@@ -7,8 +7,8 @@ Structure that provides access to necessary information needed for shading.
 #include <core/Ray.h>
 
 struct SurfaceScatterEvent {
-	Vec3 *wo, *wi;
-	Vec2 *uv;
+	Vec3 wo, wi;
+	Vec2 uv;
 	Real pdf, eta;
 	RayHit *hit;
 };
