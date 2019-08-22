@@ -1,37 +1,82 @@
 #include <iostream>
-//#include <core/TriangleMesh.h>
-//#include <core/Scene.h>
-//#include <core/Spectrum.h>
+#include <assets/AssetImporter.h>
 #include<cmath>
-#include <image/Texture.h>
+#include <shading/OrenNayar.h>
+#include <integrators/DirectLightingIntegrator.h>
 #include <sampling/HaltonSampler.h>
+#include <camera/PinholeCamera.h>
+#include <camera/EnvironmentCamera.h>
+#include <core/TriangleMesh.h>
+#include <lighting/TriangleLight.h>
+#include <lighting/EnvironmentLight.h>
+#include <core/RenderCoordinator.h>
 
 int main() {
 
+	//Spectrum::Init();
+
+	//Declare a scene.
+	Scene scene;
+
+	//Import the scene model(s).
+	AssetImporter ai;
+	ai.Import("../content/thai_statue.obj");
+	TriangleMesh mesh;
+	mesh.smoothNormals = false;
+	mesh.LoadFromImport(scene.device, ai);
+
+	Texture albedo(1,1,Colour(1,1,1));
+	//albedo.LoadImageFile("../content/uv_grid.png");
+	OrenNayarBRDF mat(&albedo);
+	mesh.bxdf = &mat;
+
+	//Add objects to scene.
+	scene.AddObject(mesh);
+	scene.Commit();
+
+	//Make environment lighting.
+	Texture envMap;
+	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
+	envMap.LoadImageFile("../content/veranda_2k.hdr");
+	EnvironmentLight ibl(&envMap);
+	ibl.offset = Vec2(0,0);
+	scene.lights.push_back(&ibl);
+
+	//Set up sampler.
 	TextureRGBA32 blueNoise;
-	blueNoise.LoadImageFile("C:/Users/user/source/repos/Lambda/content/HDR_RGBA_63.png");
-
-	Texture tex(512, 512, Colour(0,0,0));
-
+	blueNoise.LoadImageFile("../content/HDR_RGBA_63.png");
 	SampleShifter sampleShifter(&blueNoise);
 	HaltonSampler sampler;
 	sampler.sampleShifter = &sampleShifter;
 
-	const Colour c[8] = { Colour(1,1,1), Colour(0,1,1), Colour(1,0,1), Colour(1,1,0), Colour(1,0,0), Colour(0,1,0), Colour(0,0,1), Colour(.5,1,.2) };
+	//Make camera;
+	PinholeCamera cam(Vec3(0, 2, 5), 1, 1);
+	cam.SetFov(1.1);
+	cam.SetRotation(-PI, 0);
 
-	for (unsigned j = 0; j < 8; ++j) {
-		for (unsigned i = 0; i < 800; ++i) {
-			const Vec2 point = sampler.Get2D();
-			tex.SetPixelCoord(point.x * 512, point.y * 512, c[j]);
-			sampler.NextSample();
-		}
-		sampler.SetSample(0);
-		sampleShifter.pixelIndex++;
-	}
+	//Make the integrator.
+	DirectLightingIntegrator integrator(&sampler);
+
+	Film film(1024, 1024);
+
+	//Render texture.
+	Texture tex(1024, 1024, Colour(0, 0, 0));
+	//Render tile.
+	RenderTile tile;
+	tile.camera = &cam;
+	tile.scene = &scene;
+	tile.integrator = &integrator;
+	tile.x = 0; tile.y = 0; tile.w = 1024; tile.h = 1024;
+	tile.film = &film;
+
+	//Render the image...
+	RenderCoordinator::ProcessTile(tile, 32);
+
+	//Convert film to an RGB image;
+	film.ToXYZTexture(&tex);
 	
-	tex.SaveToImageFile("out.png", false);
-
-	system("pause");
+	//Save to file.
+	tex.SaveToImageFile("out.png", true);
 	
 	return 0;
 }

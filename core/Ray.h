@@ -7,6 +7,8 @@
 
 #pragma once
 #include <maths/maths.h>
+#include <embree3/rtcore.h>
+class Object;
 
 class Ray {
 	public:
@@ -20,7 +22,7 @@ class Ray {
 			d = _d;
 		}
 
-		inline RTCRay ToRTCRay() const {
+		RTCRay ToRTCRay() const {
 			RTCRay ray;
 			ray.dir_x = d.x;
 			ray.dir_y = d.y;
@@ -34,14 +36,14 @@ class Ray {
 			ray.time = 0;
 			ray.id = 0;
 			ray.flags = 0;
+			return ray;
 		}
 
-		inline Vec3 operator()(const float _t) const { return o + d * _t; }
+		inline Vec3 operator()(const Real _t) const { return o + d * _t; }
 };
 
-//Tangent and bitangent are shader-surface, not geometry-surface.
 struct RayHit {
 	Vec3 point, normalG, normalS, tangent, bitangent;
 	Vec2 uvCoords;
-	unsigned geomId;
+	Object *object;
 };

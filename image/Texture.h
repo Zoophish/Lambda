@@ -16,13 +16,13 @@
 #define STB_IMAGE_IMPLEMENTATION    
 #include "third_party\stb_image.h"
 
-enum InterpolationMode {
+enum class InterpolationMode {
 	INTERP_NEAREST,
 	INTERP_BILINEAR,
 	INTERP_BICUBIC
 };
 
-enum EncoderMode {
+enum class EncoderMode {
 	ENCODE_SCANLINEROW,
 	ENCODE_SCANLINECOL,
 	ENCODE_MORTON,
@@ -37,7 +37,7 @@ class texture_t {
 		size_t (*Map)(const unsigned, const unsigned, const unsigned, const unsigned) = TextureEncoding::ScanlineRowMap;
 	
 	public:
-		InterpolationMode interpolationMode = INTERP_BILINEAR;
+		InterpolationMode interpolationMode = InterpolationMode::INTERP_BILINEAR;
 
 		texture_t<Format>(const unsigned _width = 1, const unsigned _height = 1, const Format &_c = Format()) {
 			Resize(_width, _height, _c);
@@ -54,13 +54,13 @@ class texture_t {
 
 		void SetEncoder(const EncoderMode _encoderMode) {
 			switch (_encoderMode) {
-			case ENCODE_SCANLINEROW :
+			case EncoderMode::ENCODE_SCANLINEROW :
 				Map = TextureEncoding::ScanlineRowMap; break;
-			case ENCODE_SCANLINECOL :
+			case EncoderMode::ENCODE_SCANLINECOL :
 				Map = TextureEncoding::ScanlineColMap; break;
-			case ENCODE_MORTON :
+			case EncoderMode::ENCODE_MORTON :
 				Map = TextureEncoding::MortonMap; break;
-			case ENCODE_HILBERT :
+			case EncoderMode::ENCODE_HILBERT :
 				Map = TextureEncoding::HilbertMap; break;
 			default :
 				Map = TextureEncoding::ScanlineRowMap;
@@ -68,6 +68,10 @@ class texture_t {
 		}
 
 		inline Format GetPixelCoord(const unsigned _x, const unsigned _y) const {
+			return pixels[(*Map)(width, height, _x, _y)];
+		}
+
+		inline Format &Pixel(const unsigned _x, const unsigned _y) {
 			return pixels[(*Map)(width, height, _x, _y)];
 		}
 
@@ -80,9 +84,9 @@ class texture_t {
 
 		Format GetPixelUV(const float _u, const float _v) const {
 			switch (interpolationMode) {
-			case INTERP_NEAREST :
+			case InterpolationMode::INTERP_NEAREST :
 				return GetPixelUVNearest(_u, _v);
-			case INTERP_BILINEAR :
+			case InterpolationMode::INTERP_BILINEAR :
 				return GetPixelUVBilinear(_u, _v);
 			default:
 				return GetPixelUVNearest(_u, _v);
@@ -149,33 +153,23 @@ class texture_t {
 
 		protected:
 			inline Format GetPixelUVNearest(const float _u, const float _v) const {
-				const unsigned int x = std::min((float)(width - 1), _u * width);
-				const unsigned int y = std::min((float)(height - 1), _v * height);
+				const unsigned int x = std::min((float)(width - 1), _u * (float)width);
+				const unsigned int y = std::min((float)(height - 1), _v * (float)height);
 				return GetPixelCoord(x, y);
 			}
 
 			inline Format GetPixelUVBilinear(const float _u, const float _v) const {
-				const float fx = std::min((float)(width - 1), _u * width);
-				const float fy = std::min((float)(height - 1), _v * height);
+				const float fx = std::min((float)(width - 1), _u * (float)width);
+				const float fy = std::min((float)(height - 1), _v * (float)height);
 				const unsigned x = (unsigned)fx;
 				const unsigned y = (unsigned)fy;
 				const unsigned x1 = std::min(x + 1, width - 1);
 				const unsigned y1 = std::min(y + 1, height - 1);
-				const Format ya = Format::Lerp(GetPixelCoord(x, y), (x1, y), fx - (float)x);
+				const Format ya = Format::Lerp(GetPixelCoord(x, y), GetPixelCoord(x1, y), fx - (float)x);
 				const Format yb = Format::Lerp(GetPixelCoord(x, y1), GetPixelCoord(x1, y1), fx - (float)x);
 				return Format::Lerp(ya, yb, fy - (float)y);
 			}
 };
 
-/*
-Texture is a fast texture class for generic use. Uses Morton-order to improve cache read/write speeds.
-*/
-template<class Format>
-class TextureMorton : public texture_t<Format> {
-	public:
-		TextureMorton(const unsigned _width = 1, const unsigned _height = 1, const Format &_c = Format())
-			: texture_t<Format>(_width, _height, _c) {}
-};
-
-typedef TextureMorton<Colour> Texture;
-typedef TextureMorton<ColourFormat::RGBA32> TextureRGBA32;
+typedef texture_t<Colour> Texture;
+typedef texture_t<ColourFormat::RGBA32> TextureRGBA32;

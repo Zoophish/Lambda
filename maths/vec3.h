@@ -71,12 +71,12 @@ class vec3 {
 		inline bool operator==(const vec3<T> &_rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
 		inline bool operator!=(const vec3<T> &_rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
 
+		inline T Magnitude() const { return std::sqrt(x * x + y * y + z * z); }
+
 		inline vec3<T> Normalised() const {
 			const T inv = (T)1 / Magnitude();
 			return *this * inv;
 		}
-
-		inline T Magnitude() const { return std::sqrt(x*x + y*y + z*z); }
 };
 
 /*
@@ -145,14 +145,14 @@ class alignas(16) vec3<float> {
 		inline bool operator==(const vec3<float> &_rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
 		inline bool operator!=(const vec3<float> &_rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
 
-		inline vec3<float> Normalised() const {
-			const float inv = 1.f / Magnitude();
-			return *this * inv;
-		}
-
 		inline float Magnitude() const {
 			const vec3<float> sq = *this * *this;
 			return std::sqrt(sq.x + sq.y + sq.z);
+		}
+
+		inline vec3<float> Normalised() const {
+			const float inv = 1.f / Magnitude();
+			return *this * inv;
 		}
 
 		protected:
@@ -181,7 +181,7 @@ namespace maths {
 
 	template<class T>
 	inline T SphericalTheta(const vec3<T> &_v) {
-		return std::acos(std::max(std::min(_v.z, 1.), -1.));
+		return std::acos(std::max(std::min(_v.z, (T)1.), (T)-1.));
 	}
 
 	template<class T>
@@ -191,9 +191,10 @@ namespace maths {
 	}
 
 	#ifdef LAMBDA_MATHS_SSE
-	inline float Dot(const vec3<float>& _a, const vec3<float>& _b) {
-		const vec3<float> tmp = _a * _b;
-		return tmp.x + tmp.y + tmp.z;
+	template<>
+	inline float Dot(const vec3<float> &_a, const vec3<float> &_b) {
+		const vec3<float> sq = _a * _b;
+		return sq.x + sq.y + sq.z;
 	}
 	#endif
 }

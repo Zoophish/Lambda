@@ -12,16 +12,17 @@
 
 #pragma once
 #include <vector>
-#include <embree3/rtcore.h>
+#include <lighting/Light.h>
 #include "Object.h"
 
 class Scene {
 	protected:
-		RTCDevice device;
 		RTCScene scene;
 
 	public:
+		RTCDevice device;
 		std::vector<Object*> objects;
+		std::vector<Light*> lights;
 
 		Scene(const RTCSceneFlags _sceneFlags = RTC_SCENE_FLAG_NONE, const char* _deviceConfig = NULL) {
 			device = rtcNewDevice(_deviceConfig);
@@ -49,17 +50,35 @@ class Scene {
 			rtcCommitScene(scene);
 		}
 
-		bool Intersect(const Ray &ray, RayHit &hit) const {
-			RTCRay eRay = ray.ToRTCRay();
+		bool Intersect(const Ray &_ray, RayHit &_hit) const {
+			RTCRay eRay = _ray.ToRTCRay();
 			RTCRayHit rayHit;
 			rayHit.ray = eRay;
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
 			rtcIntersect1(scene, &context, &rayHit);
 			if(rayHit.ray.tfar > 0 && rayHit.ray.tfar < INFINITY) {
-				hit = objects[rayHit.hit.geomID]->Hit(rayHit);
+				_hit = objects[rayHit.hit.geomID]->Hit(rayHit);
+				_hit.object = objects[rayHit.hit.geomID];
 				return true;
 			}
 			return false;
+		}
+
+		bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2) const {
+			const Vec3 diff = _p2 - _p1;
+			const Real mag = diff.Magnitude();
+			RTCRay eRay = Ray(_p1, diff / mag).ToRTCRay();
+			RTCIntersectContext context;
+			rtcOccluded1(scene, &context, &eRay);
+			return eRay.tfar >= mag - 0.0004f;
+		}
+
+		bool RayEscapes(const Ray &_ray) const {
+			RTCRay eRay = _ray.ToRTCRay();
+			RTCIntersectContext context;
+			rtcInitIntersectContext(&context);
+			rtcOccluded1(scene, &context, &eRay);
+			return eRay.tfar == INFINITY;
 		}
 };

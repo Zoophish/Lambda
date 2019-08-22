@@ -12,7 +12,7 @@ class Colour {
 			g = _g;
 		}
 
-		Colour(float *_rgb) {
+		Colour(const float *_rgb) {
 			r = _rgb[0];
 			g = _rgb[1];
 			b = _rgb[2];
@@ -90,6 +90,8 @@ namespace ColourFormat {
 			b = _rgba[2];
 			a = _rgba[3];
 		}
+
+		inline float operator[](const unsigned _rhs) const { switch (_rhs) { case 0: return r; case 1: return g; case 2: return b; case 3: return a; } }
 	};
 
 	struct R32 {

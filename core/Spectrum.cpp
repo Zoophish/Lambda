@@ -36,32 +36,60 @@ void  SortSpectrumSamples(Real* _lambda, Real* _vals, const unsigned _n) {
 	}
 }
 
-Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd) {
-	// Handle cases with out-of-bounds range or single sample only
-	if (_n == 1 || _lambdaEnd <= _lambda[0]) return _vals[0];
-	if (_lambdaStart >= _lambda[_n - 1]) return _vals[_n - 1];
+//Real AverageSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd) {
+//	// Handle cases with out-of-bounds range or single sample only
+//	if (_n == 1 || _lambdaEnd <= _lambda[0]) return _vals[0];
+//	if (_lambdaStart >= _lambda[_n - 1]) return _vals[_n - 1];
+//
+//	// Add contributions of constant (rectangular) segments before/after samples
+//	Real sum = 0.;
+//	if (_lambdaStart < _lambda[0]) sum += _vals[0] * (_lambda[0] - _lambdaStart);
+//	if (_lambdaEnd > _lambda[_n - 1]) sum += _vals[_n - 1] * (_lambdaEnd - _lambda[_n - 1]);
+//
+//	// Advance to first relevant wavelength segment
+//	unsigned i = 0;
+//	while (_lambda[i + 1] < _lambdaStart) ++i;
+//
+//	// Interpolate vals between first (i) and second (i+1) lambda and add that segment
+//	const Real vs = maths::Lerp(_vals[i], _vals[i + 1], (_lambdaStart - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
+//	sum += .5 * (_lambda[i + 1] - _lambdaStart) * (vs + _vals[i + 1]);
+//	++i;
+//	// Add contributions of middle segments that are not touching start/end boundary
+//	for (; i < _n - 1 && _lambdaEnd >= _lambda[i]; ++i)
+//		sum += .5 * (_lambda[i + 1] - _lambda[i]) * (_vals[i] + _vals[i + 1]);
+//
+//	// Add end segment using end interpolated value
+//	const Real ve = maths::Lerp(_vals[i], _vals[i + 1], (_lambdaEnd - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
+//	sum += .5 * (_lambda[i + 1] - _lambda[i]) * (ve + _vals[i]);
+//
+//	return sum / (_lambdaEnd - _lambdaStart);
+//}
 
-	// Add contributions of constant (rectangular) segments before/after samples
-	Real sum = 0.;
+Real AverageSpectrumSamples(const Real *_lambda, const Real *_vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd) {
+	if (_lambdaEnd <= _lambda[0]) return _vals[0];
+	if (_lambdaStart >= _lambda[_n - 1]) return _vals[_n - 1];
+	if (_n == 1) return _vals[0];
+	Real sum = 0;
+	// Add contributions of constant segments before/after samples
 	if (_lambdaStart < _lambda[0]) sum += _vals[0] * (_lambda[0] - _lambdaStart);
-	if (_lambdaEnd > _lambda[_n - 1]) sum += _vals[_n - 1] * (_lambdaEnd - _lambda[_n - 1]);
+	if (_lambdaEnd > _lambda[_n - 1])
+		sum += _vals[_n - 1] * (_lambdaEnd - _lambda[_n - 1]);
 
 	// Advance to first relevant wavelength segment
-	unsigned i = 0;
-	while (_lambda[i + 1] < _lambdaStart) ++i;
+	int i = 0;
+	while (_lambdaStart > _lambda[i + 1]) ++i;
 
-	// Interpolate vals between first (i) and second (i+1) lambda and add that segment
-	const Real vs = maths::Lerp(_vals[i], _vals[i + 1], (_lambdaStart - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
-	sum += .5 * (_lambda[i + 1] - _lambdaStart) * (vs + _vals[i + 1]);
-	++i;
-	// Add contributions of middle segments that are not touching start/end boundary
-	for (; i < _n - 1 && _lambdaEnd >= _lambda[i]; ++i)
-		sum += .5 * (_lambda[i + 1] - _lambda[i]) * (_vals[i] + _vals[i + 1]);
-
-	// Add end segment using end interpolated value
-	const Real ve = maths::Lerp(_vals[i], _vals[i + 1], (_lambdaEnd - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
-	sum += .5 * (_lambda[i + 1] - _lambda[i]) * (ve + _vals[i]);
-
+	// Loop over wavelength sample segments and add contributions
+	auto interp = [_lambda, _vals](Real w, int i) {
+		return maths::Lerp((w - _lambda[i]) / (_lambda[i + 1] - _lambda[i]), _vals[i],
+			_vals[i + 1]);
+	};
+	for (; i + 1 < _n && _lambdaEnd >= _lambda[i]; ++i) {
+		Real segLambdaStart = std::max(_lambdaStart, _lambda[i]);
+		Real segLambdaEnd = std::min(_lambdaEnd, _lambda[i + 1]);
+		sum += 0.5 * (interp(segLambdaStart, i) + interp(segLambdaEnd, i)) *
+			(segLambdaEnd - segLambdaStart);
+	}
 	return sum / (_lambdaEnd - _lambdaStart);
 }
 

@@ -27,18 +27,25 @@ class HaltonSampler : public Sampler {
 		}
 
 		Real Get1D() override {
+			Real out;
 			if (sampleShifter) {
-				return sampleShifter->Shift(sequence[dimensionIndex++ % maxDimension], dimensionIndex);
+				out = sampleShifter->Shift(sequence[dimensionIndex % maxDimension], dimensionIndex);
 			}
-			return sequence[dimensionIndex++ % maxDimension];
+			else { out = sequence[dimensionIndex++ % maxDimension]; }
+			dimensionIndex++;
+			return out;
 		}
 
 		Vec2 Get2D() override {
+			Vec2 out;
 			if (sampleShifter) {
-				return Vec2(sampleShifter->Shift(sequence[dimensionIndex++ % maxDimension], dimensionIndex),
-							sampleShifter->Shift(sequence[dimensionIndex++ % maxDimension], dimensionIndex));
+				out =  Vec2(sampleShifter->Shift(sequence[dimensionIndex % maxDimension], dimensionIndex),
+							sampleShifter->Shift(sequence[(dimensionIndex + 1) % maxDimension], dimensionIndex + 1));
 			}
-			return Vec2(sequence[dimensionIndex++ % maxDimension], sequence[dimensionIndex++ % maxDimension]);
+			else { out = Vec2(sequence[dimensionIndex % maxDimension], sequence[(dimensionIndex + 1) % maxDimension]); }
+			dimensionIndex += 2;
+			return out;
+
 		}
 
 	protected:

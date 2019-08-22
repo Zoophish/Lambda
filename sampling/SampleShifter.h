@@ -11,29 +11,25 @@ For the first maskDimensions of a sample set, a mask texture (e.g. blue noise) c
 
 class SampleShifter {
 	public:
-		unsigned pixelIndex, maxDimension = 512;
+		unsigned maxDimension = 1024;
 		TextureRGBA32 *mask;
 
 		SampleShifter(TextureRGBA32 *_mask = nullptr, const unsigned _pixelIndex = 0) {
 			pixelIndex = _pixelIndex;
 			mask = _mask;
-			if(mask)
-				maskSize = mask->GetWidth() * _mask->GetHeight();
+		}
+
+		inline void SetPixelIndex(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+			if (mask)
+				pixelIndex = (_y % mask->GetHeight()) * mask->GetWidth() + (_x % mask->GetWidth());
+			else
+				pixelIndex = _y * _w + _x;
 		}
 
 		Real Shift(const Real _point, const unsigned _dimensionIndex) const {
 			Real tmp = _point;
-			if (mask && (_dimensionIndex <= maskDimensions)) {
-				switch (_dimensionIndex % maskSize) {
-				case 0 :
-					ToroidalShift(tmp, (*mask)[pixelIndex].r); break;
-				case 1:
-					ToroidalShift(tmp, (*mask)[pixelIndex].g); break;
-				case 2:
-					ToroidalShift(tmp, (*mask)[pixelIndex].b); break;
-				case 3:
-					ToroidalShift(tmp, (*mask)[pixelIndex].a); break;
-				}
+			if (mask && _dimensionIndex < maskDimensions) {
+				ToroidalShift(tmp, (*mask)[pixelIndex][_dimensionIndex]);
 			}
 			else {
 				ToroidalShift(tmp, (Real)(Hash(pixelIndex * maxDimension + _dimensionIndex) * inv32));
@@ -44,7 +40,7 @@ class SampleShifter {
 	protected:
 		static constexpr unsigned maskDimensions = 4;
 		static constexpr double inv32 = 1.0 / 4294967296.0;
-		unsigned maskSize;
+		unsigned pixelIndex;
 
 		inline void ToroidalShift(Real &_point, const Real _shift) const {
 			_point += _shift;

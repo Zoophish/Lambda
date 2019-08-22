@@ -60,6 +60,15 @@ public:
 
 	inline T Magnitude() const { return std::sqrt(x*x + y*y); }
 
+	inline vec2<T> Mod(const T _q = 1) const {
+		Vec2 out;
+		if (x < 0) out.x = _q - x;
+		else if (x >= _q) out.x = x - _q;
+		if (y < 0) out.y = _q - y;
+		else if (y >= _q) out.y = y - _q;
+		return out;
+	}
+
 };
 
 namespace maths {
@@ -67,6 +76,11 @@ namespace maths {
 	template<class T>
 	inline T Dot(const vec2<T> &_a, const vec2<T> &_b) {
 		return _a.x*_b.x + _a.y*_b.y;
+	}
+
+	template<class T>
+	inline vec2<T> Mod(const vec2<T> &_vec, const T _q = 1) {
+		return vec2<T>(std::fmod(_vec.x, _q), std::fmod(_vec.y, _q));
 	}
 
 }

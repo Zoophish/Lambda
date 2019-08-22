@@ -17,6 +17,6 @@ class EnvironmentCamera : public Camera {
 		Ray GenerateRay(const Real _u, const Real _v) const override {
 			const Real phi = PI2 * _u + offsetPhi;
 			const Real theta = PI * _v + offsetTheta;
-			return Ray(origin, maths::SphericalDirection(std::sin(theta), std::cos(theta), phi));
+			return Ray(origin, maths::SphericalDirection(std::sin(theta), std::cos(theta), phi).Normalised());
 		}
 };

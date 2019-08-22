@@ -13,14 +13,14 @@ class PinholeCamera : public Camera {
 	public:
 		PinholeCamera(const Vec3 &_origin, const float _x, const float _y) : Camera(_x, _y) {
 			origin = _origin;
-			SetFov(1.2);
+			SetFov(1.1);
 			SetRotation(0, 0);
 		}
 
 		inline void SetRotation(const float _phi, const float _theta) {
 			zHat = Vec3(std::cos(_theta) * std::sin(_phi), std::sin(_theta), std::cos(_theta) * std::cos(_phi)).Normalised();
 			xHat = maths::Cross(zHat, Vec3(0, 1, 0));
-			yHat = maths::Cross(zHat, xHat);
+			yHat = maths::Cross(xHat, zHat);
 		}
 
 		inline void SetForwards(const Vec3 &_forwards) {
@@ -35,11 +35,11 @@ class PinholeCamera : public Camera {
 		}
 
 		Ray GenerateRay(const float _u, const float _v) const override {
-			const Vec3 p = xHat*(_v*-tanFov2+tanFov) + yHat*(_v*-tanFov2*aspect + tanFov*aspect) + zHat;
+			const Vec3 p = origin + xHat*(_u*-tanFov2+tanFov) + yHat*(_v*-tanFov2*aspect + tanFov*aspect) + zHat;
 			return Ray(origin, (p - origin).Normalised());
 		}
 
 	protected:
 		Vec3 xHat, yHat, zHat;
-		float tanFov, tanFov2;
+		Real tanFov, tanFov2;
 };

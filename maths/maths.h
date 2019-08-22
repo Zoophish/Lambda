@@ -30,6 +30,7 @@ typedef vec2<Real> Vec2;
 #define PI 3.14159265358979323846264338
 #define PI2 2. * PI
 #define INV_PI 1. / PI
+#define INV_PI2 1. / (2. * PI)
 #define BITFLAG(_i) 1 << _i
 
 namespace maths {
@@ -44,6 +45,10 @@ namespace maths {
 		return std::max(std::min(_value, _max), _min);
 	}
 
+	template<class T>
+	inline T BarycentricInterpolation(const T &_t0, const T &_t1, const T &_t2, const Real _u, const Real _v) {
+		return _t0 + (_t1 - _t0) * _u + (_t2 - _t0) * _v;
+	}
 }
 
 #ifdef LAMBDA_MATHS_COMMON_TYPES
