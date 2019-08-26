@@ -6,7 +6,7 @@ class Object {
 	public:
 		RTCGeometry geometry;
 		unsigned geometryId;
-		BxDF *bxdf;
+		BxDF *bxdf = nullptr;
 		Light *light = nullptr;
 
 		Object() {}

@@ -102,5 +102,12 @@ namespace ColourFormat {
 		R32(const float _r) {
 			r = _r;
 		}
+
+		inline R32 operator+(const float _rhs) const { return r + _rhs; }
+		inline R32 operator-(const float _rhs) const { return r - _rhs; }
+		inline R32 operator*(const float _rhs) const { return r * _rhs; }
+		inline R32 operator/(const float _rhs) const { return r / _rhs; }
+		inline R32 operator+(const R32 _rhs) const { return r + _rhs.r; }
+		inline R32 operator-(const R32 _rhs) const { return r - _rhs.r; }
 	};
 }

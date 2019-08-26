@@ -3,13 +3,10 @@
 
 class Emission : public BxDF {
 	public:
-		Spectrum emission;
 
-		Emission(const Spectrum &_emission) : BxDF(BxDFType::EMISSION) {
-			emission = _emission;
-		}
+		Emission() : BxDF(BxDFType::EMISSION) {}
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override {
-			return emission;
+			return Spectrum(0);
 		}
 };

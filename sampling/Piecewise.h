@@ -52,6 +52,18 @@ namespace Distribution {
 				return (offset + du) / pdf.size();
 			}
 
+			unsigned SampleDiscrete(Real _u, Real *_pdf = nullptr, Real *_uRemapped = nullptr) const {
+				unsigned offset = FindInterval(cdf.size(), [&](int index) { return cdf[index] <= _u; });
+				if (_pdf) *_pdf = pdf[offset] / (integral * pdf.size());
+				if (_uRemapped)
+					*_uRemapped = (_u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);
+				return offset;
+			}
+
+			Real PDF(const unsigned _i) const {
+				return pdf[_i];
+			}
+
 		protected:
 			friend class Piecewise2D;
 			Real integral;

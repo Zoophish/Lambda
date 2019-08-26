@@ -7,7 +7,7 @@ class LambertianBRDF : public BxDF {
 		TextureAdapter albedo;
 
 		LambertianBRDF(Texture *_albedo = nullptr) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
-			albedo.texture = _albedo;
+			albedo.SetTexture(_albedo);
 		}
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override {

@@ -2,7 +2,7 @@
 Template class for 3-dimensional vectors of any numerical type. Includes basic operators and utilities.
 Supports SSE instructions for vec3<float> which offers a significant performance improvement.
 */
-#define LAMBDA_MATHS_SSE
+#define LAMBDA_VEC3_USE_SSE
 
 #pragma once
 #include <type_traits>
@@ -82,9 +82,9 @@ class vec3 {
 /*
 ----	SIMD SSE Vec3 Implementation	----
 Since float will almost always be used, this introduces a large performance boost for basic operators.
-Since SSE uses 128-bit registers, there is a redundant fourth float 'a' to fill the remaining 32 bits in memory.
+Since SSE uses 128-bit registers, there is a redundant fourth float 'a' to indicate the alignment of 16 bytes.
 */
-#ifdef LAMBDA_MATHS_SSE
+#ifdef LAMBDA_VEC3_USE_SSE
 template<>
 class alignas(16) vec3<float> {
 	public:
@@ -175,22 +175,28 @@ namespace maths {
 	}
 
 	template<class T>
+	inline T DistSq(const vec3<T> &_a, const vec3<T> &_b) {
+		const vec3<T> diff = _b - _a;
+		return Dot(diff, diff);
+	}
+
+	template<class T>
 	inline vec3<T> SphericalDirection(const T _sinTheta, const T _cosTheta, const T _phi) {
-		return vec3<T>(_sinTheta * std::cos(_phi), _sinTheta * std::sin(_phi), _cosTheta);
+		return vec3<T>(_sinTheta * std::cos(_phi), _cosTheta, _sinTheta * std::sin(_phi));
 	}
 
 	template<class T>
 	inline T SphericalTheta(const vec3<T> &_v) {
-		return std::acos(std::max(std::min(_v.z, (T)1.), (T)-1.));
+		return std::acos(std::max(std::min(_v.y, (T)1.), (T)-1.));
 	}
 
 	template<class T>
 	inline T SphericalPhi(const vec3<T> &_v) {
-		const T p = std::atan2(_v.y, _v.x);
+		const T p = std::atan2(_v.z, _v.x);
 		return (p < 0.) ? (p + 6.2831853) : p;
 	}
 
-	#ifdef LAMBDA_MATHS_SSE
+	#ifdef LAMBDA_VEC3_USE_SSE
 	template<>
 	inline float Dot(const vec3<float> &_a, const vec3<float> &_b) {
 		const vec3<float> sq = _a * _b;

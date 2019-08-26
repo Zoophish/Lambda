@@ -262,7 +262,7 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 			for (unsigned i = 0; i < nSpectralSamples; ++i) {
 				const Real lambda0 = maths::Lerp((Real)sampledLambdaStart, (Real)sampledLambdaEnd, (Real)i * invNSpectralSamples);
 				const Real lambda1 = maths::Lerp((Real)sampledLambdaStart, (Real)sampledLambdaEnd, (Real)(i+1) * invNSpectralSamples);
-				tmp.c[i] = AverageSpectrumSamples(_lambda, _v, _n, lambda0, lambda1);
+				tmp[i] = AverageSpectrumSamples(_lambda, _v, _n, lambda0, lambda1);
 			}
 			return tmp;
 		}

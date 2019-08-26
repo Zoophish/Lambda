@@ -28,7 +28,7 @@ class Film {
 				 for (size_t i = 0; i < size; ++i) {
 					 float xyz[3];
 					 const Spectrum out = (Spectrum)(filmData[i].spec / (Real)filmData[i].sampleCount);
-					 out.ToXYZ(xyz);
+					 out.ToRGB(xyz);
 					 //std::cout << xyz[0] << std::endl << xyz[1] << std::endl << xyz[2];
 					 (*_output)[i] = Colour(xyz);
 				 }

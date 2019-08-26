@@ -12,6 +12,7 @@ class Scene;
 class BxDF;
 
 struct SurfaceScatterEvent {
+	bool mode = 0;
 	Vec3 wo, wi;
 	Real pdf, eta;
 	RayHit *hit;

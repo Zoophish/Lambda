@@ -12,7 +12,7 @@ class OrenNayarBRDF : public BxDF {
 		}
 
 		OrenNayarBRDF(Texture *_albedo = nullptr, const Real _sigma = .5) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
-			albedo.texture = _albedo;
+			albedo.SetTexture(_albedo);
 			SetSigma(_sigma);
 		}
 

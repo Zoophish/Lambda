@@ -12,6 +12,7 @@ For the first maskDimensions of a sample set, a mask texture (e.g. blue noise) c
 class SampleShifter {
 	public:
 		unsigned maxDimension = 1024;
+		unsigned maskDimensionStart = 1;
 		TextureRGBA32 *mask;
 
 		SampleShifter(TextureRGBA32 *_mask = nullptr, const unsigned _pixelIndex = 0) {
@@ -20,16 +21,20 @@ class SampleShifter {
 		}
 
 		inline void SetPixelIndex(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
-			if (mask)
-				pixelIndex = (_y % mask->GetHeight()) * mask->GetWidth() + (_x % mask->GetWidth());
+			if (mask) {
+				const unsigned xp = _x % mask->GetWidth();
+				const unsigned yp = _y % mask->GetHeight();
+				pixelIndex = yp * mask->GetWidth() + xp;
+			}
 			else
 				pixelIndex = _y * _w + _x;
 		}
 
 		Real Shift(const Real _point, const unsigned _dimensionIndex) const {
 			Real tmp = _point;
-			if (mask && _dimensionIndex < maskDimensions) {
-				ToroidalShift(tmp, (*mask)[pixelIndex][_dimensionIndex]);
+			const int dim = _dimensionIndex - maskDimensionStart;
+			if (mask && dim >= 0 && dim < maskDimensions) {
+				ToroidalShift(tmp, (*mask)[pixelIndex][dim]);
 			}
 			else {
 				ToroidalShift(tmp, (Real)(Hash(pixelIndex * maxDimension + _dimensionIndex) * inv32));

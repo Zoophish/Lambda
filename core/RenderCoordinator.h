@@ -23,6 +23,7 @@ namespace RenderCoordinator {
 					if (_tile.integrator->sampler->sampleShifter) {
 						_tile.integrator->sampler->sampleShifter->SetPixelIndex(_tile.film->filmData.GetWidth(), _tile.film->filmData.GetHeight(), x, y);
 					}
+					_tile.integrator->sampler->SetSample(0);
 					for (unsigned i = 0; i < spp; ++i) {
 						const Real u = xa + xi * ((Real)x + _tile.integrator->sampler->Get1D() - .5);
 						const Real v = ya + yi * ((Real)y + _tile.integrator->sampler->Get1D() - .5);

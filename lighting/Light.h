@@ -1,14 +1,14 @@
 #pragma once
 #include <core/Spectrum.h>
+#include <sampling/Sampler.h>
 class Ray;
 struct RayHit;
 struct SurfaceScatterEvent;
 
 class Light {
 	public:
-
 		//Sampled an incident direction light may arrive on.
-		virtual Spectrum Sample_Li(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const = 0;
+		virtual Spectrum Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const = 0;
 		
 		virtual Real PDF_Li(const SurfaceScatterEvent &_event) const = 0;
 
@@ -23,16 +23,23 @@ class Light {
 			return Spectrum(0);
 		}
 
-		//virtual Real Power() const;
+		//Importance heuristic functions.
+		virtual Real Irradiance() const = 0;
+		virtual Real Area() const = 0;
+		
+		Real Power() const {
+			return Irradiance() * Area();
+		}
 
-		static void Blackbody(const Real *lambda, int n, Real T, Real *Le) {
+		//Function of relative intensity of emission spectra of ideal blackbody emitter at given temperature T in  Kelvin. (Stefan-Boltzmann)
+		static void BlackbodySpectra(const Real *_lambda, int _n, Real _T, Real *_Le) {
 			const Real c = 299792458;
 			const Real h = 6.62606957e-34;
 			const Real kb = 1.3806488e-23;
-			for (int i = 0; i < n; ++i) {
-				const Real l = lambda[i] * 1e-9;
+			for (unsigned i = 0; i < _n; ++i) {
+				const Real l = _lambda[i] * 1e-9;
 				const Real lambda5 = (l * l) * (l * l) * l;
-				Le[i] = (2 * h * c * c) / (lambda5 * (std::exp((h * c) / (l * kb * T)) - 1));
+				_Le[i] = (2 * h * c * c) / (lambda5 * (std::exp((h * c) / (l * kb * _T)) - 1));
 			}
 		}
 };

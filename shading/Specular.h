@@ -9,7 +9,7 @@ class SpecularBRDF : public BxDF {
 	
 		SpecularBRDF(Texture *_albedo, Fresnel *_fresnel) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_SPECULAR)) {
 			fresnel = _fresnel;
-			albedo.texture = _albedo;
+			albedo.SetTexture(_albedo);
 		}
 	
 		Spectrum f(const SurfaceScatterEvent &_event) const override {
@@ -30,7 +30,7 @@ class SpecularBTDF : public BxDF {
 		TextureAdapter albedo;
 
 		SpecularBTDF(Texture *_albedo, const Real _etaT) : BxDF((BxDFType)(BxDF_TRANSMISSION | BxDF_SPECULAR)) {
-			albedo.texture = _albedo;
+			albedo.SetTexture(_albedo);
 			fresnel.etaT = _etaT;
 		}
 

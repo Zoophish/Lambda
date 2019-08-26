@@ -1,3 +1,4 @@
+//DEPRECATED
 //----	By Sam Warren 2019	----
 //----	Template class for real numbers of different precisions. Changing large parts of program's precision is easier.	----
 

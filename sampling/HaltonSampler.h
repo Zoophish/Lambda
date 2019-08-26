@@ -7,11 +7,11 @@ class HaltonSampler : public Sampler {
 		HaltonSampler(const unsigned _sampleIndex = 0) {
 			sampleIndex = _sampleIndex;
 			sequence.resize(maxDimension);
-			NextSample();
+			SetSample(0);
 		}
 
 		void NextSample() override {
-			for (short i = 0; i < maxDimension; ++i) {
+			for (unsigned i = 0; i < maxDimension; ++i) {
 				sequence[i] = Halton(sampleIndex, primes[i]);
 			}
 			dimensionIndex = 0;
@@ -20,7 +20,7 @@ class HaltonSampler : public Sampler {
 
 		void SetSample(const unsigned _sampleIndex) override {
 			sampleIndex = _sampleIndex;
-			for (short i = 0; i < maxDimension; ++i) {
+			for (unsigned i = 0; i < maxDimension; ++i) {
 				sequence[i] = Halton(sampleIndex, primes[i]);
 			}
 			dimensionIndex = 0;
@@ -31,7 +31,7 @@ class HaltonSampler : public Sampler {
 			if (sampleShifter) {
 				out = sampleShifter->Shift(sequence[dimensionIndex % maxDimension], dimensionIndex);
 			}
-			else { out = sequence[dimensionIndex++ % maxDimension]; }
+			else { out = sequence[dimensionIndex % maxDimension]; }
 			dimensionIndex++;
 			return out;
 		}

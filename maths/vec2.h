@@ -61,12 +61,11 @@ public:
 	inline T Magnitude() const { return std::sqrt(x*x + y*y); }
 
 	inline vec2<T> Mod(const T _q = 1) const {
-		Vec2 out;
-		if (x < 0) out.x = _q - x;
-		else if (x >= _q) out.x = x - _q;
-		if (y < 0) out.y = _q - y;
-		else if (y >= _q) out.y = y - _q;
-		return out;
+		return vec2<T>(std::fmod(x, _q), std::fmod(y, _q));
+	}
+
+	inline vec2<T> Wrap(const T _xb = 1, const T _yb = 1) const {
+		return vec2<T>(x - _xb * std::floor(x / _xb), y - _yb * std::floor(y / _yb));
 	}
 
 };

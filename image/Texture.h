@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <maths/maths.h>
 #include "Colour.h"
 #include "TextureEncoding.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -165,11 +166,12 @@ class texture_t {
 				const unsigned y = (unsigned)fy;
 				const unsigned x1 = std::min(x + 1, width - 1);
 				const unsigned y1 = std::min(y + 1, height - 1);
-				const Format ya = Format::Lerp(GetPixelCoord(x, y), GetPixelCoord(x1, y), fx - (float)x);
-				const Format yb = Format::Lerp(GetPixelCoord(x, y1), GetPixelCoord(x1, y1), fx - (float)x);
-				return Format::Lerp(ya, yb, fy - (float)y);
+				const Format ya = maths::Lerp(GetPixelCoord(x, y), GetPixelCoord(x1, y), fx - (float)x);
+				const Format yb = maths::Lerp(GetPixelCoord(x, y1), GetPixelCoord(x1, y1), fx - (float)x);
+				return maths::Lerp(ya, yb, fy - (float)y);
 			}
 };
 
 typedef texture_t<Colour> Texture;
 typedef texture_t<ColourFormat::RGBA32> TextureRGBA32;
+typedef texture_t<ColourFormat::R32> TextureR32;

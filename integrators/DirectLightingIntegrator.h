@@ -16,8 +16,6 @@ class DirectLightingIntegrator : public Integrator {
 			sampler = _sampler;
 		}
 
-		//TODO : Does Sample_Li() need to take a PDF or just divide through the SPectrum by the pdf?
-
 		Spectrum Li(const Ray &_ray, const Scene &_scene) const override {
 			RayHit hit;
 			if (_scene.Intersect(_ray, hit)) {
@@ -25,10 +23,14 @@ class DirectLightingIntegrator : public Integrator {
 				event.hit = &hit;
 				event.scene = &_scene;
 				event.wo = -_ray.d;
-				Light *l = _scene.lights[(size_t)(sampler->Get1D() * (Real)_scene.lights.size())];
-				return EstimateDirect(event, _scene, *l);
+				Real lightPdf = 1;
+				Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightPdf)];
+				if (l == event.hit->object->light) {
+					return l->L(event);
+				}
+				return EstimateDirect(event, _scene, *l) / lightPdf;
 			}
-			return _scene.lights[0]->Le(_ray);
+			return _scene.envLight->Le(_ray);
 		}
 
 	protected:

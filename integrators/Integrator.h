@@ -12,13 +12,15 @@ class Integrator {
 		Spectrum EstimateDirect(SurfaceScatterEvent &_event, const Scene &_scene, const Light &_light) const {
 			Spectrum Ld(0);
 			Real scatteringPDF, lightPDF;
-			Spectrum Li = _light.Sample_Li(_event, sampler->Get2D(), lightPDF);
-			const bool occluded = !_scene.RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .004, -_event.wi));
+			Spectrum Li = _light.Sample_Li(_event, sampler, lightPDF);
+			bool occluded = !_scene.RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .001, _event.wi));
 			if (!occluded && lightPDF > 0 && !Li.IsBlack()) {
 				const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(maths::Dot(_event.hit->normalS, _event.wi));
 				scatteringPDF = _event.hit->object->bxdf->PDF(_event.wo, _event.wi);
-				const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
-				Ld += Li * f * weight / lightPDF;
+				if (!f.IsBlack()) {
+					const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
+					Ld += Li * f * weight / lightPDF;
+				}
 			}
 			Spectrum f = _event.hit->object->bxdf->Sample_f(_event, sampler->Get2D(), scatteringPDF);
 			f *= std::abs(maths::Dot(_event.wi, _event.hit->normalS));

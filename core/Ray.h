@@ -46,4 +46,5 @@ struct RayHit {
 	Vec3 point, normalG, normalS, tangent, bitangent;
 	Vec2 uvCoords;
 	Object *object;
+	unsigned primId;
 };

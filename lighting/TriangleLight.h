@@ -9,31 +9,27 @@ class TriangleLight : public Light {
 	public:
 		//HDR texture.
 		TextureAdapter emission;
-		Real emissionMultiplier = 1;
+		Real intensity = 1;
 
 		TriangleLight(Triangle *_triangle, TriangleMesh *_mesh, Texture *_emission) {
 			mesh = _mesh;
 			triangle = _triangle;
-			emission.texture = _emission;
+			emission.SetTexture(_emission);
 			emission.type = SpectrumType::Illuminant;
 			ComputeInfo();
 		}
 
-		void ComputeInfo() {
-			const Vec3 v0(mesh->vertices[triangle->v0].x, mesh->vertices[triangle->v0].y, mesh->vertices[triangle->v0].z);
-			const Vec3 v1(mesh->vertices[triangle->v1].x, mesh->vertices[triangle->v1].y, mesh->vertices[triangle->v1].z);
-			const Vec3 v2(mesh->vertices[triangle->v2].x, mesh->vertices[triangle->v2].y, mesh->vertices[triangle->v2].z);
-			const Vec3 cross = maths::Cross(v1 - v0, v2 - v0);
-			area = cross.Magnitude() * .5;
-			normal = cross / (area * 2.);
+		inline void ComputeInfo() {
+			mesh->GetTriangleAreaAndNormal(triangle, &area, &normal);
 		}
 
-		Spectrum Sample_Li(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
-			const Vec3 p = SamplePoint(_u);
+		Spectrum Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override {
+			const Vec2 u = _sampler->Get2D();
+			const Vec3 p = SamplePoint(u);
 			if (_event.scene->MutualVisibility(_event.hit->point, p)) {
-				_event.wi = p - _event.hit->point;
+				_event.wi = (p - _event.hit->point).Normalised();
 				_pdf = maths::Dot(_event.wi, _event.wi) / (std::abs(maths::Dot(normal, -_event.hit->point)) * area);
-				return emission.GetUV(SampleUV(_u)) * INV_PI;
+				return emission.GetUV(SampleUV(u)) * intensity * INV_PI;
 			}
 			_pdf = 0;
 			return Spectrum(0);
@@ -44,7 +40,7 @@ class TriangleLight : public Light {
 		}
 
 		Spectrum L(const SurfaceScatterEvent &_event) const override {
-			return emission.GetUV(_event.hit->uvCoords) * emissionMultiplier * INV_PI;
+			return emission.GetUV(_event.hit->uvCoords) * intensity * INV_PI;
 		}
 
 		Spectrum Le(const Ray &_r) const override {
@@ -58,9 +54,9 @@ class TriangleLight : public Light {
 		TriangleMesh *mesh;
 
 		inline Vec3 SamplePoint(const Vec2 &_u) const {
-			const Vec3 v0(mesh->vertices[triangle->v0].x, mesh->vertices[triangle->v0].y, mesh->vertices[triangle->v0].z);
-			const Vec3 v1(mesh->vertices[triangle->v1].x, mesh->vertices[triangle->v1].y, mesh->vertices[triangle->v1].z);
-			const Vec3 v2(mesh->vertices[triangle->v2].x, mesh->vertices[triangle->v2].y, mesh->vertices[triangle->v2].z);
+			const Vec3 v0 = mesh->vertices[triangle->v0];
+			const Vec3 v1 = mesh->vertices[triangle->v1];
+			const Vec3 v2 = mesh->vertices[triangle->v2];
 			return v0 + (v1 - v0) * _u.x + (v2 - v0) * _u.y;
 		}
 

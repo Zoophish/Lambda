@@ -21,11 +21,13 @@ from float will disable SSE (double support yet to come).
 #include "complex_t.h"
 #include "vec3.h"
 #include "vec2.h"
+#include "bounds.h"
 
 typedef LAMBDA_MATHS_PRECISION_MODE Real;
 typedef complex_t<Real> Complex;
 typedef vec3<Real> Vec3;
 typedef vec2<Real> Vec2;
+typedef bounds<Real> Bounds;
 
 #define PI 3.14159265358979323846264338
 #define PI2 2. * PI
