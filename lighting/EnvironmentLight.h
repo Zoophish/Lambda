@@ -1,15 +1,16 @@
 #pragma once
+#include "Light.h"
 #include <shading/TextureAdapter.h>
 #include <sampling/Piecewise.h>
 #include <shading/SurfaceScatterEvent.h>
 #include <core/Ray.h>
-#include "Light.h"
+#include <core/Scene.h>
 
 class EnvironmentLight : public Light {
 	public:
 		Vec2 offset;
 		Real intensity = 1;
-		Real diameter = 10000;
+		//Real radius;
 
 		EnvironmentLight() {}
 
@@ -33,17 +34,18 @@ class EnvironmentLight : public Light {
 		Spectrum Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override {
 			const Vec2 uv = distribution->SampleContinuous(_sampler->Get2D(), &_pdf);
 			if (_pdf == 0) return Spectrum(0);
-			const Real theta = uv.y * PI + offset.y, phi = uv.x * PI2 + offset.x;
+			const Real theta = uv.y * PI + offset.y;
+			const Real phi = uv.x * PI2 + offset.x;
 			const Real cosTheta = std::cos(theta), sinTheta = std::sin(theta);
+			if (sinTheta == 0) { _pdf = 0; }
 			const Real sinPhi = std::sin(phi), cosPhi = std::cos(phi);
-			_event.wi = maths::SphericalDirection(sinTheta, cosTheta, phi).Normalised();
-			//if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .001, _event.wi))) {
-				if (sinTheta == 0) { _pdf = 0; }
-				else { _pdf /= 2 * PI * PI * sinTheta; }
+			_event.wi = maths::SphericalDirection(sinTheta, cosTheta, phi);
+			if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi))) {
+				_pdf /= 2 * PI * PI * sinTheta;
 				return radianceMap.GetUV(uv) * intensity;
-			//}
-			//_pdf = 0;
-			//return Spectrum(0);
+			}
+			_pdf = 0;
+			return Spectrum(0);
 		}
 
 		Real PDF_Li(const SurfaceScatterEvent &_event) const override {
@@ -51,7 +53,11 @@ class EnvironmentLight : public Light {
 			const Real phi = maths::SphericalPhi(_event.wi) + offset.x;
 			const Real sinTheta = std::sin(theta);
 			if (sinTheta == 0) return 0;
-			return distribution->PDF(Vec2(phi * INV_PI2, theta * INV_PI).Wrap()) / (2 * PI * PI * sinTheta);
+			const Vec3 wiOffset = maths::SphericalDirection(sinTheta, std::cos(theta), phi);
+			if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, wiOffset))) {
+				return distribution->PDF(Vec2(phi * INV_PI2, theta * INV_PI).Wrap()) / (2 * PI * PI * sinTheta);
+			}
+			else return 0;
 		}
 
 		Spectrum Le(const Ray &_r) const override {
@@ -61,8 +67,7 @@ class EnvironmentLight : public Light {
 
 		//Aproximate disk.
 		Real Area() const override {
-			const Real r = diameter * .5;
-			return PI * r * r;
+			return PI * radius * radius;
 		}
 
 		Real Irradiance() const override {

@@ -1,5 +1,6 @@
 #pragma once
 #include "Ray.h"
+class Light;
 class BxDF;
 
 class Object {

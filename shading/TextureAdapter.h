@@ -52,11 +52,16 @@ class TextureAdapter {
 				return Spectrum(scalar);
 			}
 			default:
+				return Spectrum(0);
 				throw std::runtime_error("A TextureAdapter with no texture had 'GetUV()' called.");
 			}
 		}
 
-	protected:
+		inline void operator=(Texture *_rhs) { SetTexture(_rhs); }
+		inline void operator=(texture_t<Spectrum> *_rhs) { SetTexture(_rhs); }
+		inline void operator=(TextureR32 *_rhs) { SetTexture(_rhs); }
+
+	private:
 		void *texture;
 		TextureType textureType;
 };

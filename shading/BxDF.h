@@ -1,6 +1,7 @@
 #pragma once
 #include "TextureAdapter.h"
 #include "SurfaceScatterEvent.h"
+#include <sampling/Sampling.h>
 
 class BxDF {
 	public:
@@ -21,8 +22,8 @@ class BxDF {
 		virtual Spectrum f(const SurfaceScatterEvent &_event) const = 0;
 
 		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
-			_event.wi = SampleCosHemisphere(_u);
-			_pdf = PDF(_event.wo, _event.wi);
+			_event.wi = _event.ToWorld(Sampling::SampleCosineHemisphere(_u));
+			_pdf = CosineHemispherePdf(_event.wo, _event.wi);
 			return f(_event);
 		}
 
@@ -31,9 +32,9 @@ class BxDF {
 		}
 
 		//----	Utility functions:	----
-		inline Real CosTheta(const Vec3 &_w) const { return _w.z; }
+		inline Real CosTheta(const Vec3 &_w) const { return _w.y; }
 
-		inline Real Sin2Theta(const Vec3 &_w) const { return std::max((Real)0, 1 - _w.z * _w.z); }
+		inline Real Sin2Theta(const Vec3 &_w) const { return std::max((Real)0, 1 - _w.y * _w.y); }
 
 		inline Real SinTheta(const Vec3 &_w) const { return std::sqrt(Sin2Theta(_w)); }
 
@@ -47,20 +48,14 @@ class BxDF {
 			return (sinTheta == 0) ? 0 : maths::Clamp(_w.y / sinTheta, (Real)-1, (Real)1);
 		}
 
-		inline Vec3 SampleCosHemisphere(const Vec2 &_u) const {
-				const Real r = std::sqrt(_u.x);
-				const Real theta = PI2 * _u.y;
-				const Real cosTheta = std::cos(theta);
-				return Vec3(r * cosTheta, r * std::sin(theta), std::sqrt(1.f - _u.x));
+		inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) const {
+			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;
 		}
 
 		inline bool SameHemisphere(const Vec3 &_w1, const Vec3 &_w2) const {
-			return _w1.z * _w2.z > 0;
+			return _w1.y * _w2.y > 0;
 		}
-
-		inline bool PDF(const Vec3 &_wo, const Vec3 &_wi) const {
-			return SameHemisphere(_wo, _wi) ? std::abs(_wi.z) * INV_PI : 0;
-		}
+		
 };
 
 class ScaledBxDF : public BxDF {

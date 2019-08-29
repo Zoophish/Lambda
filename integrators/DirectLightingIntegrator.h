@@ -23,12 +23,7 @@ class DirectLightingIntegrator : public Integrator {
 				event.hit = &hit;
 				event.scene = &_scene;
 				event.wo = -_ray.d;
-				Real lightPdf = 1;
-				Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightPdf)];
-				if (l == event.hit->object->light) {
-					return l->L(event);
-				}
-				return EstimateDirect(event, _scene, *l) / lightPdf;
+				return SampleOneLight(event, _scene);
 			}
 			return _scene.envLight->Le(_ray);
 		}

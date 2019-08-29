@@ -7,22 +7,20 @@ Structure that provides access to necessary information needed for shading.
 #pragma once
 #include <maths/maths.h>
 #include <core/Ray.h>
-#include <lighting/Light.h>
-class Scene;
 class BxDF;
+class Scene;
 
 struct SurfaceScatterEvent {
-	bool mode = 0;
 	Vec3 wo, wi;
 	Real pdf, eta;
 	RayHit *hit;
 	const Scene *scene;
 
-	void ToSurfaceSpace() {
-
+	inline Vec3 ToLocal(const Vec3 &_v) const {
+		if(hit) return maths::ToSpace(_v, hit->normalS, hit->tangent, hit->bitangent);
 	}
-
-	void ToWorldSpace() {
-
+	
+	inline Vec3 ToWorld(const Vec3 &_v) const {
+		if(hit) return maths::FromSpace(_v, hit->normalS, hit->tangent, hit->bitangent);
 	}
 };

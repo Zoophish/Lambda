@@ -12,10 +12,10 @@
 
 #pragma once
 #include <vector>
+#include "Object.h"
 #include <lighting/Light.h>
 #include <sampling/Piecewise.h>
-#include "Object.h"
-#include <lighting/EnvironmentLight.h>
+//#include <lighting/EnvironmentLight.h>
 
 class Scene {
 	protected:
@@ -25,7 +25,7 @@ class Scene {
 		RTCDevice device;
 		std::vector<Object*> objects;
 		std::vector<Light*> lights;
-		EnvironmentLight *envLight;
+		Light* envLight;
 		Distribution::Piecewise1D lightDistribution;
 
 		Scene(const RTCSceneFlags _sceneFlags = RTC_SCENE_FLAG_NONE, const char* _deviceConfig = NULL) {
@@ -64,13 +64,13 @@ class Scene {
 			const Vec3 diff = _p2 - _p1;
 			const Real mag = diff.Magnitude();
 			const Vec3 dir = diff / mag;
-			RTCRay eRay = Ray(_p1 + dir * .0005, dir).ToRTCRay();
+			RTCRay eRay = Ray(_p1 + dir * .00001, dir).ToRTCRay();
 			RTCRayHit rayHit;
 			rayHit.ray = eRay;
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
 			rtcIntersect1(scene, &context, &rayHit);
-			return rayHit.ray.tfar > (mag - 0.001f);
+			return rayHit.ray.tfar > (mag - 0.00002);
 		}
 
 		bool RayEscapes(const Ray &_ray) const {
@@ -78,7 +78,7 @@ class Scene {
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
 			rtcOccluded1(scene, &context, &eRay);
-			return eRay.tfar == INFINITY;
+			return eRay.tfar != -INFINITY;
 		}
 
 		void AddObject(Object &_obj) {
@@ -106,9 +106,12 @@ class Scene {
 			if (envLight) {
 				RTCBounds b;
 				rtcGetSceneBounds(scene, &b);
-				envLight->diameter = b.upper_x - b.lower_x;
+				const Real xd = b.upper_x - b.lower_x;
+				const Real yd = b.upper_y - b.lower_y;
+				const Real zd = b.upper_z - b.lower_z;
+				envLight->radius = std::max(std::max(xd, yd), zd) * .5;
 			}
-			std::vector<Real> importances(lights.size());
+			std::unique_ptr<Real[]> importances(new Real[lights.size()]);
 			for (unsigned i = 0; i < lights.size(); ++i) {
 				importances[i] = lights[i]->Power();
 			}

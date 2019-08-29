@@ -150,9 +150,12 @@ class TriangleMesh : public Object {
 					_h.hit.u, _h.hit.v);
 			}
 			else {
+				//Needs optimisation.
 				_hit.normalS = _hit.normalG;
+				const Vec3 c1 = maths::Cross(_hit.normalG, Vec3(0, 0, 1));
+				const Vec3 c2 = maths::Cross(_hit.normalG, Vec3(0, 1, 0));
+				_hit.tangent = (maths::Dot(c1,c1) > maths::Dot(c2,c2) ? c1 : c2);
+				_hit.bitangent = maths::Cross(_hit.tangent, _hit.normalG);
 			}
-			_hit.tangent = maths::Cross(_hit.normalS, Vec3(0, 1, 0));
-			_hit.bitangent = maths::Cross(_hit.normalS, _hit.tangent);
 		}
 };

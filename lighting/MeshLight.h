@@ -11,10 +11,9 @@ class MeshLight : public Light {
 		TextureAdapter emission;
 		Real intensity = 1;
 
-		MeshLight(TriangleMesh *_mesh, Texture *_emission) {
+		MeshLight(TriangleMesh *_mesh) {
 			mesh = _mesh;
 			_mesh->light = this;
-			emission.SetTexture(_emission);
 			emission.type = SpectrumType::Illuminant;
 			InitDistribution();
 		}
@@ -28,8 +27,12 @@ class MeshLight : public Light {
 				Real triArea;
 				Vec3 normal;
 				mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
-				_pdf *= maths::DistSq(_event.hit->point, p) / (maths::Dot(normal, -_event.wi) * triArea);
-				return emission.GetUV(u) * intensity * INV_PI;
+				//Convert pdf to solid angle measure.
+				const Real denom = maths::Dot(normal, -_event.wi) * triArea;
+				if (denom > 0) {
+					_pdf *= maths::DistSq(_event.hit->point, p) / denom;
+					return emission.GetUV(u) * intensity * INV_PI;
+				}
 			}
 			_pdf = 0;
 			return Spectrum(0);
@@ -37,12 +40,16 @@ class MeshLight : public Light {
 
 		Real PDF_Li(const SurfaceScatterEvent &_event) const override {
 			RayHit hit;
-			if (!_event.scene->Intersect(Ray(_event.hit->point, _event.wi), hit)) return 0;
+			if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit)) return 0;
 			if (hit.object->light != this) return 0;
 			Real triArea;
 			Vec3 normal;
 			mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);
-			return maths::DistSq(_event.hit->point, hit.point) / (maths::Dot(normal, -_event.wi) * triArea);
+			if (maths::Dot(-_event.wi, normal) > 0) {
+				const Real denom = maths::Dot(normal, -_event.wi) * triArea;
+				if(denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
+			}
+			return 0;
 		}
 
 		Spectrum L(const SurfaceScatterEvent &_event) const override {
