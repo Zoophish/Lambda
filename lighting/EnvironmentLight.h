@@ -61,8 +61,7 @@ class EnvironmentLight : public Light {
 		}
 
 		Spectrum Le(const Ray &_r) const override {
-			const Vec2 uv = Vec2((maths::SphericalPhi(_r.d) - offset.x) * INV_PI2, (maths::SphericalTheta(_r.d) - offset.y) * INV_PI).Wrap();
-			return radianceMap.GetUV(uv) * intensity;
+			return Le(_r.d);
 		}
 
 		//Aproximate disk.
@@ -72,6 +71,11 @@ class EnvironmentLight : public Light {
 
 		Real Irradiance() const override {
 			return intensity;
+		}
+
+		inline Spectrum Le(const Vec3 &_w) const {
+			const Vec2 uv = Vec2((maths::SphericalPhi(_w) + offset.x) * INV_PI2, (maths::SphericalTheta(_w) + offset.y) * INV_PI).Wrap();
+			return radianceMap.GetUV(uv) * intensity;
 		}
 
 	protected:

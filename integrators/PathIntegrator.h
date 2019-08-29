@@ -17,28 +17,34 @@ class PathIntegrator : public Integrator {
 			RayHit hit;
 			for (unsigned bounces = 0; bounces < maxBounces; ++bounces) {
 				if (_scene.Intersect(r, hit)) {
-
 					SurfaceScatterEvent event;
 					event.hit = &hit;
 					event.scene = &_scene;
 					event.wo = -r.d;
+					event.pdf = 1;
 
 					if (bounces == 0 && hit.object->light) {
-						L += hit.object->light->L(event);
+						L += beta * hit.object->light->L(event);
 					}
 
 					if (hit.object->bxdf) {
 						L += beta * SampleOneLight(event, _scene);
 						const Spectrum f = hit.object->bxdf->Sample_f(event, sampler->Get2D(), event.pdf);
+						if ((event.pdf == 0) || f.IsBlack()) break;
 						beta *= f * std::abs(maths::Dot(hit.normalS, event.wi)) / event.pdf;
-						r.o = hit.point + hit.normalG * .001;
+						r.o = hit.point + hit.normalG * .00001;
 						r.d = event.wi;
 					}
-					//else
+					else {
+						r.o = event.hit->point + r.d * .00005;
+						continue;
+					}
 
-					Real q = std::max((Real).05, 1 - beta.y());
-					if (sampler->Get1D() < q) break;
-					beta /= 1 - q;
+					if (bounces > 3) {
+						Real q = std::max((Real).05, 1 - beta.y());
+						if (sampler->Get1D() < q) break;
+						beta /= (Real)1 - q;
+					}
 					
 				}
 				else {

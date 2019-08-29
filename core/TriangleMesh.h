@@ -6,11 +6,10 @@
 
 	DEVELOPMENT NOTE: May create a resource manager that stores all imported data, then this
 	class only has to point to the data in resource manager; saves memory.
-*/
 
-/*	Embree only supports 32-bit floats and 16-byte aligned vertex structures.
+	Embree only supports 32-bit floats and 16-byte aligned vertex structures.
 	This is a safety switch preventing a non vec3<float> implementation being used for mesh data.
-	Note Lambda's vec3<float> type is already aligned, even with the switch 'LAMBDA_VEC3_USE_SSE' turned off.
+	The vec3<float> type is already aligned, even with the switch 'LAMBDA_VEC3_USE_SSE' turned off.
 	Data independant from Embree (e.g. uvCoords, tangents) can use any precision and alignment and thus inherit 'LAMBDA_MATHS_PRECISION_MODE'. 
 	KEEP THIS SWITCH ON if Embree is being used:	*/
 #define LAMBDA_MESH_FORCE_FLOAT32
@@ -119,6 +118,13 @@ class TriangleMesh : public Object {
 				area += cross.Magnitude() * .5;
 			}
 			return area;
+		}
+
+		inline Vec3 SamplePoint(const Triangle &_triangle, const Vec2 &_u) const {
+			const Vec3 v0 = vertices[_triangle.v0];
+			const Vec3 v1 = vertices[_triangle.v1];
+			const Vec3 v2 = vertices[_triangle.v2];
+			return v0 + (v1 - v0) * _u.x + (v2 - v0) * _u.y;
 		}
 
 	protected:

@@ -1,20 +1,21 @@
+/*----	By Sam Warren 2019	----
+Similar to MeshLight, however, the environment light's emission is sampled instead.
+Bad placement of portals will worsen convergence.
+*/
+
 #pragma once
-#include <sampling/Piecewise.h>
 #include <core/TriangleMesh.h>
-#include <shading/TextureAdapter.h>
-#include <shading/SurfaceScatterEvent.h>
-#include <core/Scene.h>
-#include "Light.h"
+#include <sampling/Piecewise.h>
+#include "EnvironmentLight.h"
 
-class MeshLight : public Light {
+class MeshPortal : public Light {
 	public:
-		TextureAdapter emission;
-		Real intensity = 1;
+		EnvironmentLight *parentLight;
 
-		MeshLight(TriangleMesh *_mesh) {
+		MeshPortal(EnvironmentLight *_parentLight, TriangleMesh *_mesh) {
+			parentLight = _parentLight;
 			mesh = _mesh;
 			_mesh->light = this;
-			emission.type = SpectrumType::Illuminant;
 			InitDistribution();
 		}
 
@@ -27,11 +28,10 @@ class MeshLight : public Light {
 				Real triArea;
 				Vec3 normal;
 				mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
-				//Convert pdf to solid angle measure.
 				const Real denom = maths::Dot(normal, -_event.wi) * triArea;
 				if (denom > 0) {
 					_pdf *= maths::DistSq(_event.hit->point, p) / denom;
-					return emission.GetUV(u) * intensity * INV_PI;
+					return parentLight->Le(_event.wi) * INV_PI;
 				}
 			}
 			_pdf = 0;
@@ -46,25 +46,28 @@ class MeshLight : public Light {
 			Vec3 normal;
 			mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);
 			const Real denom = maths::Dot(normal, -_event.wi) * triArea;
-			if(denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
+			if (denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
 			return 0;
 		}
 
 		Spectrum L(const SurfaceScatterEvent &_event) const override {
-			return emission.GetUV(_event.hit->uvCoords) * intensity * INV_PI;
+			if (maths::Dot(_event.hit->normalS, _event.wo) > 0) {
+				return parentLight->Le(_event.wo);
+			}
+			return Spectrum(0);
 		}
 
 		Real Area() const override {
-			return mesh->Area();
+			return mesh->Area() * 100;
 		}
 
 		Real Irradiance() const override {
-			return intensity;
+			return parentLight->intensity;
 		}
 
 	protected:
-		TriangleMesh *mesh;
 		Distribution::Piecewise1D triDistribution;
+		TriangleMesh *mesh;
 
 		void InitDistribution() {
 			const size_t ts = mesh->trianglesSize;

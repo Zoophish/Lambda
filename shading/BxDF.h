@@ -22,8 +22,11 @@ class BxDF {
 		virtual Spectrum f(const SurfaceScatterEvent &_event) const = 0;
 
 		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
-			_event.wi = _event.ToWorld(Sampling::SampleCosineHemisphere(_u));
-			_pdf = CosineHemispherePdf(_event.wo, _event.wi);
+			_event.wi = Sampling::SampleCosineHemisphere(_u);
+			Vec3 woL = _event.ToLocal(_event.wo);
+			if (woL.y < 0) _event.wi.y *= -1;
+			_pdf = CosineHemispherePdf(woL, _event.wi);
+			_event.wi = _event.ToWorld(_event.wi);
 			return f(_event);
 		}
 

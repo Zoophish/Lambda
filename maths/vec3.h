@@ -180,13 +180,13 @@ namespace maths {
 		return diff.x*diff.x + diff.y*diff.y + diff.z*diff.z;
 	}
 
+	//Y is up (Normal)
 	template<class T>
-	inline vec3<T> ToSpace(const vec3<T> &_v, const vec3<T> &_n, const vec3<T> &_t, const vec3<T> &_bt) {
+	inline vec3<T> ToSpace(const vec3<T> &_v, const vec3<T> &_t, const vec3<T> &_n, const vec3<T> &_bt) {
 		return vec3<T>(maths::Dot(_t, _v), maths::Dot(_n, _v), maths::Dot(_bt, _v));
 	}
-
 	template<class T>
-	inline vec3<T> FromSpace(const vec3<T> &_v, const vec3<T> &_n, const vec3<T> &_t, const vec3<T> &_bt) {
+	inline vec3<T> FromSpace(const vec3<T> &_v, const vec3<T> &_t, const vec3<T> &_n, const vec3<T> &_bt) {
 		return _t * _v.x + _n * _v.y + _bt * _v.z;
 	}
 

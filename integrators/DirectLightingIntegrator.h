@@ -19,11 +19,16 @@ class DirectLightingIntegrator : public Integrator {
 		Spectrum Li(const Ray &_ray, const Scene &_scene) const override {
 			RayHit hit;
 			if (_scene.Intersect(_ray, hit)) {
-				SurfaceScatterEvent event;
-				event.hit = &hit;
-				event.scene = &_scene;
-				event.wo = -_ray.d;
-				return SampleOneLight(event, _scene);
+				if (hit.object->bxdf) {
+					SurfaceScatterEvent event;
+					event.hit = &hit;
+					event.scene = &_scene;
+					event.wo = -_ray.d;
+					return SampleOneLight(event, _scene);
+				}
+				else {
+					return Li(Ray(hit.point + _ray.d * .0001, _ray.d), _scene);
+				}
 			}
 			return _scene.envLight->Le(_ray);
 		}

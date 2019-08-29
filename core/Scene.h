@@ -50,6 +50,7 @@ class Scene {
 			rayHit.ray = eRay;
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
+			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
 			rtcIntersect1(scene, &context, &rayHit);
 			if(rayHit.hit.geomID != RTC_INVALID_GEOMETRY_ID && rayHit.ray.tfar > 0 && rayHit.ray.tfar < INFINITY) {
 				_hit = objects[rayHit.hit.geomID]->Hit(rayHit);
@@ -69,6 +70,7 @@ class Scene {
 			rayHit.ray = eRay;
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
+			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
 			rtcIntersect1(scene, &context, &rayHit);
 			return rayHit.ray.tfar > (mag - 0.00002);
 		}
@@ -77,8 +79,9 @@ class Scene {
 			RTCRay eRay = _ray.ToRTCRay();
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
+			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
 			rtcOccluded1(scene, &context, &eRay);
-			return eRay.tfar != -INFINITY;
+			return eRay.tfar > 0;
 		}
 
 		void AddObject(Object &_obj) {
