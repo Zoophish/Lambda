@@ -2,6 +2,7 @@
 Similar to MeshLight, however, the environment light's emission is sampled instead.
 Does not importance sample more luminant areas of IBL map, rather ensures shadow rays pass through portal's area.
 Bad placement of portals will worsen convergence.
+It is redundant to add the portal mesh as an object to the scene as portals only need to be light sampled.
 */
 
 #pragma once
@@ -24,7 +25,7 @@ class MeshPortal : public Light {
 			const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 			const Vec2 u = _sampler->Get2D();
 			const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
-			if (_event.scene->MutualVisibility(_event.hit->point, p)) {
+			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * .001, p)) {
 				_event.wi = (p - _event.hit->point).Normalised();
 				Real triArea;
 				Vec3 normal;
@@ -59,7 +60,7 @@ class MeshPortal : public Light {
 		}
 
 		Real Area() const override {
-			return mesh->Area() * 100;
+			return mesh->Area() * 100000;
 		}
 
 		Real Irradiance() const override {

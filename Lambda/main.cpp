@@ -25,7 +25,7 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box.obj");
+	ai.Import("../content/box_window.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
@@ -38,15 +38,15 @@ int main() {
 	
 	scene.AddObject(mesh);
 
-	AssetImporter ai3;
-	ai3.Import("../content/lucy.obj");
-	TriangleMesh lucy;
-	lucy.LoadFromImport(scene.device, ai3);
-	lucy.smoothNormals = true;
-	Texture white(1, 1, Colour(1, 1, 1));
-	OrenNayarBRDF mat2(&white, 1);
-	lucy.bxdf = &mat2;
-	scene.AddObject(lucy);
+	//AssetImporter ai3;
+	//ai3.Import("../content/lucy.obj");
+	//TriangleMesh lucy;
+	//lucy.LoadFromImport(scene.device, ai3);
+	//lucy.smoothNormals = true;
+	//Texture white(1, 1, Colour(1, 1, 1));
+	//OrenNayarBRDF mat2(&white, 1);
+	//lucy.bxdf = &mat2;
+	//scene.AddObject(lucy);
 
 	//ai.Import("../content/ocean_slice.obj");
 	//TriangleMesh ocean;
@@ -76,19 +76,20 @@ int main() {
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/lookout_2k.hdr");
+	envMap.LoadImageFile("../content/venice_dawn_2_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = .2;
+	ibl.intensity = 40;
 	ibl.offset = Vec2(0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
-	//ai.Import("../content/box_front.obj");
-	//TriangleMesh portalMesh;
-	//portalMesh.LoadFromImport(scene.device, ai);
-	//portalMesh.smoothNormals = false;
-	//MeshPortal portal(&ibl, &portalMesh);
-	//scene.AddLight(&portal);
+	ai.Import("../content/box_window_portal.obj");
+	TriangleMesh portalMesh;
+	portalMesh.LoadFromImport(scene.device, ai);
+	portalMesh.smoothNormals = false;
+	MeshPortal portal(&ibl, &portalMesh);
+	//scene.AddObject(portalMesh);
+	scene.AddLight(&portal);
 
 	scene.Commit();
 
@@ -128,10 +129,10 @@ int main() {
 
 	//Render the image...
 
-	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 16);
-	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 16);
-	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 16);
-	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 16);
+	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 1);
+	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 1);
+	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 1);
+	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 1);
 	t1.join();
 	t2.join();
 	t3.join();
@@ -142,7 +143,7 @@ int main() {
 	film.ToXYZTexture(&tex);
 
 	//Save to file.
-	tex.SaveToImageFile("out.png");
+	tex.SaveToImageFile("portal.png");
 	
 	return 0;
 }

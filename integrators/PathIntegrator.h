@@ -36,7 +36,7 @@ class PathIntegrator : public Integrator {
 						r.d = event.wi;
 					}
 					else {
-						r.o = event.hit->point + r.d * .00005;
+						r.o = event.hit->point + r.d * .0005;
 						continue;
 					}
 
