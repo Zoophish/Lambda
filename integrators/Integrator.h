@@ -56,6 +56,10 @@ class Integrator {
 			return Ld;
 		}
 
+		Spectrum SpecularTransmit() const {
+
+		}
+
 	protected:
 		inline Real PowerHeuristic(int nf, Real fPdf, int ng, Real gPdf) const {
 			Real f = nf * fPdf, g = ng * gPdf;

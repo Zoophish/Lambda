@@ -1,5 +1,6 @@
 /*----	By Sam Warren 2019	----
 Similar to MeshLight, however, the environment light's emission is sampled instead.
+Does not importance sample more luminant areas of IBL map, rather ensures shadow rays pass through portal's area.
 Bad placement of portals will worsen convergence.
 */
 

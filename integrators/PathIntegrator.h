@@ -48,7 +48,7 @@ class PathIntegrator : public Integrator {
 					
 				}
 				else {
-					L += _scene.envLight->Le(r);
+					L += beta * _scene.envLight->Le(r);
 					break;
 				}
 			}

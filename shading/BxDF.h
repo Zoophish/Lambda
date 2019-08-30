@@ -11,8 +11,6 @@ class BxDF {
 			BxDF_DIFFUSE = BITFLAG(2),
 			BxDF_GLOSSY = BITFLAG(3),
 			BxDF_SPECULAR = BITFLAG(4),
-			EMISSION = BITFLAG(5),
-			BxDF_ALL = 63
 		};
 
 		const BxDFType type;
@@ -23,7 +21,7 @@ class BxDF {
 
 		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
 			_event.wi = Sampling::SampleCosineHemisphere(_u);
-			Vec3 woL = _event.ToLocal(_event.wo);
+			const Vec3 woL = _event.ToLocal(_event.wo);
 			if (woL.y < 0) _event.wi.y *= -1;
 			_pdf = CosineHemispherePdf(woL, _event.wi);
 			_event.wi = _event.ToWorld(_event.wi);

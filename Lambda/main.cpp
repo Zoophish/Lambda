@@ -1,5 +1,6 @@
 #include <iostream>
 #include <omp.h>
+#include <thread>
 #include <assets/AssetImporter.h>
 #include<cmath>
 #include <shading/OrenNayar.h>
@@ -24,7 +25,7 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box_empty.obj");
+	ai.Import("../content/box.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
@@ -37,15 +38,25 @@ int main() {
 	
 	scene.AddObject(mesh);
 
-	ai.Import("../content/lucy.obj");
+	AssetImporter ai3;
+	ai3.Import("../content/lucy.obj");
 	TriangleMesh lucy;
-	lucy.LoadFromImport(scene.device, ai);
+	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
 	Texture white(1, 1, Colour(1, 1, 1));
 	OrenNayarBRDF mat2(&white, 1);
 	lucy.bxdf = &mat2;
-
 	scene.AddObject(lucy);
+
+	//ai.Import("../content/ocean_slice.obj");
+	//TriangleMesh ocean;
+	//ocean.LoadFromImport(scene.device, ai);
+	//ocean.smoothNormals = true;
+	//Texture l(1, 1, Colour(1, 1, .95));
+	//FresnelBSDF water(&l, 1.333);
+	//ocean.bxdf = &water;
+
+	//scene.AddObject(ocean);
 
 	AssetImporter ai2;
 	ai2.Import("../content/box_light.obj");
@@ -57,19 +68,19 @@ int main() {
 	//emission.LoadImageFile("../content/uv_grid_2.png");
 	MeshLight meshLight(&light);
 	meshLight.emission = &emission;
-	meshLight.intensity = 100;
+	meshLight.intensity = 400;
 	
-	scene.AddObject(light);
-	scene.AddLight(&meshLight);
+	//scene.AddObject(light);
+	//scene.AddLight(&meshLight);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
 	envMap.LoadImageFile("../content/lookout_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = .2;
 	ibl.offset = Vec2(0, 0);
-	//scene.AddLight(&ibl);
+	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
 	//ai.Import("../content/box_front.obj");
@@ -97,10 +108,10 @@ int main() {
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 
-	Film film(512, 512);
+	Film film(1024, 1024);
 
 	//Render texture.
-	Texture tex(512, 512, Colour(0, 0, 0));
+	Texture tex(1024, 1024, Colour(0, 0, 0));
 	//Render tile.
 	RenderTile tile;
 	tile.camera = &cam;
@@ -109,8 +120,23 @@ int main() {
 	tile.x = 0; tile.y = 0; tile.w = 512; tile.h = 512;
 	tile.film = &film;
 
+	std::vector<RenderTile> tiles(4, tile);
+	tiles[1].x = 512;
+	tiles[2].y = 512;
+	tiles[3].x = 512;
+	tiles[3].y = 512;
+
 	//Render the image...
-	RenderCoordinator::ProcessTile(tile, 4);
+
+	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 16);
+	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 16);
+	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 16);
+	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 16);
+	t1.join();
+	t2.join();
+	t3.join();
+	t4.join();
+
 
 	//Convert film to an RGB image;
 	film.ToXYZTexture(&tex);

@@ -7,7 +7,7 @@ class FresnelBSDF : public BxDF {
 		Real ior;
 		TextureAdapter albedo;
 
-		FresnelBSDF(Texture *_albedo, const Real _ior) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_SPECULAR)) {
+		FresnelBSDF(Texture *_albedo, const Real _ior) : BxDF((BxDFType)(BxDF_TRANSMISSION | BxDF_SPECULAR)) {
 			ior = _ior;
 			albedo.SetTexture(_albedo);
 		}
@@ -18,7 +18,10 @@ class FresnelBSDF : public BxDF {
 
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
 			const Vec3 woL = _event.ToLocal(_event.wo);
-			const Real fr = Fresnel::FrDielectric(woL.y, _event.eta, ior);
+			const bool entering = woL.y > 0;
+			const Real a = entering ? _event.eta : ior;
+			const Real b = entering ?ior : _event.eta;
+			const Real fr = Fresnel::FrDielectric(woL.y, a, b);
 			if (_u.x < fr) {
 				_event.wi = Vec3(-woL.x, woL.y, -woL.z);
 				const Real cosTheta = std::abs(_event.wi.y);
