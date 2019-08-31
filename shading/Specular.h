@@ -17,26 +17,25 @@ class FresnelBSDF : public BxDF {
 		}
 
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
-			const Vec3 woL = _event.ToLocal(_event.wo);
-			const bool entering = woL.y > 0;
+			const bool entering = _event.woL.y > 0;
 			const Real a = entering ? _event.eta : ior;
 			const Real b = entering ?ior : _event.eta;
-			const Real fr = Fresnel::FrDielectric(woL.y, a, b);
+			const Real fr = Fresnel::FrDielectric(_event.woL.y, a, b);
 			if (_u.x < fr) {
-				_event.wi = Vec3(-woL.x, woL.y, -woL.z);
-				const Real cosTheta = std::abs(_event.wi.y);
+				_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
+				_event.wi = _event.ToWorld(_event.wiL);
+				const Real cosTheta = std::abs(_event.wiL.y);
 				_event.pdf = fr;
-				_event.wi = _event.ToWorld(_event.wi);
 				return albedo.GetUV(_event.hit->uvCoords) * fr / cosTheta;
 			}
 			else {
-				const bool entering = woL.y > 0;
+				const bool entering = _event.woL.y > 0;
 				const Real etaI = entering ? _event.eta : ior;
 				const Real etaT = entering ? ior : _event.eta;
 				_event.pdf = 1 - fr;
-				_event.wi = Refract(woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT);
-				const Real cosTheta = std::abs(_event.wi.y);
-				_event.wi = _event.ToWorld(_event.wi);
+				_event.wiL = Refract(_event.woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT);
+				_event.wi = _event.ToWorld(_event.wiL);
+				const Real cosTheta = std::abs(_event.wiL.y);
 				Spectrum ft = albedo.GetUV(_event.hit->uvCoords) * (1 - fr);
 				ft *= (etaI * etaI) / (etaT * etaT);
 				_event.hit->point += _event.wi * .001;
@@ -73,10 +72,9 @@ class SpecularBRDF : public BxDF {
 	
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
 			_event.pdf = 1;
-			const Vec3 woL = _event.ToLocal(_event.wo);
-			_event.wi = Vec3(-woL.x, woL.y, -woL.z);
-			const Real cosTheta = _event.wi.y;
-			_event.wi = _event.ToWorld(_event.wi);
+			_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
+			const Real cosTheta = _event.wiL.y;
+			_event.wi = _event.ToWorld(_event.wiL);
 			return fresnel->Evaluate(cosTheta, _event.eta) * albedo.GetUV(_event.hit->uvCoords) / std::abs(cosTheta);
 		}
 };

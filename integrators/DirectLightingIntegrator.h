@@ -24,6 +24,7 @@ class DirectLightingIntegrator : public Integrator {
 					event.hit = &hit;
 					event.scene = &_scene;
 					event.wo = -_ray.d;
+					event.Localise();
 					return SampleOneLight(event, _scene);
 				}
 				else {

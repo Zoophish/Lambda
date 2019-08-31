@@ -41,6 +41,7 @@ class EnvironmentLight : public Light {
 			const Real sinPhi = std::sin(phi), cosPhi = std::cos(phi);
 			_event.wi = maths::SphericalDirection(sinTheta, cosTheta, phi);
 			if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi))) {
+				_event.wiL = _event.ToLocal(_event.wi);
 				_pdf /= 2 * PI * PI * sinTheta;
 				return radianceMap.GetUV(uv) * intensity;
 			}

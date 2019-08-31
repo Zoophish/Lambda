@@ -20,33 +20,15 @@ class BxDF {
 		virtual Spectrum f(const SurfaceScatterEvent &_event) const = 0;
 
 		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
-			_event.wi = Sampling::SampleCosineHemisphere(_u);
-			const Vec3 woL = _event.ToLocal(_event.wo);
-			if (woL.y < 0) _event.wi.y *= -1;
-			_pdf = CosineHemispherePdf(woL, _event.wi);
-			_event.wi = _event.ToWorld(_event.wi);
+			_event.wiL = Sampling::SampleCosineHemisphere(_u);
+			if (_event.woL.y < 0) _event.wiL.y *= -1;
+			_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
+			_event.wi = _event.ToWorld(_event.wiL);
 			return f(_event);
 		}
 
 		virtual Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const {
 			return Spectrum(0);
-		}
-
-		//----	Utility functions:	----
-		inline Real CosTheta(const Vec3 &_w) const { return _w.y; }
-
-		inline Real Sin2Theta(const Vec3 &_w) const { return std::max((Real)0, 1 - _w.y * _w.y); }
-
-		inline Real SinTheta(const Vec3 &_w) const { return std::sqrt(Sin2Theta(_w)); }
-
-		inline Real CosPhi(const Vec3 &_w) const {
-			const Real sinTheta = SinTheta(_w);
-			return (sinTheta == 0) ? 0 : maths::Clamp(_w.x / sinTheta, (Real)-1, (Real)1);
-		}
-
-		inline Real SinPhi(const Vec3 &_w) const {
-			const Real sinTheta = SinTheta(_w);
-			return (sinTheta == 0) ? 0 : maths::Clamp(_w.y / sinTheta, (Real)-1, (Real)1);
 		}
 
 		inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) const {
@@ -58,6 +40,41 @@ class BxDF {
 		}
 		
 };
+
+//----	Utility functions:	---- TO DO - NEEDS OPTIMISING AND MOVING
+inline Real CosTheta(const Vec3 &_w) { return _w.y; }
+
+inline Real Cos2Theta(const Vec3 &_w) { return _w.y * _w.y; }
+
+inline Real Sin2Theta(const Vec3 &_w) { return std::max((Real)0, 1 - _w.y * _w.y); }
+
+inline Real SinTheta(const Vec3 &_w) { return std::sqrt(Sin2Theta(_w)); }
+
+inline Real CosPhi(const Vec3 &_w) {
+	const Real sinTheta = SinTheta(_w);
+	return (sinTheta == 0) ? 0 : maths::Clamp(_w.x / sinTheta, (Real)-1, (Real)1);
+}
+
+inline Real Cos2Phi(const Vec3 &_w) {
+	return CosPhi(_w) * CosPhi(_w);
+}
+
+inline Real SinPhi(const Vec3 &_w) {
+	const Real sinTheta = SinTheta(_w);
+	return (sinTheta == 0) ? 0 : maths::Clamp(_w.y / sinTheta, (Real)-1, (Real)1);
+}
+
+inline Real Sin2Phi(const Vec3 &_w) {
+	return SinPhi(_w) * SinPhi(_w);
+}
+
+inline Real Tan2Theta(const Vec3 &_w) {
+	return Sin2Theta(_w) / Cos2Theta(_w);
+}
+
+inline Real TanTheta(const Vec3 &_w) {
+	return SinTheta(_w) / CosTheta(_w);
+}
 
 class ScaledBxDF : public BxDF {
 	public:

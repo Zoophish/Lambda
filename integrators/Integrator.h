@@ -23,30 +23,32 @@ class Integrator {
 			Real scatteringPDF, lightPDF;
 			Spectrum Li = _light.Sample_Li(_event, sampler, lightPDF);
 			if (lightPDF > 0 && !Li.IsBlack()) {
-				const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(maths::Dot(_event.hit->normalS, _event.wi));
-				const Vec3 woL = _event.ToLocal(_event.wo), wiL = _event.ToLocal(_event.wi);
-				scatteringPDF = _event.hit->object->bxdf->CosineHemispherePdf(woL, wiL);
+				//const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(maths::Dot(_event.hit->normalS, _event.wi));
+				const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(_event.wiL.y);
+				scatteringPDF = _event.hit->object->bxdf->CosineHemispherePdf(_event.woL, _event.wiL);
 				if (!f.IsBlack()) {
 					const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
 					Ld += Li * f * weight / lightPDF;
 				}
 			}
 			Spectrum f = _event.hit->object->bxdf->Sample_f(_event, sampler->Get2D(), scatteringPDF);
-			f *= std::abs(maths::Dot(_event.wi, _event.hit->normalS));
+			//f *= std::abs(maths::Dot(_event.wi, _event.hit->normalS));
+			f *= std::abs(_event.wiL.y);
 			if (scatteringPDF > 0 && !f.IsBlack()) {
 				Real weight = 1;
 				Spectrum Li(0);
 				lightPDF = _light.PDF_Li(_event);
 				if (lightPDF == 0) return Ld;
 				weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-				SurfaceScatterEvent lightIntersect;
+				SurfaceScatterEvent bsdfIntersect;
+				bsdfIntersect.scene = &_scene;
 				RayHit lightHit;
-				lightIntersect.hit = &lightHit;
-				lightIntersect.wo = _event.wi;
+				bsdfIntersect.hit = &lightHit;
+				bsdfIntersect.wo = -_event.wi;
 				const Ray r(_event.hit->point + _event.hit->normalG * .00001, _event.wi);
 				if (_scene.Intersect(r, lightHit)) {
-					if (lightIntersect.hit->object->light == &_light)
-						Li = lightIntersect.hit->object->light->L(lightIntersect);
+					if (bsdfIntersect.hit->object->light == &_light)
+						Li = bsdfIntersect.hit->object->light->L(bsdfIntersect);
 				}
 				else {
 					Li = _light.Le(r);

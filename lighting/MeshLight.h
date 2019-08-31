@@ -30,6 +30,7 @@ class MeshLight : public Light {
 				//Convert pdf to solid angle measure.
 				const Real denom = maths::Dot(normal, -_event.wi) * triArea;
 				if (denom > 0) {
+					_event.wiL = _event.ToLocal(_event.wi);
 					_pdf *= maths::DistSq(_event.hit->point, p) / denom;
 					return emission.GetUV(u) * intensity * INV_PI;
 				}

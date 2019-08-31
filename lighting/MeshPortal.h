@@ -18,6 +18,7 @@ class MeshPortal : public Light {
 			parentLight = _parentLight;
 			mesh = _mesh;
 			_mesh->light = this;
+			parentLight->radius = 0.1; //Prevents over sampling of parent.
 			InitDistribution();
 		}
 
@@ -32,6 +33,7 @@ class MeshPortal : public Light {
 				mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
 				const Real denom = maths::Dot(normal, -_event.wi) * triArea;
 				if (denom > 0) {
+					_event.wiL = _event.ToLocal(_event.wi);
 					_pdf *= maths::DistSq(_event.hit->point, p) / denom;
 					return parentLight->Le(_event.wi) * INV_PI;
 				}
@@ -60,7 +62,7 @@ class MeshPortal : public Light {
 		}
 
 		Real Area() const override {
-			return mesh->Area() * 100000;
+			return mesh->Area();
 		}
 
 		Real Irradiance() const override {

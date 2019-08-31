@@ -15,11 +15,11 @@ class PathIntegrator : public Integrator {
 			Spectrum L(0), beta(1);
 			Ray r = _r;
 			RayHit hit;
+			SurfaceScatterEvent event;	//Reusable object to reduce instantiation and destruction.
+			event.scene = &_scene;
 			for (unsigned bounces = 0; bounces < maxBounces; ++bounces) {
 				if (_scene.Intersect(r, hit)) {
-					SurfaceScatterEvent event;
 					event.hit = &hit;
-					event.scene = &_scene;
 					event.wo = -r.d;
 					event.pdf = 1;
 
@@ -28,10 +28,12 @@ class PathIntegrator : public Integrator {
 					}
 
 					if (hit.object->bxdf) {
+						event.Localise();
 						L += beta * SampleOneLight(event, _scene);
 						const Spectrum f = hit.object->bxdf->Sample_f(event, sampler->Get2D(), event.pdf);
 						if ((event.pdf == 0) || f.IsBlack()) break;
-						beta *= f * std::abs(maths::Dot(hit.normalS, event.wi)) / event.pdf;
+						//beta *= f * std::abs(maths::Dot(hit.normalS, event.wi)) / event.pdf;
+						beta *= f * std::abs(event.wiL.y) / event.pdf;
 						r.o = hit.point + hit.normalG * .00001;
 						r.d = event.wi;
 					}

@@ -25,7 +25,7 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box_window.obj");
+	ai.Import("../content/box.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
@@ -38,24 +38,23 @@ int main() {
 	
 	scene.AddObject(mesh);
 
-	//AssetImporter ai3;
-	//ai3.Import("../content/lucy.obj");
-	//TriangleMesh lucy;
-	//lucy.LoadFromImport(scene.device, ai3);
-	//lucy.smoothNormals = true;
-	//Texture white(1, 1, Colour(1, 1, 1));
-	//OrenNayarBRDF mat2(&white, 1);
-	//lucy.bxdf = &mat2;
-	//scene.AddObject(lucy);
+	AssetImporter ai3;
+	ai3.Import("../content/lucy.obj");
+	TriangleMesh lucy;
+	lucy.LoadFromImport(scene.device, ai3);
+	lucy.smoothNormals = true;
+	Texture white(1, 1, Colour(1, 1, 1));
+	OrenNayarBRDF mat2(&white, 1);
+	lucy.bxdf = &mat2;
+	scene.AddObject(lucy);
 
-	//ai.Import("../content/ocean_slice.obj");
+	//ai.Import("../content/ocean.obj");
 	//TriangleMesh ocean;
 	//ocean.LoadFromImport(scene.device, ai);
 	//ocean.smoothNormals = true;
 	//Texture l(1, 1, Colour(1, 1, .95));
 	//FresnelBSDF water(&l, 1.333);
 	//ocean.bxdf = &water;
-
 	//scene.AddObject(ocean);
 
 	AssetImporter ai2;
@@ -69,27 +68,26 @@ int main() {
 	MeshLight meshLight(&light);
 	meshLight.emission = &emission;
 	meshLight.intensity = 400;
-	
-	//scene.AddObject(light);
-	//scene.AddLight(&meshLight);
+	scene.AddObject(light);
+	scene.AddLight(&meshLight);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
 	envMap.LoadImageFile("../content/venice_dawn_2_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 40;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(0, 0);
-	scene.AddLight(&ibl);
+	//scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
-	ai.Import("../content/box_window_portal.obj");
-	TriangleMesh portalMesh;
-	portalMesh.LoadFromImport(scene.device, ai);
-	portalMesh.smoothNormals = false;
-	MeshPortal portal(&ibl, &portalMesh);
-	//scene.AddObject(portalMesh);
-	scene.AddLight(&portal);
+	//ai.Import("../content/box_front.obj");
+	//TriangleMesh portalMesh;
+	//portalMesh.LoadFromImport(scene.device, ai);
+	//portalMesh.smoothNormals = false;
+	//MeshPortal portal(&ibl, &portalMesh);
+	////scene.AddObject(portalMesh);
+	//scene.AddLight(&portal);
 
 	scene.Commit();
 
@@ -109,30 +107,30 @@ int main() {
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 
-	Film film(1024, 1024);
+	Film film(512, 512);
 
 	//Render texture.
-	Texture tex(1024, 1024, Colour(0, 0, 0));
+	Texture tex(512, 512, Colour(0, 0, 0));
 	//Render tile.
 	RenderTile tile;
 	tile.camera = &cam;
 	tile.scene = &scene;
 	tile.integrator = &pathIntegrator;
-	tile.x = 0; tile.y = 0; tile.w = 512; tile.h = 512;
+	tile.x = 0; tile.y = 0; tile.w = 256; tile.h = 256;
 	tile.film = &film;
 
 	std::vector<RenderTile> tiles(4, tile);
-	tiles[1].x = 512;
-	tiles[2].y = 512;
-	tiles[3].x = 512;
-	tiles[3].y = 512;
+	tiles[1].x = 256;
+	tiles[2].y = 256;
+	tiles[3].x = 256;
+	tiles[3].y = 256;
 
 	//Render the image...
 
-	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 1);
-	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 1);
-	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 1);
-	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 1);
+	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 16);
+	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 16);
+	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 16);
+	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 16);
 	t1.join();
 	t2.join();
 	t3.join();
@@ -143,7 +141,7 @@ int main() {
 	film.ToXYZTexture(&tex);
 
 	//Save to file.
-	tex.SaveToImageFile("portal.png");
+	tex.SaveToImageFile("out.png");
 	
 	return 0;
 }
