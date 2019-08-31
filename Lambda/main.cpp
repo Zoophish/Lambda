@@ -6,7 +6,7 @@
 #include <shading/OrenNayar.h>
 #include <shading/Lambertian.h>
 #include <shading/Specular.h>
-#include <shading/Specular.h>
+#include <shading/Microfacet.h>
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/PathIntegrator.h>
 #include <sampling/HaltonSampler.h>
@@ -44,7 +44,9 @@ int main() {
 	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
 	Texture white(1, 1, Colour(1, 1, 1));
-	OrenNayarBRDF mat2(&white, 1);
+	BeckmannDistribution dist(0.01, .01);
+	FresnelDielectric fres(2);
+	MicrofacetBRDF mat2(&white, &dist, &fres);
 	lucy.bxdf = &mat2;
 	scene.AddObject(lucy);
 

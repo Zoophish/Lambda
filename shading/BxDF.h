@@ -41,41 +41,6 @@ class BxDF {
 		
 };
 
-//----	Utility functions:	---- TO DO - NEEDS OPTIMISING AND MOVING
-inline Real CosTheta(const Vec3 &_w) { return _w.y; }
-
-inline Real Cos2Theta(const Vec3 &_w) { return _w.y * _w.y; }
-
-inline Real Sin2Theta(const Vec3 &_w) { return std::max((Real)0, 1 - _w.y * _w.y); }
-
-inline Real SinTheta(const Vec3 &_w) { return std::sqrt(Sin2Theta(_w)); }
-
-inline Real CosPhi(const Vec3 &_w) {
-	const Real sinTheta = SinTheta(_w);
-	return (sinTheta == 0) ? 0 : maths::Clamp(_w.x / sinTheta, (Real)-1, (Real)1);
-}
-
-inline Real Cos2Phi(const Vec3 &_w) {
-	return CosPhi(_w) * CosPhi(_w);
-}
-
-inline Real SinPhi(const Vec3 &_w) {
-	const Real sinTheta = SinTheta(_w);
-	return (sinTheta == 0) ? 0 : maths::Clamp(_w.y / sinTheta, (Real)-1, (Real)1);
-}
-
-inline Real Sin2Phi(const Vec3 &_w) {
-	return SinPhi(_w) * SinPhi(_w);
-}
-
-inline Real Tan2Theta(const Vec3 &_w) {
-	return Sin2Theta(_w) / Cos2Theta(_w);
-}
-
-inline Real TanTheta(const Vec3 &_w) {
-	return SinTheta(_w) / CosTheta(_w);
-}
-
 class ScaledBxDF : public BxDF {
 	public:
 		BxDF* bxdf;

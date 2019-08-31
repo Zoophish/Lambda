@@ -65,14 +65,14 @@ class Scene {
 			const Vec3 diff = _p2 - _p1;
 			const Real mag = diff.Magnitude();
 			const Vec3 dir = diff / mag;
-			RTCRay eRay = Ray(_p1 + dir * .00001, dir).ToRTCRay();
+			RTCRay eRay = Ray(_p1 + dir * .0001, dir).ToRTCRay();
 			RTCRayHit rayHit;
 			rayHit.ray = eRay;
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
 			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
 			rtcIntersect1(scene, &context, &rayHit);
-			return rayHit.ray.tfar > (mag - 0.00002);
+			return rayHit.ray.tfar > (mag - 0.0002);
 		}
 
 		bool RayEscapes(const Ray &_ray) const {

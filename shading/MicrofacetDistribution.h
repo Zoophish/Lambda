@@ -9,6 +9,8 @@ class MicrofacetDistribution {
 		virtual Real Lambda(const Vec3 &_w) const = 0;
 
 		Real G1(const Vec3 &_w) const { return 1 / (1 + Lambda(_w)); }
+
+		Real G(const Vec3 &_wo, const Vec3 &_wi) const { return 1 / (1 + Lambda(_wo) + Lambda(_wi)); }
 };
 
 class BeckmannDistribution : public MicrofacetDistribution {

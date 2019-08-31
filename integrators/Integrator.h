@@ -23,7 +23,6 @@ class Integrator {
 			Real scatteringPDF, lightPDF;
 			Spectrum Li = _light.Sample_Li(_event, sampler, lightPDF);
 			if (lightPDF > 0 && !Li.IsBlack()) {
-				//const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(maths::Dot(_event.hit->normalS, _event.wi));
 				const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(_event.wiL.y);
 				scatteringPDF = _event.hit->object->bxdf->CosineHemispherePdf(_event.woL, _event.wiL);
 				if (!f.IsBlack()) {
@@ -32,7 +31,6 @@ class Integrator {
 				}
 			}
 			Spectrum f = _event.hit->object->bxdf->Sample_f(_event, sampler->Get2D(), scatteringPDF);
-			//f *= std::abs(maths::Dot(_event.wi, _event.hit->normalS));
 			f *= std::abs(_event.wiL.y);
 			if (scatteringPDF > 0 && !f.IsBlack()) {
 				Real weight = 1;

@@ -17,8 +17,9 @@ class PathIntegrator : public Integrator {
 			RayHit hit;
 			SurfaceScatterEvent event;	//Reusable object to reduce instantiation and destruction.
 			event.scene = &_scene;
+			event.isect = false;
 			for (unsigned bounces = 0; bounces < maxBounces; ++bounces) {
-				if (_scene.Intersect(r, hit)) {
+				if (event.isect || _scene.Intersect(r, hit)) {
 					event.hit = &hit;
 					event.wo = -r.d;
 					event.pdf = 1;
@@ -32,7 +33,6 @@ class PathIntegrator : public Integrator {
 						L += beta * SampleOneLight(event, _scene);
 						const Spectrum f = hit.object->bxdf->Sample_f(event, sampler->Get2D(), event.pdf);
 						if ((event.pdf == 0) || f.IsBlack()) break;
-						//beta *= f * std::abs(maths::Dot(hit.normalS, event.wi)) / event.pdf;
 						beta *= f * std::abs(event.wiL.y) / event.pdf;
 						r.o = hit.point + hit.normalG * .00001;
 						r.d = event.wi;
