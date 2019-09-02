@@ -27,7 +27,7 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box.obj");
+	ai.Import("../content/box_empty.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
@@ -40,15 +40,16 @@ int main() {
 	scene.AddObject(mesh);
 
 	AssetImporter ai3;
-	ai3.Import("../content/ocean.obj");
+	ai3.Import("../content/spheres.obj");
 	TriangleMesh lucy;
 	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
 	Texture white(1, 1, Colour(1, 1, 1));
-	BeckmannDistribution dist(.05, .05);
+	TrowbridgeReitzDistribution dist(.01, .01);
 	FresnelDielectric fres(1.8);
-	//MicrofacetBRDF mat2(&white, &dist, &fres);
-	FresnelBSDF mat2(&white, 1.333);
+	MicrofacetBRDF mat2(&white, &dist, &fres);
+	mat2.etaT = 1.8;
+	//FresnelBSDF mat2(&white, 1.333);
 	//OrenNayarBRDF mat2(&white, .8);
 	lucy.bxdf = &mat2;
 	scene.AddObject(lucy);
@@ -143,10 +144,10 @@ int main() {
 
 	//Render the image...
 
-	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 400);
-	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 400);
-	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 400);
-	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 400);
+	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 1);
+	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 1);
+	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 1);
+	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 1);
 	t1.join();
 	std::cout << std::endl << "T1 Done.";
 	t2.join();

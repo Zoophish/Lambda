@@ -11,17 +11,16 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [x] Path-integrator with multiple importance sampling
  - [x] Offline render-coordinator (with multithreading)
  - [ ] Interactive render application (for debugging)
+ - [ ] Denoiser
  - [x] Thin lens camera model
  - [x] Spherical camera model
  - [x] Importance-sampled image/polygon aperture
  - [ ] Improved import system and scene structure
- - [ ] Tonemapping post-processor
  - [x] Triangulated mesh geometry
  - [ ] Instanced geometry
  - [ ] Transform
  - [ ] Hair geometry
  - [x] Sample scrambler with dithering (blue-noise)
- - [ ] Sobol' sampler
  - [x] Mesh lights
  - [x] Environment lights
  - [x] Light portals (mesh-based)
@@ -31,11 +30,24 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [x] Fresnel BSDF
  - [ ] Mix BSDF
  - [ ] Participating Media (homogenous + heterogenous)
- - [ ] Virtual-displacement mapping
 
 **Non-Priority**
+ - [ ] Sobol' sampler
  - [ ] Light portals (projected)
+ - [ ] Spatial importance sampling of lights
  - [ ] Packet-tracing
+ - [ ] Tonemapping post-processor
+ - [ ] Utility integratos (depth, normal, albedo, etc)
  - [ ] Bidirectional path-integrator
  - [ ] Realistic camera model with lens and sensor profiles
  - [ ] Camera chromatic aberration
+ - [ ] Infinite plane geommetry
+ - [ ] Parameterised Hair BSDF (Bitterli, Chiang - 2016)
+
+ **Concept**
+ - Virtual-displacement mapping
+ - Animated rendering
+ - Massive-scene optimisation (LOD, occlusion of insignificant object groups)
+ - Light-pass rendering
+ - Scene-marching, planetary scale rendering
+ - Physical-atmosphere approximation with clouds
