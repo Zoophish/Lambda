@@ -21,7 +21,7 @@ namespace RenderCoordinator {
 			const Real ya = (Real)_tile.y / (Real)_tile.film->filmData.GetHeight();
 			int percentage = 0;
 			for (unsigned y = _tile.y; y < _tile.y + _tile.h; ++y) {
-				const float p = (float)y / (float)(_tile.y + _tile.h) * 100.f;
+				const float p = (((float)y - (float)_tile.y) / (float)(_tile.h)) * 100.f;
 				if (p >= percentage + 10.f) {
 					percentage = p;
 					std::cout << std::endl << percentage << '%';

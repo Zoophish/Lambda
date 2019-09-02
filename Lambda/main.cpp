@@ -27,7 +27,7 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box_empty.obj");
+	ai.Import("../content/box.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
@@ -40,15 +40,15 @@ int main() {
 	scene.AddObject(mesh);
 
 	AssetImporter ai3;
-	ai3.Import("../content/lucy.obj");
+	ai3.Import("../content/ocean.obj");
 	TriangleMesh lucy;
 	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
 	Texture white(1, 1, Colour(1, 1, 1));
 	BeckmannDistribution dist(.05, .05);
 	FresnelDielectric fres(1.8);
-	MicrofacetBRDF mat2(&white, &dist, &fres);
-	//FresnelBSDF mat2(&white, 1.333);
+	//MicrofacetBRDF mat2(&white, &dist, &fres);
+	FresnelBSDF mat2(&white, 1.333);
 	//OrenNayarBRDF mat2(&white, .8);
 	lucy.bxdf = &mat2;
 	scene.AddObject(lucy);
@@ -107,12 +107,12 @@ int main() {
 	apertureMask.LoadImageFile("../content/aperture.png");
 	MaskedAperture aperture(&apertureMask, &sampler);
 	//BladeAperture aperture(6, .002);
-	ThinLensCamera cam2(Vec3(0, 1, 5), 1, 1, 5);
+	ThinLensCamera cam2(Vec3(0, 1.55, 5), 1, 1, 5);
 	cam2.aperture = &aperture;
-	cam2.aperture->size = .19;
+	cam2.aperture->size = .09;
 	cam2.aperture->sampler = &sampler;
 	cam2.SetFov(.52);
-	cam2.SetRotation(-PI, 0);
+	cam2.SetRotation(-PI, -PI*.04);
 
 	//Make camera;
 	PinholeCamera cam(Vec3(0, 1, 5), 1, 1);
@@ -131,7 +131,7 @@ int main() {
 	RenderTile tile;
 	tile.camera = &cam2;
 	tile.scene = &scene;
-	tile.integrator = &directIntegrator;
+	tile.integrator = &pathIntegrator;
 	tile.x = 0; tile.y = 0; tile.w = 256; tile.h = 256;
 	tile.film = &film;
 
@@ -143,10 +143,10 @@ int main() {
 
 	//Render the image...
 
-	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 64);
-	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 64);
-	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 64);
-	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 64);
+	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 400);
+	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 400);
+	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 400);
+	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 400);
 	t1.join();
 	std::cout << std::endl << "T1 Done.";
 	t2.join();
