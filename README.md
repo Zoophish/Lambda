@@ -1,6 +1,6 @@
 # Lambda
 A high performance physically-based renderer written in C++ as a project in my spare time.
-![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/lambda/repo_resources/glass_lucy.png)
+![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/glass_lucy.png)
 
 ## Roadmap of Features
 *2019 Q4*
