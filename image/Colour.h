@@ -93,21 +93,4 @@ namespace ColourFormat {
 
 		inline float operator[](const unsigned _rhs) const { switch (_rhs) { case 0: return r; case 1: return g; case 2: return b; case 3: return a; } }
 	};
-
-	struct R32 {
-		float r;
-
-		R32() {}
-
-		R32(const float _r) {
-			r = _r;
-		}
-
-		inline R32 operator+(const float _rhs) const { return r + _rhs; }
-		inline R32 operator-(const float _rhs) const { return r - _rhs; }
-		inline R32 operator*(const float _rhs) const { return r * _rhs; }
-		inline R32 operator/(const float _rhs) const { return r / _rhs; }
-		inline R32 operator+(const R32 _rhs) const { return r + _rhs.r; }
-		inline R32 operator-(const R32 _rhs) const { return r - _rhs.r; }
-	};
 }

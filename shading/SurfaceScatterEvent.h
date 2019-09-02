@@ -15,7 +15,6 @@ struct SurfaceScatterEvent {
 	Vec3 wo, wi, woL, wiL;
 	Real pdf, eta = 1.;
 	RayHit *hit;
-	bool isect;
 	const Scene *scene;
 
 	inline Vec3 ToLocal(const Vec3 &_v) const {
@@ -34,6 +33,14 @@ struct SurfaceScatterEvent {
 
 
 //----	Surface-Space Utility Functions	----
+inline bool SameHemisphere(const Vec3 &_w1, const Vec3 &_w2) {
+	return _w1.y * _w2.y > 0;
+}
+
+inline Vec3 Reflect(const Vec3 &_w, const Vec3 &_n) {
+	return _w - _n * 2 * maths::Dot(_n, _w);
+}
+
 inline Real CosTheta(const Vec3 &_w) { return _w.y; }
 
 inline Real Cos2Theta(const Vec3 &_w) { return _w.y * _w.y; }

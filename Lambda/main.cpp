@@ -12,12 +12,14 @@
 #include <sampling/HaltonSampler.h>
 #include <camera/PinholeCamera.h>
 #include <camera/EnvironmentCamera.h>
+#include <camera/ThinLensCamera.h>
 #include <core/TriangleMesh.h>
 #include <lighting/MeshLight.h>
 #include <lighting/EnvironmentLight.h>
 #include <lighting/MeshPortal.h>
 #include <core/RenderCoordinator.h>
 #include <lighting/Blackbody.h>
+#include <camera/Aperture.h>
 
 int main() {
 
@@ -25,7 +27,7 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box.obj");
+	ai.Import("../content/box_empty.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
@@ -35,7 +37,6 @@ int main() {
 	OrenNayarBRDF mat(&albedo, 1.3);
 	mat.SetSigma(.5);
 	mesh.bxdf = &mat;
-	
 	scene.AddObject(mesh);
 
 	AssetImporter ai3;
@@ -44,9 +45,11 @@ int main() {
 	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
 	Texture white(1, 1, Colour(1, 1, 1));
-	BeckmannDistribution dist(0.01, .01);
-	FresnelDielectric fres(2);
+	BeckmannDistribution dist(.05, .05);
+	FresnelDielectric fres(1.8);
 	MicrofacetBRDF mat2(&white, &dist, &fres);
+	//FresnelBSDF mat2(&white, 1.333);
+	//OrenNayarBRDF mat2(&white, .8);
 	lucy.bxdf = &mat2;
 	scene.AddObject(lucy);
 
@@ -76,7 +79,7 @@ int main() {
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/venice_dawn_2_2k.hdr");
+	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 0;
 	ibl.offset = Vec2(0, 0);
@@ -100,6 +103,17 @@ int main() {
 	HaltonSampler sampler;
 	sampler.sampleShifter = &sampleShifter;
 
+	Texture apertureMask;
+	apertureMask.LoadImageFile("../content/aperture.png");
+	MaskedAperture aperture(&apertureMask, &sampler);
+	//BladeAperture aperture(6, .002);
+	ThinLensCamera cam2(Vec3(0, 1, 5), 1, 1, 5);
+	cam2.aperture = &aperture;
+	cam2.aperture->size = .19;
+	cam2.aperture->sampler = &sampler;
+	cam2.SetFov(.52);
+	cam2.SetRotation(-PI, 0);
+
 	//Make camera;
 	PinholeCamera cam(Vec3(0, 1, 5), 1, 1);
 	cam.SetFov(.52);
@@ -115,9 +129,9 @@ int main() {
 	Texture tex(512, 512, Colour(0, 0, 0));
 	//Render tile.
 	RenderTile tile;
-	tile.camera = &cam;
+	tile.camera = &cam2;
 	tile.scene = &scene;
-	tile.integrator = &pathIntegrator;
+	tile.integrator = &directIntegrator;
 	tile.x = 0; tile.y = 0; tile.w = 256; tile.h = 256;
 	tile.film = &film;
 
@@ -129,15 +143,18 @@ int main() {
 
 	//Render the image...
 
-	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 16);
-	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 16);
-	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 16);
-	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 16);
+	std::thread t1(RenderCoordinator::ProcessTile, tiles[0], 64);
+	std::thread t2(RenderCoordinator::ProcessTile, tiles[1], 64);
+	std::thread t3(RenderCoordinator::ProcessTile, tiles[2], 64);
+	std::thread t4(RenderCoordinator::ProcessTile, tiles[3], 64);
 	t1.join();
+	std::cout << std::endl << "T1 Done.";
 	t2.join();
+	std::cout << std::endl << "T2 Done.";
 	t3.join();
+	std::cout << std::endl << "T3 Done.";
 	t4.join();
-
+	std::cout << std::endl << "T4 Done.";
 
 	//Convert film to an RGB image;
 	film.ToXYZTexture(&tex);

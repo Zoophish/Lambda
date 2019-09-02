@@ -19,7 +19,13 @@ namespace RenderCoordinator {
 			const Real yi = (Real)1 / _tile.film->filmData.GetHeight();
 			const Real xa = (Real)_tile.x / (Real)_tile.film->filmData.GetWidth();
 			const Real ya = (Real)_tile.y / (Real)_tile.film->filmData.GetHeight();
+			int percentage = 0;
 			for (unsigned y = _tile.y; y < _tile.y + _tile.h; ++y) {
+				const float p = (float)y / (float)(_tile.y + _tile.h) * 100.f;
+				if (p >= percentage + 10.f) {
+					percentage = p;
+					std::cout << std::endl << percentage << '%';
+				}
 				for (unsigned x = _tile.x; x < _tile.x + _tile.w; ++x) {
 					if (_tile.integrator->sampler->sampleShifter) {
 						_tile.integrator->sampler->sampleShifter->SetPixelIndex(_tile.film->filmData.GetWidth(), _tile.film->filmData.GetHeight(), x, y);

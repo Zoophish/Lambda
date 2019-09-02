@@ -128,7 +128,7 @@ class texture_t {
 			if (format == "tga") { stbi_write_tga(name, width, height, 4, &p[0]); return; }
 			std::cout << std::endl << "Did not save image.";
 		}
-	
+		
 		void LoadImageFile(const char* path, int channels = 4) {
 			int file_width, file_height;
 			if(stbi_info(path, &file_width, &file_height, nullptr)) {
@@ -174,4 +174,4 @@ class texture_t {
 
 typedef texture_t<Colour> Texture;
 typedef texture_t<ColourFormat::RGBA32> TextureRGBA32;
-typedef texture_t<ColourFormat::R32> TextureR32;
+typedef texture_t<float> TextureR32;

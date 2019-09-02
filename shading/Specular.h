@@ -19,40 +19,45 @@ class FresnelBSDF : public BxDF {
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
 			const bool entering = _event.woL.y > 0;
 			const Real a = entering ? _event.eta : ior;
-			const Real b = entering ?ior : _event.eta;
+			const Real b = entering ? ior : _event.eta;
 			const Real fr = Fresnel::FrDielectric(_event.woL.y, a, b);
 			if (_u.x < fr) {
 				_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
 				_event.wi = _event.ToWorld(_event.wiL);
 				const Real cosTheta = std::abs(_event.wiL.y);
 				_event.pdf = fr;
+				_event.hit->point += _event.hit->normalG * .001;
 				return albedo.GetUV(_event.hit->uvCoords) * fr / cosTheta;
 			}
 			else {
 				const bool entering = _event.woL.y > 0;
-				const Real etaI = entering ? _event.eta : ior;
-				const Real etaT = entering ? ior : _event.eta;
+				const Real etaI = a;
+				const Real etaT = b;
 				_event.pdf = 1 - fr;
-				_event.wiL = Refract(_event.woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT);
-				_event.wi = _event.ToWorld(_event.wiL);
+				const bool refract = Refract(_event.woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT, &_event.wiL);
 				const Real cosTheta = std::abs(_event.wiL.y);
+				_event.wi = _event.ToWorld(_event.wiL);
 				Spectrum ft = albedo.GetUV(_event.hit->uvCoords) * (1 - fr);
-				ft *= (etaI * etaI) / (etaT * etaT);
-				_event.hit->point += _event.wi * .001;
+				if(refract) ft *= (etaI * etaI) / (etaT * etaT);
+				_event.hit->point += _event.hit->normalG * (refract ? (entering ? -.001 : .001) : (entering ? .001 : -.001));
 				return ft / cosTheta;
 			}
 		}
 
+		Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const override { return 0; }
+
 	protected:
-		inline Vec3 Refract(const Vec3 &_w, const Vec3 &_n, const Real _eta) const {
+		inline bool Refract(const Vec3 &_w, const Vec3 &_n, const Real _eta, Vec3 *_wr) const {
 			const Real cosThetaI = maths::Dot(_w, _n);
 			const Real sin2ThetaI = std::max((Real)0, (Real)1 - cosThetaI * cosThetaI);
 			const Real sin2ThetaT = _eta * _eta * sin2ThetaI;
 			if (sin2ThetaT >= 1) { //TIR
-
+				*_wr = Vec3(-1, 1, -1) * _w;
+				return false;
 			}
 			const Real cosThetaT = std::sqrt(1 - sin2ThetaT);
-			return -_w * _eta + _n * (_eta * cosThetaI - cosThetaT);
+			*_wr = -_w * _eta + _n * (_eta * cosThetaI - cosThetaT);
+			return true;
 		}
 };
 
@@ -110,10 +115,6 @@ class SpecularBTDF : public BxDF {
 		}
 
 	protected:
-		inline Vec3 Reflect(const Vec3 &_w, const Vec3 &_n) const {
-			return (_n * -2 * maths::Dot(_w, _n)) + _w;
-		}
-
 		inline Vec3 Refract(const Vec3 &_w, const Vec3 &_n, const Real _eta) const {
 			const Real cosThetaI = maths::Dot(_w, _n);
 			const Real sin2ThetaI = std::max((Real)0, (Real)1 - cosThetaI * cosThetaI);

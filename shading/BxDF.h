@@ -24,6 +24,7 @@ class BxDF {
 			if (_event.woL.y < 0) _event.wiL.y *= -1;
 			_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
 			_event.wi = _event.ToWorld(_event.wiL);
+			_event.hit->point += _event.hit->normalG * .001;
 			return f(_event);
 		}
 
@@ -31,14 +32,13 @@ class BxDF {
 			return Spectrum(0);
 		}
 
-		inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) const {
+		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const {
 			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;
 		}
 
-		inline bool SameHemisphere(const Vec3 &_w1, const Vec3 &_w2) const {
-			return _w1.y * _w2.y > 0;
+		inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) const {
+			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;
 		}
-		
 };
 
 class ScaledBxDF : public BxDF {

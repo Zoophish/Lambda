@@ -33,6 +33,7 @@ typedef bounds<Real> Bounds;
 #define PI2 2. * PI
 #define INV_PI 1. / PI
 #define INV_PI2 1. / (2. * PI)
+#define E 2.718281828459045
 #define BITFLAG(_i) 1 << _i
 
 namespace maths {

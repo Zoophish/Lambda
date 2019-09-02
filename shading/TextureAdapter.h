@@ -48,7 +48,7 @@ class TextureAdapter {
 				return reinterpret_cast<texture_t<Spectrum> *>(texture)->GetPixelUV(_uv.x, _uv.y);
 			}
 			case TextureType::SCALAR: {
-				const Real scalar = reinterpret_cast<TextureR32 *>(texture)->GetPixelUV(_uv.x, _uv.y).r;
+				const Real scalar = reinterpret_cast<TextureR32 *>(texture)->GetPixelUV(_uv.x, _uv.y);
 				return Spectrum(scalar);
 			}
 			default:

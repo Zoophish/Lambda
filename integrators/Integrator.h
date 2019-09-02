@@ -24,8 +24,8 @@ class Integrator {
 			Spectrum Li = _light.Sample_Li(_event, sampler, lightPDF);
 			if (lightPDF > 0 && !Li.IsBlack()) {
 				const Spectrum f = _event.hit->object->bxdf->f(_event) * std::abs(_event.wiL.y);
-				scatteringPDF = _event.hit->object->bxdf->CosineHemispherePdf(_event.woL, _event.wiL);
-				if (!f.IsBlack()) {
+				scatteringPDF = _event.hit->object->bxdf->Pdf(_event.woL, _event.wiL);
+				if (!f.IsBlack() && scatteringPDF > 0) {
 					const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
 					Ld += Li * f * weight / lightPDF;
 				}
