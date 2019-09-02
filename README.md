@@ -1,5 +1,6 @@
 # Lambda
 A high performance physically-based renderer written in C++ as a project in my spare time.
+![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/lambda/repo_resources/glass_lucy.png)
 
 ## Roadmap of Features
 *2019 Q4*
@@ -16,10 +17,10 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [ ] Instanced geometry
  - [ ] Transform
  - [ ] Hair geometry
- - [x] Mesh light
- - [x] Environment light
- - [x] Light portal (mesh-based)
- - [ ] Microfacet BSDFs
+ - [x] Mesh lights
+ - [x] Environment lights
+ - [x] Light portals (mesh-based)
+ - [x] Microfacet BSDFs
  - [x] Oren-Nayar BRDF
  - [x] Specular BSDF
  - [x] Fresnel BSDF
