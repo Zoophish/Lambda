@@ -2,6 +2,7 @@
 #include <image/Texture.h>
 #include <sampling/Piecewise.h>
 #include <sampling/Sampler.h>
+#include <sampling/Sampling.h>
 #include <maths/maths.h>
 
 class Aperture {
@@ -22,14 +23,26 @@ class BladeAperture : public Aperture {
 	}
 
 	Vec2 Sample_p(Real *_pdf = nullptr) const override {
-		const Real rnd = PI2 * sampler->Get1D() / (Real)blades;
-		const Real thetaMin = std::floor(rnd) * (Real)blades;
-		const Real thetaMax = std::ceil(rnd) * (Real)blades;
+		const Real d = PI2 / (Real)blades;
+		const Real rnd = PI2 * sampler->Get1D();
+		const Real thetaMin = std::floor(rnd / d) * d;
+		const Real thetaMax = thetaMin + d;
 		const Vec2 p1(std::cos(thetaMin), std::sin(thetaMin));
 		const Vec2 p2(std::cos(thetaMax), std::sin(thetaMax));
 		const Vec2 u = sampler->Get2D();
 		return (p1 * u.x + p2 * u.y) * size;
 	}
+};
+
+class CircularAperture : public Aperture {
+	public:
+		CircularAperture(const Real _size) {
+			size = _size;
+		}
+
+		Vec2 Sample_p(Real *_pdf = nullptr) const override {
+			return Sampling::SampleUnitDisk(sampler->Get2D()) * size - Vec2(size * .5, size * .5);
+		}
 };
 
 class MaskedAperture : public Aperture {

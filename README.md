@@ -9,7 +9,8 @@ A high performance physically-based renderer written in C++ as a project in my s
 *2019 Q4*
 **Priority**
  - [x] Path-integrator with multiple importance sampling
- - [x] Offline render-coordinator (with multithreading)
+ - [ ] Improved offline render-coordinator (with multithreading)
+ - [ ] Adaptive pixel sampling
  - [ ] Interactive render application (for debugging)
  - [ ] Denoiser
  - [x] Thin lens camera model
@@ -24,7 +25,7 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [x] Mesh lights
  - [x] Environment lights
  - [x] Light portals (mesh-based)
- - [x] Microfacet BSDFs
+ - [ ] Microfacet BSDFs
  - [x] Oren-Nayar BRDF
  - [x] Specular BSDF
  - [x] Fresnel BSDF
@@ -37,7 +38,7 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [ ] Spatial importance sampling of lights
  - [ ] Packet-tracing
  - [ ] Tonemapping post-processor
- - [ ] Utility integratos (depth, normal, albedo, etc)
+ - [ ] Utility integrators (depth, normal, albedo, etc)
  - [ ] Bidirectional path-integrator
  - [ ] Realistic camera model with lens and sensor profiles
  - [ ] Camera chromatic aberration
