@@ -48,7 +48,7 @@ namespace TileRenderers {
 	}
 
 	//Will render until max spp reached, but stops rendering pixels that are suitably converged.
-	static void ConvergeAndStop(const RenderTile *_tile) {
+	static void MaxSpp(const RenderTile *_tile) {
 		const unsigned w = _tile->film->filmData.GetWidth();
 		const unsigned h = _tile->film->filmData.GetHeight();
 		const Real xi = (Real)1 / w;
@@ -56,7 +56,7 @@ namespace TileRenderers {
 
 		const unsigned s = _tile->w * _tile->h;
 		std::vector<bool> completionBuffer(s, false);
-		unsigned sampleIndex = 0, jump = 31, completions = 0;
+		unsigned sampleIndex = 0, jump = 64, completions = 0;
 		while (sampleIndex < _tile->spp) {
 			if (completions < s) {
 				for (unsigned y = _tile->y; y < _tile->y + _tile->h; ++y) {
@@ -64,7 +64,7 @@ namespace TileRenderers {
 						if (!completionBuffer[(y - _tile->y) * _tile->w + x - _tile->x]) {
 							if (_tile->integrator->sampler->sampleShifter)
 								_tile->integrator->sampler->sampleShifter->SetPixelIndex(w, h, x, y);
-							const Real pre = _tile->film->filmData.GetPixelCoord(x, y).spec.y_fast();
+							const Real pre = _tile->film->filmData.GetPixelCoord(x, y).spec.y();
 							_tile->integrator->sampler->SetSample(sampleIndex);
 							for (unsigned i = 0; i < jump; ++i) {
 								const Real u = xi * ((Real)x + _tile->integrator->sampler->Get1D() - .5);
@@ -74,8 +74,8 @@ namespace TileRenderers {
 								_tile->film->AddSample(sample, x, y);
 								_tile->integrator->sampler->NextSample();
 							}
-							const Real dif = _tile->film->filmData.GetPixelCoord(x, y).spec.y_fast() - pre;
-							if (dif * dif < .004) {
+							const Real dif = (_tile->film->filmData.GetPixelCoord(x, y).spec.y() - pre) / (Real)sampleIndex;
+							if (dif * dif < .00005) {
 								completionBuffer[(y - _tile->y) * _tile->w + x - _tile->x] = true;
 								completions++;
 							}
@@ -85,6 +85,6 @@ namespace TileRenderers {
 			}
 			sampleIndex += jump;
 		}
-		std::cout << std::endl << "Completions: " << completions;
+		if(completions < s) std::cout << std::endl << "Undersampled: " << s - completions << " pixels.";
 	}
 }

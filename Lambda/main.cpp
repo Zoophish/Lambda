@@ -1,8 +1,4 @@
-#include <iostream>
-#include <omp.h>
-#include <thread>
 #include <assets/AssetImporter.h>
-#include<cmath>
 #include <shading/OrenNayar.h>
 #include <shading/Lambertian.h>
 #include <shading/Specular.h>
@@ -33,14 +29,14 @@ int main() {
 	Texture albedo(1,1,Colour(1,1,1));
 	albedo.LoadImageFile("../content/box_tex.png");
 	albedo.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	//OrenNayarBRDF mat(&albedo, 3);
+	//OrenNayarBRDF mat(&albedo, 1);
 	LambertianBRDF mat(&albedo);
 	//mat.SetSigma(1);
 	mesh.bxdf = &mat;
 	scene.AddObject(mesh);
 
 	AssetImporter ai3;
-	ai3.Import("../content/ocean.obj");
+	ai3.Import("../content/spheres.obj");
 	TriangleMesh lucy;
 	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
@@ -50,10 +46,10 @@ int main() {
 	FresnelDielectric fres(1.8);
 	//MicrofacetBRDF mat2(&white, &dist, &fres);
 	//mat2.etaT = 1.8;
-	FresnelBSDF mat2(&white, 1.333);
-	//OrenNayarBRDF mat2(&white, .8);
+	//FresnelBSDF mat2(&white, 1.333);
+	OrenNayarBRDF mat2(&white, .8);
 	lucy.bxdf = &mat2;
-	//scene.AddObject(lucy);
+	scene.AddObject(lucy);
 
 	AssetImporter ai2;
 	ai2.Import("../content/box_light.obj");
@@ -110,11 +106,11 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 800;
+	renderDirective.spp = 20000;
 	renderDirective.tileSizeX = 64;
 	renderDirective.tileSizeY = 64;
 
-	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::ConvergeAndStop, 4);
+	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::MaxSpp, 4);
 	rdr.Render();
 
 	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(0, 0, 0));
