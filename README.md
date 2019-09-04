@@ -9,7 +9,7 @@ A high performance physically-based renderer written in C++ as a project in my s
 *2019 Q4*
 **Priority**
  - [x] Path-integrator with multiple importance sampling
- - [ ] Improved offline render-coordinator (with multithreading)
+ - [x] Improved offline render-coordinator (with multithreading)
  - [ ] Adaptive pixel sampling
  - [ ] Interactive render application (for debugging)
  - [ ] Denoiser

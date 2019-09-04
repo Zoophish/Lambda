@@ -11,6 +11,8 @@ class PathIntegrator : public Integrator {
 			sampler = _sampler;
 		}
 
+		Integrator *clone() const override { return new PathIntegrator(*this); }
+
 		Spectrum Li(const Ray &_r, const Scene &_scene) const override {
 			Spectrum L(0), beta(1);
 			Ray r = _r;

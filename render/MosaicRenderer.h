@@ -4,19 +4,19 @@
 
 class MosaicRenderer {
 	public:
-	RenderMosaic mosaic;
+		RenderMosaic mosaic;
 
-	virtual void Render() const = 0;
+		virtual void Render() const = 0;
 };
 
 class ThreadedMosaicRenderer : public MosaicRenderer {
 	public:
 		unsigned nThreads;
-		void *tileRenderer;
+		void (*tileRenderer)(const RenderTile*);
 
-		ThreadedMosaicRenderer(const RenderDirective &_directive, void *_tileRenderer, const unsigned _nThreads = 4) {
+		ThreadedMosaicRenderer(const RenderDirective &_directive, void* _tileRenderer, const unsigned _nThreads = 4) {
 			mosaic = CreateMosaic(_directive);
-			tileRenderer = _tileRenderer;
+			tileRenderer = reinterpret_cast<void(*)(const RenderTile*)>(_tileRenderer);
 			nThreads = _nThreads;
 		}
 
@@ -27,7 +27,7 @@ class ThreadedMosaicRenderer : public MosaicRenderer {
 			for (unsigned i = 0; i < n + 1; ++i) {
 				const unsigned workers = i < n ? nThreads : remainder;
 				for (unsigned j = 0; j < workers; ++j) {
-					t[j] = std::thread(TileRenderers::RenderTileUniformSpp, &mosaic.tiles[i * nThreads + j]);
+					t[j] = std::thread(tileRenderer, &mosaic.tiles[i * nThreads + j]);
 				}
 				for (unsigned j = 0; j < workers; ++j) {
 					t[j].join();

@@ -6,6 +6,8 @@ struct RenderDirective {
 	Scene *scene;
 	Camera *camera;
 	Integrator *integrator;
+	Sampler *sampler;
+	SampleShifter *sampleShifter;
 	unsigned tileSizeX, tileSizeY, spp;
 };
 
@@ -30,10 +32,14 @@ static RenderMosaic CreateMosaic(const RenderDirective &_directive) {
 	out.tiles.resize(nX * nY);
 	for (unsigned y = 0; y < nY; ++y) {
 		for (unsigned x = 0; x < nX; ++x) {
-			RenderTile t;
+			RenderTile &t = out.tiles[y * nX + x];
 			t.camera = _directive.camera;
 			t.film = _directive.film;
-			t.integrator = _directive.integrator;
+			t.integrator.reset(_directive.integrator->clone()); //Each tile has own copy - thread independence.
+			t.sampler.reset(_directive.sampler->clone()); //
+			t.sampleShifter.reset(new SampleShifter(*_directive.sampleShifter)); //
+			t.sampler->sampleShifter = t.sampleShifter.get();
+			t.integrator->sampler = t.sampler.get();
 			t.scene = _directive.scene;
 			t.spp = _directive.spp;
 			if (padX && x == nX - 1) t.w = rX;
@@ -42,7 +48,6 @@ static RenderMosaic CreateMosaic(const RenderDirective &_directive) {
 			else t.h = _directive.tileSizeY;
 			t.x = x * _directive.tileSizeX;
 			t.y = y * _directive.tileSizeY;
-			out.tiles[y * nX + x] = t;
 		}
 	}
 	return out;

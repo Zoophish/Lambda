@@ -6,6 +6,8 @@ class Sampler {
 	public:
 		SampleShifter *sampleShifter = nullptr;
 
+		virtual Sampler *clone() const = 0;
+
 		virtual void NextSample() = 0;
 
 		virtual void SetSample(const unsigned _sampleIndex) = 0;

@@ -26,24 +26,25 @@ int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box.obj");
+	ai.Import("../content/box_empty.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
 	Texture albedo(1,1,Colour(1,1,1));
 	albedo.LoadImageFile("../content/box_tex.png");
 	albedo.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	OrenNayarBRDF mat(&albedo, 1.3);
-	mat.SetSigma(.5);
+	//OrenNayarBRDF mat(&albedo, 3);
+	LambertianBRDF mat(&albedo);
+	//mat.SetSigma(1);
 	mesh.bxdf = &mat;
-	//scene.AddObject(mesh);
+	scene.AddObject(mesh);
 
 	AssetImporter ai3;
 	ai3.Import("../content/ocean.obj");
 	TriangleMesh lucy;
 	lucy.LoadFromImport(scene.device, ai3);
 	lucy.smoothNormals = true;
-	Texture white(1, 1, Colour(1, 1, 1));
+	Texture white(1, 1, Colour(1, .9, .9));
 	const Real r = MicrofacetDistribution::RoughnessToAlpha(.5);
 	TrowbridgeReitzDistribution dist(r, r);
 	FresnelDielectric fres(1.8);
@@ -52,7 +53,7 @@ int main() {
 	FresnelBSDF mat2(&white, 1.333);
 	//OrenNayarBRDF mat2(&white, .8);
 	lucy.bxdf = &mat2;
-	scene.AddObject(lucy);
+	//scene.AddObject(lucy);
 
 	AssetImporter ai2;
 	ai2.Import("../content/box_light.obj");
@@ -65,17 +66,17 @@ int main() {
 	MeshLight meshLight(&light);
 	meshLight.emission = &emission;
 	meshLight.intensity = 400;
-	//scene.AddObject(light);
-	//scene.AddLight(&meshLight);
+	scene.AddObject(light);
+	scene.AddLight(&meshLight);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
 	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*-.08, 0);
-	scene.AddLight(&ibl);
+	//scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
 	scene.Commit();
@@ -84,42 +85,44 @@ int main() {
 	TextureRGBA32 blueNoise;
 	blueNoise.LoadImageFile("../content/HDR_RGBA_7.png");
 	SampleShifter sampleShifter(&blueNoise);
-	sampleShifter.maskDimensionStart = 4;
+	sampleShifter.maskDimensionStart = 3;
 	HaltonSampler sampler;
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.09);
-	ThinLensCamera cam(Vec3(0, 2.1, 5), 1, 1, 5);
+	ThinLensCamera cam(Vec3(0, 1, 5), 1, 1, 5);
 	cam.aperture = &aperture2;
-	cam.aperture->size = .09;
+	cam.aperture->size = 0;
 	cam.aperture->sampler = &sampler;
 	cam.SetFov(.52);
-	cam.SetRotation(-PI, -PI*.09);
+	cam.SetRotation(-PI, 0);
 
 	//Make the integrator.
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 
-	Film film(800, 800);
+	Film film(512, 512);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
 	renderDirective.camera = &cam;
 	renderDirective.integrator = &pathIntegrator;
 	renderDirective.film = &film;
-	renderDirective.spp = 64;
+	renderDirective.sampler = &sampler;
+	renderDirective.sampleShifter = &sampleShifter;
+	renderDirective.spp = 800;
 	renderDirective.tileSizeX = 64;
 	renderDirective.tileSizeY = 64;
 
-	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::RenderTileUniformSpp, 4);
+	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::ConvergeAndStop, 4);
 	rdr.Render();
 
 	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(0, 0, 0));
 	//Convert film to an RGB image;
-	film.ToXYZTexture(&tex);
+	film.ToRGBTexture(&tex);
 
 	//Save to file.
 	tex.SaveToImageFile("out.png");
-	
+	system("pause");
 	return 0;
 }

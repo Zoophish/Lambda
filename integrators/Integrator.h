@@ -7,6 +7,8 @@ class Integrator {
 	public:
 		Sampler *sampler;
 
+		virtual Integrator *clone() const = 0;
+
 		virtual Spectrum Li(const Ray &_ray, const Scene &_scene) const = 0;
 
 		Spectrum SampleOneLight(SurfaceScatterEvent &_event, const Scene &_scene) const {

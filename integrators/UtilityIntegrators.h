@@ -24,6 +24,8 @@ class DepthPass : public UtilityIntegrator {
 			background = _background;
 		}
 
+		Integrator *clone() const override { return new DepthPass(*this); }
+
 		Colour P(const Ray &_ray, const Scene &_scene) const override {
 			RayHit hit;
 			if (_scene.Intersect(_ray, hit)) {
@@ -37,6 +39,8 @@ class DepthPass : public UtilityIntegrator {
 class NormalPass : public UtilityIntegrator {
 	public:
 		bool normalG;
+
+		Integrator *clone() const override { return new NormalPass(*this); }
 
 		NormalPass(Sampler *_sampler, const bool _normalG = false) {
 			sampler = _sampler;

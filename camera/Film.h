@@ -22,7 +22,7 @@ class Film {
 			 filmData.Pixel(_x, _y).sampleCount++;
 		 }
 
-		 void ToXYZTexture(Texture *_output) const {
+		 void ToRGBTexture(Texture *_output) const {
 			 if (filmData.GetWidth() == _output->GetWidth() && filmData.GetHeight() == _output->GetHeight()) {
 				 const size_t size = filmData.GetWidth() * filmData.GetHeight();
 				 for (size_t i = 0; i < size; ++i) {

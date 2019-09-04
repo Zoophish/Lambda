@@ -16,6 +16,8 @@ class DirectLightingIntegrator : public Integrator {
 			sampler = _sampler;
 		}
 
+		Integrator *clone() const override { return new DirectLightingIntegrator(*this); }
+
 		Spectrum Li(const Ray &_ray, const Scene &_scene) const override {
 			RayHit hit;
 			if (_scene.Intersect(_ray, hit)) {

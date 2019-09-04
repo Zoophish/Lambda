@@ -10,6 +10,8 @@ class HaltonSampler : public Sampler {
 			SetSample(0);
 		}
 
+		Sampler *clone() const override { return new HaltonSampler(*this); }
+
 		void NextSample() override {
 			for (unsigned i = 0; i < maxDimension; ++i) {
 				sequence[i] = Halton(sampleIndex, primes[i]);

@@ -312,6 +312,10 @@ class RGBSpectrum : public CoefficientSpectrum<3> {
 			return YWeight[0] * c[0] + YWeight[1] * c[1] + YWeight[2] * c[2];
 		}
 
+		Real y_fast() const {
+			return std::max(std::max(c[0], c[1]), c[2]);
+		}
+
 		const RGBSpectrum &ToRGBSpectrum() const { return *this; }
 
 		static RGBSpectrum FromRGB(const Real _rgb[3], SpectrumType _type = SpectrumType::Reflectance) {
