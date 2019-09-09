@@ -50,7 +50,6 @@ class TriangleMesh : public Object {
 				trianglesSize = mesh->mNumFaces;
 
 				vertices = (vec3<float>*)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(vec3<float>), verticesSize);
-				//vertices = std::vector<Vertex>(v, v + vertexSize);
 				for (unsigned i = 0; i < verticesSize; ++i) {
 					vertices[i].x = mesh->mVertices[i].x;
 					vertices[i].y = mesh->mVertices[i].y;
@@ -59,7 +58,6 @@ class TriangleMesh : public Object {
 
 				//----	TRIANGLES	----
 				triangles = (Triangle *)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(Triangle), trianglesSize);
-				//triangles = std::vector<Triangle>(t, t + trianglesSize);
 				for (unsigned i = 0; i < trianglesSize; ++i) {
 					triangles[i].v0 = mesh->mFaces[i].mIndices[0];
 					triangles[i].v1 = mesh->mFaces[i].mIndices[1];

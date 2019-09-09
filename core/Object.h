@@ -1,17 +1,17 @@
 #pragma once
+#include <core/Transformable.h>
 #include "Ray.h"
 class Light;
 class BxDF;
 
-class Object {
+class Object : public Transformable {
 	public:
 		RTCGeometry geometry;
-		unsigned geometryId;
 		BxDF *bxdf = nullptr;
 		Light *light = nullptr;
-
+		
 		Object() {}
-
+		
 		RayHit Hit(const RTCRayHit &_h) const {
 			RayHit hit;
 			hit.point.x = _h.ray.org_x + _h.ray.dir_x * _h.ray.tfar;
@@ -22,6 +22,5 @@ class Object {
 			return hit;
 		}
 
-	protected:
 		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
 };

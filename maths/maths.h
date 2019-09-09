@@ -1,14 +1,14 @@
 /*
-----	By Sam Warren 2019	----
-	Single include header for foundational mathematics, no precompiled .lib needed.
+----	Sam Warren 2019	----
+	Single include header for foundational mathematics.
 	SIMD accellerated with SSE instructions; changing numerical precision type
-from float will disable SSE (double support yet to come).
+from float will disable SSE.
 
-----	Define the general numerical precision here:	----
+----	General numerical precision definition:	----
 */
-#define LAMBDA_MATHS_PRECISION_MODE float
+#define LAMBDA_MATHS_PRECISION float
 
-//----	Optional basic typdefs for mathematical types:
+//----	Enable useful typdefs for mathematical types:
 //#define LAMBDA_MATHS_COMMON_TYPES
 
 
@@ -22,12 +22,14 @@ from float will disable SSE (double support yet to come).
 #include "vec3.h"
 #include "vec2.h"
 #include "bounds.h"
+#include "affine3.h"
 
-typedef LAMBDA_MATHS_PRECISION_MODE Real;
+typedef LAMBDA_MATHS_PRECISION Real;
 typedef complex_t<Real> Complex;
 typedef vec3<Real> Vec3;
 typedef vec2<Real> Vec2;
 typedef bounds<Real> Bounds;
+typedef affine3<Real> Affine3;
 
 #define PI 3.14159265358979323846264338
 #define PI2 2. * PI
@@ -74,4 +76,14 @@ typedef vec2<float> vec2f;
 typedef vec2<double> vec2d;
 typedef vec2<int> vec2i;
 typedef vec2<unsigned> vec2u;
+
+typedef bounds<float> boundsf;
+typedef bounds<double> boundsd;
+typedef bounds<int> boundsi;
+typedef bounds<unsigned> boundsu;
+
+typedef affine3<float> affine3f;
+typedef affine3<double> affine3d;
+typedef affine3<int> affine3i;
+typedef affine3<unsigned> affine3u;
 #endif

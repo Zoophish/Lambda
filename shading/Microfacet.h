@@ -31,7 +31,7 @@ class MicrofacetBRDF : public BxDF {
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
 			if (_event.woL.y == 0) return Spectrum(0);
 			const Vec3 wh = distribution->Sample_wh(_u, _event.woL);
-			_event.wiL = Reflect(_event.woL, wh);
+			_event.wiL = Reflect(-_event.woL, wh);
 			if (!SameHemisphere(_event.woL, _event.wiL)) {
 				_pdf = 0;
 				return Spectrum(0);

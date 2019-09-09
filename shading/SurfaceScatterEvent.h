@@ -53,7 +53,7 @@ inline Real SinTheta(const Vec3 &_w) { return std::sqrt(Sin2Theta(_w)); }
 
 inline Real CosPhi(const Vec3 &_w) {
 	const Real sinTheta = SinTheta(_w);
-	return (sinTheta == 0) ? 0 : maths::Clamp(_w.x / sinTheta, (Real)-1, (Real)1);
+	return (sinTheta < 0.000001) ? 0 : maths::Clamp(_w.x / sinTheta, (Real)-1, (Real)1);
 }
 
 inline Real Cos2Phi(const Vec3 &_w) {
@@ -62,7 +62,7 @@ inline Real Cos2Phi(const Vec3 &_w) {
 
 inline Real SinPhi(const Vec3 &_w) {
 	const Real sinTheta = SinTheta(_w);
-	return (sinTheta == 0) ? 0 : maths::Clamp(_w.z / sinTheta, (Real)-1, (Real)1);
+	return (sinTheta < 0.000001) ? 0 : maths::Clamp(_w.z / sinTheta, (Real)-1, (Real)1);
 }
 
 inline Real Sin2Phi(const Vec3 &_w) { return SinPhi(_w) * SinPhi(_w); }

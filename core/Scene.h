@@ -91,7 +91,7 @@ class Scene {
 		}
 
 		void RemoveObject(const unsigned _i) {
-			rtcDetachGeometry(scene, objects[_i]->geometryId);
+			rtcDetachGeometry(scene, _i);
 			objects.erase(objects.begin() + _i);
 		}
 

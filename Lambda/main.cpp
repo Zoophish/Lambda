@@ -11,6 +11,7 @@
 #include <camera/EnvironmentCamera.h>
 #include <camera/ThinLensCamera.h>
 #include <core/TriangleMesh.h>
+#include <core/Instance.h>
 #include <lighting/MeshLight.h>
 #include <lighting/EnvironmentLight.h>
 #include <lighting/MeshPortal.h>
@@ -18,37 +19,50 @@
 #include <lighting/Blackbody.h>
 #include <camera/Aperture.h>
 
+#include <random>
+
 int main() {
 	Scene scene;
 
 	AssetImporter ai;
-	ai.Import("../content/box_empty.obj");
+	ai.Import("../content/box.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
 	mesh.smoothNormals = true;
 	Texture albedo(1,1,Colour(1,1,1));
 	albedo.LoadImageFile("../content/box_tex.png");
 	albedo.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	//OrenNayarBRDF mat(&albedo, 1);
-	LambertianBRDF mat(&albedo);
-	//mat.SetSigma(1);
+	OrenNayarBRDF mat(&albedo, 1);
 	mesh.bxdf = &mat;
-	scene.AddObject(mesh);
 
-	AssetImporter ai3;
-	ai3.Import("../content/spheres.obj");
+	ai.Import("../content/lucy.obj");
 	TriangleMesh lucy;
-	lucy.LoadFromImport(scene.device, ai3);
-	lucy.smoothNormals = true;
+	lucy.LoadFromImport(scene.device, ai);
+	lucy.smoothNormals = false;
 	Texture white(1, 1, Colour(1, .9, .9));
-	const Real r = MicrofacetDistribution::RoughnessToAlpha(.5);
-	TrowbridgeReitzDistribution dist(r, r);
+	const Real r = MicrofacetDistribution::RoughnessToAlpha(.005);
+	BeckmannDistribution dist(r, r);
 	FresnelDielectric fres(1.8);
-	//MicrofacetBRDF mat2(&white, &dist, &fres);
+	MicrofacetBRDF mat2(&white, &dist, &fres);
 	//mat2.etaT = 1.8;
-	//FresnelBSDF mat2(&white, 1.333);
-	OrenNayarBRDF mat2(&white, .8);
+	//FresnelBSDF glass(&white, 1.333);
+	//OrenNayarBRDF mat2(&white, 3);
 	lucy.bxdf = &mat2;
+
+	//InstanceProxy proxy(&scene.device, &lucy);
+	//std::mt19937 mt(5);
+	//std::uniform_real_distribution<Real> d(0,1);
+	//std::vector<Instance*> instances;
+
+	//for (unsigned i = 0; i < 400; ++i) {
+	//	instances.push_back(new Instance(&proxy));
+	//	instances.back()->bxdf = &glass;
+	//	instances.back()->SetScale(Vec3(.1, .1 , .1));
+	//	instances.back()->SetPosition(Vec3(d(mt) * 2 - 1, d(mt) * 2, d(mt) * 2 - 1));
+	//	rtcSetGeometryTransform(instances.back()->geometry, 0, RTC_FORMAT_FLOAT3X4_COLUMN_MAJOR, &instances.back()->xfm);
+	//	scene.AddObject(*instances.back());
+	//}
+	//scene.AddObject(mesh);
 	scene.AddObject(lucy);
 
 	AssetImporter ai2;
@@ -62,17 +76,17 @@ int main() {
 	MeshLight meshLight(&light);
 	meshLight.emission = &emission;
 	meshLight.intensity = 400;
-	scene.AddObject(light);
-	scene.AddLight(&meshLight);
+	//scene.AddObject(light);
+	//scene.AddLight(&meshLight);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
+	envMap.LoadImageFile("../content/cloud_layers_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*-.08, 0);
-	//scene.AddLight(&ibl);
+	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
 	scene.Commit();
@@ -88,7 +102,7 @@ int main() {
 	CircularAperture aperture2(.09);
 	ThinLensCamera cam(Vec3(0, 1, 5), 1, 1, 5);
 	cam.aperture = &aperture2;
-	cam.aperture->size = 0;
+	cam.aperture->size = 0.09;
 	cam.aperture->sampler = &sampler;
 	cam.SetFov(.52);
 	cam.SetRotation(-PI, 0);
@@ -97,7 +111,7 @@ int main() {
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 
-	Film film(512, 512);
+	Film film(1024, 1024);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -106,11 +120,11 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 20000;
+	renderDirective.spp = 132;
 	renderDirective.tileSizeX = 64;
 	renderDirective.tileSizeY = 64;
 
-	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::MaxSpp, 4);
+	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp, 4);
 	rdr.Render();
 
 	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(0, 0, 0));
@@ -119,6 +133,5 @@ int main() {
 
 	//Save to file.
 	tex.SaveToImageFile("out.png");
-	system("pause");
 	return 0;
 }
