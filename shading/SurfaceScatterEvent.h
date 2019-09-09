@@ -41,6 +41,19 @@ inline Vec3 Reflect(const Vec3 &_w, const Vec3 &_n) {
 	return _w - _n * 2 * maths::Dot(_n, _w);
 }
 
+inline bool Refract(const Vec3 &_w, const Vec3 &_n, const Real _eta, Vec3 *_wr) {
+	const Real cosThetaI = maths::Dot(_w, _n);
+	const Real sin2ThetaI = std::max((Real)0, (Real)1 - cosThetaI * cosThetaI);
+	const Real sin2ThetaT = _eta * _eta * sin2ThetaI;
+	if (sin2ThetaT >= 1) { //TIR
+		*_wr = Vec3(-1, 1, -1) * _w;
+		return false;
+	}
+	const Real cosThetaT = std::sqrt(1 - sin2ThetaT);
+	*_wr = -_w * _eta + _n * (_eta * cosThetaI - cosThetaT);
+	return true;
+}
+
 inline Real CosTheta(const Vec3 &_w) { return _w.y; }
 
 inline Real Cos2Theta(const Vec3 &_w) { return _w.y * _w.y; }

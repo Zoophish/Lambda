@@ -28,7 +28,8 @@ int main() {
 	ai.Import("../content/box.obj");
 	TriangleMesh mesh;
 	mesh.LoadFromImport(scene.device, ai);
-	mesh.smoothNormals = true;
+	mesh.smoothNormals = false;
+	mesh.hasUVs = true;
 	Texture albedo(1,1,Colour(1,1,1));
 	albedo.LoadImageFile("../content/box_tex.png");
 	albedo.interpolationMode = InterpolationMode::INTERP_NEAREST;
@@ -62,7 +63,7 @@ int main() {
 	//	rtcSetGeometryTransform(instances.back()->geometry, 0, RTC_FORMAT_FLOAT3X4_COLUMN_MAJOR, &instances.back()->xfm);
 	//	scene.AddObject(*instances.back());
 	//}
-	//scene.AddObject(mesh);
+	scene.AddObject(mesh);
 	scene.AddObject(lucy);
 
 	AssetImporter ai2;
@@ -120,7 +121,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 132;
+	renderDirective.spp = 200;
 	renderDirective.tileSizeX = 64;
 	renderDirective.tileSizeY = 64;
 

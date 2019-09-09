@@ -1,6 +1,8 @@
 # Lambda
 A high performance physically-based renderer written in C++ as a project in my spare time.
 
+![Microfacet (Beckmann) test @100spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/box_outdoors.png)
+
 ![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/glass_lucy_2.png)
 
 ![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png)
@@ -18,8 +20,8 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [x] Importance-sampled image/polygon aperture
  - [ ] Improved import system and scene structure
  - [x] Triangulated mesh geometry
- - [ ] Instanced geometry
- - [ ] Transform
+ - [x] Instanced geometry
+ - [x] Transform
  - [ ] Hair geometry
  - [x] Sample scrambler with dithering (blue-noise)
  - [x] Mesh lights

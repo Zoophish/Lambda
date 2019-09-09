@@ -48,7 +48,3 @@ class MicrofacetBRDF : public BxDF {
 			return distribution->Pdf(wh) / (4 * maths::Dot(_wo, wh));
 		}
 };
-
-class MicrofacetBTDF : public BxDF {
-
-};
