@@ -1,6 +1,5 @@
 #pragma once
 #include "BxDF.h"
-#include "SurfaceScatterEvent.h"
 
 class LambertianBRDF : public BxDF {
 	public:

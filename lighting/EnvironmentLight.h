@@ -56,6 +56,7 @@ class EnvironmentLight : public Light {
 			if (sinTheta == 0) return 0;
 			const Vec3 wiOffset = maths::SphericalDirection(sinTheta, std::cos(theta), phi);
 			if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, wiOffset))) {
+				const Real _pdf = distribution->PDF(Vec2(phi * INV_PI2, theta * INV_PI).Wrap()) / (2 * PI * PI * sinTheta);;
 				return distribution->PDF(Vec2(phi * INV_PI2, theta * INV_PI).Wrap()) / (2 * PI * PI * sinTheta);
 			}
 			else return 0;

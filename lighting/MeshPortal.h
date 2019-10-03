@@ -18,7 +18,6 @@ class MeshPortal : public Light {
 			parentLight = _parentLight;
 			mesh = _mesh;
 			_mesh->light = this;
-			parentLight->radius = 0.1; //Prevents over sampling of parent.
 			InitDistribution();
 		}
 
@@ -26,7 +25,7 @@ class MeshPortal : public Light {
 			const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 			const Vec2 u = _sampler->Get2D();
 			const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
-			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * .001, p)) {
+			if (_event.scene->MutualVisibility(_event.hit->point, p)) {
 				_event.wi = (p - _event.hit->point).Normalised();
 				Real triArea;
 				Vec3 normal;

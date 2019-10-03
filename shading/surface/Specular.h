@@ -1,6 +1,6 @@
 #pragma once
-#include "Fresnel.h"
 #include "BxDF.h"
+#include "../Fresnel.h"
 
 class FresnelBSDF : public BxDF {
 	public:

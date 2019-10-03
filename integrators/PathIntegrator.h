@@ -1,6 +1,5 @@
 #pragma once
 #include "Integrator.h"
-#include <shading/BxDF.h>
 
 class PathIntegrator : public Integrator {
 	public:

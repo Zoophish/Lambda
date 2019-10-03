@@ -1,8 +1,7 @@
 /*----	By Sam Warren 2019	----
   ----	Allows for the construction and loading of meshes that can be passed into Embree.	----
 
-	Embree will refer to the data kept here when rays are queried. Any changes made to the
-	mesh data must be committed to take effect.
+	Any changes made to the mesh data must be committed to take effect.
 
 	DEVELOPMENT NOTE: May create a resource manager that stores all imported data, then this
 	class only has to point to the data in resource manager; saves memory.
@@ -100,6 +99,13 @@ class TriangleMesh : public Object {
 				rtcRetainGeometry(geometry);
 			}
 			else std::cout << std::endl << "No mesh in imported object.";
+		}
+
+		void Commit() override {
+			//for (unsigned i = 0; i < verticesSize; ++i) {
+			//	vertices[i] = xfm * vertices[i];
+			//}
+			rtcCommitGeometry(geometry);
 		}
 
 		//To avoid duplicate computation, we can optionally fetch the normal in the same function.

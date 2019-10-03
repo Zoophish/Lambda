@@ -3,7 +3,7 @@
 #include <core/Scene.h>
 #include <sampling/Sampler.h>
 #include <core/Ray.h>
-#include <shading/BxDF.h>
+#include <shading/surface/BxDF.h>
 
 enum class LightStrategy {
 	SAMPLE_ONE,

@@ -9,8 +9,6 @@ Structure that provides access to necessary information needed for shading.
 class BxDF;
 class Scene;
 
-
-//Align?
 struct SurfaceScatterEvent {
 	Vec3 wo, wi, woL, wiL;
 	Real pdf, eta = 1.;

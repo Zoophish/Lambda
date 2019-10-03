@@ -6,10 +6,18 @@ class Colour {
 	public:
 		float r, g, b;
 
-		Colour(const float _r = 0, const float _b = 0, const float _g = 0) {
+		Colour() {}
+
+		Colour(const float _r, const float _b, const float _g) {
 			r = _r;
 			b = _b;
 			g = _g;
+		}
+
+		Colour(const float _l) {
+			r = _l;
+			g = _l;
+			b = _l;
 		}
 
 		Colour(const float *_rgb) {

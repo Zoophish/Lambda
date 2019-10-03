@@ -8,7 +8,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#define DEFAULT_IMPORT_FLAGS aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenSmoothNormals
+#define DEFAULT_IMPORT_FLAGS aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenSmoothNormals | aiProcess_OptimizeGraph
 
 class AssetImporter {
 	protected:
@@ -16,13 +16,14 @@ class AssetImporter {
 
 	public:
 		const aiScene* scene;
-
+		
 		AssetImporter() {
 			scene = nullptr;
 		}
 
 		bool Import(const std::string &_path) {
 			scene = importer.ReadFile(_path, DEFAULT_IMPORT_FLAGS);
+			importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
 			if (!scene) {
 				std::cout << importer.GetErrorString();
 				return false;

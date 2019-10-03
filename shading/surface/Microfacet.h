@@ -1,6 +1,6 @@
 #pragma once
-#include "Fresnel.h"
-#include "MicrofacetDistribution.h"
+#include "../Fresnel.h"
+#include "../MicrofacetDistribution.h"
 
 class MicrofacetBRDF : public BxDF {
 	public:

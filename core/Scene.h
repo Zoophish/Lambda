@@ -15,7 +15,6 @@
 #include "Object.h"
 #include <lighting/Light.h>
 #include <sampling/Piecewise.h>
-//#include <lighting/EnvironmentLight.h>
 
 class Scene {
 	protected:
@@ -53,6 +52,7 @@ class Scene {
 			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
 			rtcIntersect1(scene, &context, &rayHit);
 			if(rayHit.hit.geomID != RTC_INVALID_GEOMETRY_ID && rayHit.ray.tfar > 0 && rayHit.ray.tfar < INFINITY) {
+				_hit.tFar = rayHit.ray.tfar;
 				_hit = objects[rayHit.hit.geomID]->Hit(rayHit);
 				_hit.object = objects[rayHit.hit.geomID];
 				_hit.primId = rayHit.hit.primID;
@@ -75,7 +75,7 @@ class Scene {
 			return rayHit.ray.tfar > (mag - 0.0002);
 		}
 
-		bool RayEscapes(const Ray &_ray) const {
+		bool RayEscapes(const Ray &_ray) const {	
 			RTCRay eRay = _ray.ToRTCRay();
 			RTCIntersectContext context;
 			rtcInitIntersectContext(&context);
@@ -85,7 +85,7 @@ class Scene {
 		}
 
 		void AddObject(Object &_obj) {
-			rtcCommitGeometry(_obj.geometry);
+			_obj.Commit();
 			rtcAttachGeometryByID(scene, _obj.geometry, objects.size());
 			objects.push_back(&_obj);
 		}

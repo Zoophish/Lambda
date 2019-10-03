@@ -4,11 +4,11 @@
 #pragma once
 #include <camera/Camera.h>
 
-class EnvironmentCamera : public Camera {
+class SphericalCamera : public Camera {
 	public:
 		Real offsetPhi, offsetTheta;
 
-		EnvironmentCamera(const Vec3& _origin, const Real _offsetPhi = 0, const Real _offsetTheta = 0) {
+		SphericalCamera(const Vec3& _origin, const Real _offsetPhi = 0, const Real _offsetTheta = 0) {
 			origin = _origin;
 			offsetPhi = _offsetPhi;
 			offsetTheta = _offsetTheta;

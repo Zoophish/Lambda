@@ -1,4 +1,5 @@
 #pragma once
+#include <omp.h>
 #include <thread>
 #include "Render.h"
 
@@ -36,6 +37,19 @@ class ThreadedMosaicRenderer : public MosaicRenderer {
 						p = pt;
 						std::cout << std::endl << p << '%';
 					}
+				}
+			}
+		}
+
+		void RenderOmp() const {
+			int p = 0;
+			#pragma omp parallel for
+			for (int i = 0; i < mosaic.tiles.size(); ++i) {
+				tileRenderer(&mosaic.tiles[i]);
+				const Real pt = 100.f * (Real)i / mosaic.tiles.size();
+				if (pt > p + 1) {
+					p = pt;
+					std::cout << std::endl << p << '%';
 				}
 			}
 		}

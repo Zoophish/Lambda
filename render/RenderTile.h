@@ -75,7 +75,7 @@ namespace TileRenderers {
 								_tile->integrator->sampler->NextSample();
 							}
 							const Real dif = (_tile->film->filmData.GetPixelCoord(x, y).spec.y() - pre) / (Real)sampleIndex;
-							if (dif * dif < .00005) {
+							if (dif * dif < .05) {
 								completionBuffer[(y - _tile->y) * _tile->w + x - _tile->x] = true;
 								completions++;
 							}

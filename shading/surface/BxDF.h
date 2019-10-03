@@ -1,6 +1,6 @@
 #pragma once
-#include "TextureAdapter.h"
-#include "SurfaceScatterEvent.h"
+#include "../TextureAdapter.h"
+#include "../SurfaceScatterEvent.h"
 #include <sampling/Sampling.h>
 
 class BxDF {

@@ -8,7 +8,7 @@ class UtilityIntegrator : public Integrator {
 		Spectrum Li(const Ray &_ray, const Scene &_scene) const override {
 			const Colour c = P(_ray, _scene);
 			const Real cr[3] = { c.r, c.g, c.b };
-			return Spectrum::FromRGB(cr);
+			return Spectrum::FromRGB(cr, SpectrumType::Reflectance);
 		}
 };
 

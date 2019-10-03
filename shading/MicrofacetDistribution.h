@@ -1,6 +1,6 @@
 #pragma once
 #include <maths/maths.h>
-#include "BxDF.h"
+#include "surface/BxDF.h"
 
 class MicrofacetDistribution {
 	public:

@@ -28,6 +28,11 @@ class Instance : public Object {
 			rtcRetainGeometry(geometry);
 		}
 
+		void Commit() override {
+			rtcSetGeometryTransform(geometry, 0, RTC_FORMAT_FLOAT3X4_COLUMN_MAJOR, &xfm[0]);
+			rtcCommitGeometry(geometry);
+		}
+
 	protected:
 		InstanceProxy *proxy;
 

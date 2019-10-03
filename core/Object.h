@@ -1,6 +1,7 @@
 #pragma once
 #include <core/Transformable.h>
 #include "Ray.h"
+class MediaBoundary;
 class Light;
 class BxDF;
 
@@ -9,6 +10,7 @@ class Object : public Transformable {
 		RTCGeometry geometry;
 		BxDF *bxdf = nullptr;
 		Light *light = nullptr;
+		MediaBoundary *mediaBoundary = nullptr;
 		
 		Object() {}
 		
@@ -21,6 +23,8 @@ class Object : public Transformable {
 			ProcessHit(hit, _h);
 			return hit;
 		}
+
+		virtual void Commit() = 0;
 
 		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
 };

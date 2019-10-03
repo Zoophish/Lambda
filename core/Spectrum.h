@@ -8,7 +8,7 @@
 
 static const unsigned sampledLambdaStart = 400;
 static const unsigned sampledLambdaEnd = 700;
-static const unsigned nSpectralSamples = 60;
+static const unsigned nSpectralSamples = 32;
 static const Real invNSpectralSamples = 1. / Real(nSpectralSamples);
 
 enum class SpectrumType { Reflectance, Illuminant };
@@ -31,7 +31,7 @@ class CoefficientSpectrum {
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] = _v;
 		}
-
+		
 		Real &operator[](const unsigned _i) {
 			return c[_i];
 		}
@@ -40,25 +40,25 @@ class CoefficientSpectrum {
 		}
 
 		CoefficientSpectrum& operator+=(const CoefficientSpectrum &_s) {
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] += _s[i];
 			return *this;
 		}
 		CoefficientSpectrum& operator-=(const CoefficientSpectrum &_s) {
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] -= _s[i];
 			return *this;
 		}
 		CoefficientSpectrum& operator*=(const CoefficientSpectrum &_s) {
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] *= _s[i];
 			return *this;
 		}
 		CoefficientSpectrum& operator/=(const CoefficientSpectrum &_s) {
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				c[i] /= _s[i];
 			return *this;
@@ -66,49 +66,56 @@ class CoefficientSpectrum {
 
 		CoefficientSpectrum operator+(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] += _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator-(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] -= _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator*(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] *= _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator/(const CoefficientSpectrum &_s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] /= _s[i];
 			return tmp;
 		}
 		CoefficientSpectrum operator+(const Real _s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] += _s;
 			return tmp;
 		}
 		CoefficientSpectrum operator-(const Real _s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] -= _s;
 			return tmp;
 		}
+		CoefficientSpectrum operator-() const {
+			CoefficientSpectrum tmp = *this;
+			#pragma omp simd
+			for (unsigned i = 0; i < spectrumSamples; ++i)
+				tmp[i] *= -1;
+			return tmp;
+		}
 		CoefficientSpectrum operator*(const Real _s) const {
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] *= _s;
 			return tmp;
@@ -116,7 +123,7 @@ class CoefficientSpectrum {
 		CoefficientSpectrum operator/(const Real _s) const {
 			const Real inv = 1. / _s;
 			CoefficientSpectrum tmp = *this;
-			//#pragma omp simd
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp[i] *= inv;
 			return tmp;
@@ -285,7 +292,7 @@ class SampledSpectrum : public CoefficientSpectrum<nSpectralSamples> {
 		rgbIllum2SpectMagenta, rgbIllum2SpectYellow, rgbIllum2SpectRed, rgbIllum2SpectGreen, rgbIllum2SpectBlue; 
 };
 
-class RGBSpectrum : public CoefficientSpectrum<3> {
+class alignas(16) RGBSpectrum : public CoefficientSpectrum<3> {
 	using CoefficientSpectrum<3>::c;
 
 	public:
