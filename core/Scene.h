@@ -85,7 +85,7 @@ class Scene {
 		}
 
 		void AddObject(Object &_obj) {
-			_obj.Commit();
+			_obj.Commit(device);
 			rtcAttachGeometryByID(scene, _obj.geometry, objects.size());
 			objects.push_back(&_obj);
 		}

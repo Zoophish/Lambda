@@ -11,7 +11,7 @@
 	The vec3<float> type is already aligned, even with the switch 'LAMBDA_VEC3_USE_SSE' turned off.
 	Data independant from Embree (e.g. uvCoords, tangents) can use any precision and alignment and thus inherit 'LAMBDA_MATHS_PRECISION_MODE'. 
 	KEEP THIS SWITCH ON if Embree is being used:	*/
-#define LAMBDA_MESH_FORCE_FLOAT32
+#define LAMBDA_GEOMETRY_FORCE_FLOAT32
 
 #pragma once
 #include <vector>
@@ -22,12 +22,14 @@ struct Triangle { unsigned v0, v1, v2; };
 
 class TriangleMesh : public Object {
 	public:
-		#ifdef LAMBDA_MESH_FORCE_FLOAT32
-		vec3<float> *vertices;
+		#ifdef LAMBDA_GEOMETRY_FORCE_FLOAT32
+		//vec3<float> *vertices;
 		#else
 		Vec3 *vertices;
 		#endif
-		Triangle *triangles;
+		//Triangle *triangles;
+		std::vector<vec3<float>> vertices;
+		std::vector<Triangle> triangles;
 		size_t trianglesSize, verticesSize;
 		std::vector<Vec2> uvs;
 
@@ -38,9 +40,9 @@ class TriangleMesh : public Object {
 			hasUVs = false;
 		}
 
-		void LoadFromImport(RTCDevice &_device, const AssetImporter &_ai, const unsigned _index = 0) {
+		void LoadFromImport(const AssetImporter &_ai, const unsigned _index = 0) {
 			if (_ai.scene && _ai.scene->HasMeshes()) {
-				geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
+				//geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
 
 				const aiMesh *mesh = _ai.scene->mMeshes[_index];
 
@@ -48,7 +50,9 @@ class TriangleMesh : public Object {
 				verticesSize = mesh->mNumVertices;
 				trianglesSize = mesh->mNumFaces;
 
-				vertices = (vec3<float>*)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(vec3<float>), verticesSize);
+				//vertices = (vec3<float>*)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(vec3<float>), verticesSize);
+				vertices.resize(verticesSize);
+				rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, &vertices[0], 0, sizeof(vec3<float>), verticesSize);
 				for (unsigned i = 0; i < verticesSize; ++i) {
 					vertices[i].x = mesh->mVertices[i].x;
 					vertices[i].y = mesh->mVertices[i].y;
@@ -56,7 +60,9 @@ class TriangleMesh : public Object {
 				}
 
 				//----	TRIANGLES	----
-				triangles = (Triangle *)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(Triangle), trianglesSize);
+				//triangles = (Triangle *)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(Triangle), trianglesSize);
+				triangles.resize(trianglesSize);
+				rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, &triangles[0], 0, sizeof(Triangle), trianglesSize);
 				for (unsigned i = 0; i < trianglesSize; ++i) {
 					triangles[i].v0 = mesh->mFaces[i].mIndices[0];
 					triangles[i].v1 = mesh->mFaces[i].mIndices[1];
@@ -96,15 +102,15 @@ class TriangleMesh : public Object {
 						uvs[i].y = mesh->mTextureCoords[0][i].y;
 					}
 				}
-				rtcRetainGeometry(geometry);
 			}
 			else std::cout << std::endl << "No mesh in imported object.";
 		}
 
-		void Commit() override {
-			//for (unsigned i = 0; i < verticesSize; ++i) {
-			//	vertices[i] = xfm * vertices[i];
-			//}
+		void Commit(const RTCDevice &_device) override {
+			geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
+			rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, &vertices[0], 0, sizeof(vec3<float>), verticesSize);
+			rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, &triangles[0], 0, sizeof(Triangle), trianglesSize);
+			rtcRetainGeometry(geometry);
 			rtcCommitGeometry(geometry);
 		}
 

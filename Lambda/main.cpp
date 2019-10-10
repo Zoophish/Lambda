@@ -27,7 +27,7 @@ int main() {
 	AssetImporter ai;
 	ai.Import("../content/sponza.obj");
 	TriangleMesh mesh;
-	mesh.LoadFromImport(scene.device, ai);
+	mesh.LoadFromImport(ai);
 	mesh.smoothNormals = false;
 	mesh.hasUVs = false;
 	Texture albedo(1,1,Colour(1,1,1));
@@ -50,7 +50,7 @@ int main() {
 
 	ai.Import("../content/lucy.obj");
 	TriangleMesh lucy;
-	lucy.LoadFromImport(scene.device, ai);
+	lucy.LoadFromImport(ai);
 	lucy.smoothNormals = false;
 	lucy.hasUVs = false;
 	const Real r = MicrofacetDistribution::RoughnessToAlpha(.05);

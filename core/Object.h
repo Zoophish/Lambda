@@ -1,3 +1,6 @@
+//----	Sam Warren 2019	----
+//Embree object base class.
+
 #pragma once
 #include <core/Transformable.h>
 #include "Ray.h"
@@ -24,7 +27,7 @@ class Object : public Transformable {
 			return hit;
 		}
 
-		virtual void Commit() = 0;
+		virtual void Commit(const RTCDevice &_device) = 0;
 
 		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
 };

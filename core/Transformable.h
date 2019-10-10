@@ -1,5 +1,5 @@
 //----	Sam Warren 2019	----
-//3x3 row-major transformation matrix plus a translation vector.
+//3x3 column-major transformation matrix plus a 3D translation vector; xfm = 3x4 column major.
 
 #pragma once
 #include <maths/maths.h>
@@ -9,6 +9,8 @@ class Transformable {
 		Affine3 xfm;
 
 		Transformable() {}
+
+		Transformable(const Affine3 &_xfm) : xfm(_xfm) {}
 		
 		inline void SetPosition(const Vec3 &_pos) {
 			xfm[9] = _pos.x;
@@ -22,7 +24,23 @@ class Transformable {
 			xfm[8] = _scale.z;
 		}
 
-		inline void SetRotation(const Real _theta, const Real _phi) {
-
+		inline void SetEulerAngles(const Vec3 &_eulers) {
+			xfm = Affine3::GetRotationX(_eulers.x) * Affine3::GetRotationY(_eulers.y) *Affine3::GetRotationZ(_eulers.z);
 		}
+
+		inline void AddChild(Transformable *_child) {
+			children.push_back(_child);
+			_child->parent = this;
+		}
+
+		//Get world-space affine transformation matrix.
+		inline Affine3 GetAffine() const {
+			return parent ? parent->xfm * this->xfm : xfm;
+		}
+
+		//inline Transformable operator*(const Transformable &_rhs) { return Transformable(xfm * _rhs.xfm); }
+
+	private:
+		std::vector<Transformable*> children;
+		Transformable *parent;
 };

@@ -23,12 +23,12 @@ class Instance : public Object {
 	public:
 		Instance(InstanceProxy *_proxy) {
 			proxy = _proxy;
+		}
+
+		void Commit(const RTCDevice &_device) override {
 			geometry = rtcNewGeometry(*proxy->iDevice, RTC_GEOMETRY_TYPE_INSTANCE);
 			rtcSetGeometryInstancedScene(geometry, proxy->iScene);
 			rtcRetainGeometry(geometry);
-		}
-
-		void Commit() override {
 			rtcSetGeometryTransform(geometry, 0, RTC_FORMAT_FLOAT3X4_COLUMN_MAJOR, &xfm[0]);
 			rtcCommitGeometry(geometry);
 		}
