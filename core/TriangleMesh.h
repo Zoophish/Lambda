@@ -23,15 +23,13 @@ struct Triangle { unsigned v0, v1, v2; };
 class TriangleMesh : public Object {
 	public:
 		#ifdef LAMBDA_GEOMETRY_FORCE_FLOAT32
-		//vec3<float> *vertices;
+			std::vector<vec3<float>> vertices;
 		#else
-		Vec3 *vertices;
+			std::vector<Vec3> vertices;
 		#endif
-		//Triangle *triangles;
-		std::vector<vec3<float>> vertices;
 		std::vector<Triangle> triangles;
-		size_t trianglesSize, verticesSize;
 		std::vector<Vec2> uvs;
+		size_t trianglesSize, verticesSize;
 
 		bool smoothNormals, hasUVs;
 
@@ -42,17 +40,13 @@ class TriangleMesh : public Object {
 
 		void LoadFromImport(const AssetImporter &_ai, const unsigned _index = 0) {
 			if (_ai.scene && _ai.scene->HasMeshes()) {
-				//geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
 				const aiMesh *mesh = _ai.scene->mMeshes[_index];
 
 				//----	VERTICES	----
 				verticesSize = mesh->mNumVertices;
 				trianglesSize = mesh->mNumFaces;
 
-				//vertices = (vec3<float>*)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(vec3<float>), verticesSize);
 				vertices.resize(verticesSize);
-				rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, &vertices[0], 0, sizeof(vec3<float>), verticesSize);
 				for (unsigned i = 0; i < verticesSize; ++i) {
 					vertices[i].x = mesh->mVertices[i].x;
 					vertices[i].y = mesh->mVertices[i].y;
@@ -60,9 +54,7 @@ class TriangleMesh : public Object {
 				}
 
 				//----	TRIANGLES	----
-				//triangles = (Triangle *)rtcSetNewGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(Triangle), trianglesSize);
 				triangles.resize(trianglesSize);
-				rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, &triangles[0], 0, sizeof(Triangle), trianglesSize);
 				for (unsigned i = 0; i < trianglesSize; ++i) {
 					triangles[i].v0 = mesh->mFaces[i].mIndices[0];
 					triangles[i].v1 = mesh->mFaces[i].mIndices[1];

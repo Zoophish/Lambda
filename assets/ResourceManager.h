@@ -17,6 +17,8 @@ class ResourcePool {
 			return pool.erase(_tag);
 		}
 
+		inline size_t Size() const { return pool.size(); }
+
 		T &Get(const std::string &_tag) { return pool.find(_tag); }
 };
 
