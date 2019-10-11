@@ -154,14 +154,14 @@ class texture_t {
 
 		protected:
 			inline Format GetPixelUVNearest(const float _u, const float _v) const {
-				const unsigned int x = std::min((float)(width - 1), _u * (float)width);
-				const unsigned int y = std::min((float)(height - 1), _v * (float)height);
+				const unsigned int x = std::min((float)(width - 1), maths::Clamp(_u, 0.f, 1.f) * (float)width);
+				const unsigned int y = std::min((float)(height - 1), maths::Clamp(_v, 0.f, 1.f) * (float)height);
 				return GetPixelCoord(x, y);
 			}
 
 			inline Format GetPixelUVBilinear(const float _u, const float _v) const {
-				const float fx = std::min((float)(width - 1), _u * (float)width);
-				const float fy = std::min((float)(height - 1), _v * (float)height);
+				const float fx = std::min((float)(width - 1), maths::Clamp(_u, 0.f, 1.f) * (float)width);
+				const float fy = std::min((float)(height - 1), maths::Clamp(_v, 0.f, 1.f) * (float)height);
 				const unsigned x = (unsigned)fx;
 				const unsigned y = (unsigned)fy;
 				const unsigned x1 = std::min(x + 1, width - 1);

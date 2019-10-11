@@ -3,19 +3,13 @@
 
 	Any changes made to the mesh data must be committed to take effect.
 
-	DEVELOPMENT NOTE: May create a resource manager that stores all imported data, then this
-	class only has to point to the data in resource manager; saves memory.
-
 	Embree only supports 32-bit floats and 16-byte aligned vertex structures.
-	This is a safety switch preventing a non vec3<float> implementation being used for mesh data.
-	The vec3<float> type is already aligned, even with the switch 'LAMBDA_VEC3_USE_SSE' turned off.
-	Data independant from Embree (e.g. uvCoords, tangents) can use any precision and alignment and thus inherit 'LAMBDA_MATHS_PRECISION_MODE'. 
-	KEEP THIS SWITCH ON if Embree is being used:	*/
+	Keep defined if Embree is being used:	*/
 #define LAMBDA_GEOMETRY_FORCE_FLOAT32
 
 #pragma once
 #include <vector>
-#include <assets/AssetImporter.h>
+//#include <assets/AssetImporter.h>
 #include "Object.h"
 
 struct Triangle { unsigned v0, v1, v2; };
@@ -27,6 +21,7 @@ class TriangleMesh : public Object {
 		#else
 			std::vector<Vec3> vertices;
 		#endif
+		std::vector<Vec3> vertexNormals, vertexTangents, vertexBitangents;
 		std::vector<Triangle> triangles;
 		std::vector<Vec2> uvs;
 		size_t trianglesSize, verticesSize;
@@ -38,65 +33,65 @@ class TriangleMesh : public Object {
 			hasUVs = false;
 		}
 
-		void LoadFromImport(const AssetImporter &_ai, const unsigned _index = 0) {
-			if (_ai.scene && _ai.scene->HasMeshes()) {
-				const aiMesh *mesh = _ai.scene->mMeshes[_index];
-
-				//----	VERTICES	----
-				verticesSize = mesh->mNumVertices;
-				trianglesSize = mesh->mNumFaces;
-
-				vertices.resize(verticesSize);
-				for (unsigned i = 0; i < verticesSize; ++i) {
-					vertices[i].x = mesh->mVertices[i].x;
-					vertices[i].y = mesh->mVertices[i].y;
-					vertices[i].z = mesh->mVertices[i].z;
-				}
-
-				//----	TRIANGLES	----
-				triangles.resize(trianglesSize);
-				for (unsigned i = 0; i < trianglesSize; ++i) {
-					triangles[i].v0 = mesh->mFaces[i].mIndices[0];
-					triangles[i].v1 = mesh->mFaces[i].mIndices[1];
-					triangles[i].v2 = mesh->mFaces[i].mIndices[2];
-				}
-
-				//----	NORMALS	----
-				if (mesh->HasNormals()) {
-					vertexNormals.resize(verticesSize);
-					for (unsigned i = 0; i < verticesSize; ++i) {
-						vertexNormals[i].x = mesh->mNormals[i].x;
-						vertexNormals[i].y = mesh->mNormals[i].y;
-						vertexNormals[i].z = mesh->mNormals[i].z;
-					}
-				}
-
-				//----	TANGENTS, BITANGENTS	----
-				if (mesh->HasTangentsAndBitangents()) {
-					vertexTangents.resize(verticesSize);
-					vertexBitangents.resize(verticesSize);
-					for (unsigned i = 0; i < verticesSize; ++i) {
-						vertexTangents[i].x = mesh->mTangents[i].x;
-						vertexTangents[i].y = mesh->mTangents[i].y;
-						vertexTangents[i].z = mesh->mTangents[i].z;
-						vertexBitangents[i].x = mesh->mBitangents[i].x;
-						vertexBitangents[i].y = mesh->mBitangents[i].y;
-						vertexBitangents[i].z = mesh->mBitangents[i].z;
-					}
-				}
-
-				//----	TEXTURE COORDINATES	----
-				if (mesh->HasTextureCoords(0)) {
-					hasUVs = true;
-					uvs.resize(verticesSize);
-					for (unsigned i = 0; i < verticesSize; ++i) {
-						uvs[i].x = mesh->mTextureCoords[0][i].x;
-						uvs[i].y = mesh->mTextureCoords[0][i].y;
-					}
-				}
-			}
-			else std::cout << std::endl << "No mesh in imported object.";
-		}
+		//void LoadFromImport(const aiMesh* _aiMesh, const unsigned _index = 0) {
+		//	//if (_ai.scene && _ai.scene->HasMeshes()) {
+		//		//const aiMesh *mesh = _ai.scene->mMeshes[_index];
+		//
+		//		//----	VERTICES	----
+		//		verticesSize = _aiMesh->mNumVertices;
+		//		trianglesSize = _aiMesh->mNumFaces;
+		//
+		//		vertices.resize(verticesSize);
+		//		for (unsigned i = 0; i < verticesSize; ++i) {
+		//			vertices[i].x = _aiMesh->mVertices[i].x;
+		//			vertices[i].y = _aiMesh->mVertices[i].y;
+		//			vertices[i].z = _aiMesh->mVertices[i].z;
+		//		}
+		//
+		//		//----	TRIANGLES	----
+		//		triangles.resize(trianglesSize);
+		//		for (unsigned i = 0; i < trianglesSize; ++i) {
+		//			triangles[i].v0 = _aiMesh->mFaces[i].mIndices[0];
+		//			triangles[i].v1 = _aiMesh->mFaces[i].mIndices[1];
+		//			triangles[i].v2 = _aiMesh->mFaces[i].mIndices[2];
+		//		}
+		//
+		//		//----	NORMALS	----
+		//		if (_aiMesh->HasNormals()) {
+		//			vertexNormals.resize(verticesSize);
+		//			for (unsigned i = 0; i < verticesSize; ++i) {
+		//				vertexNormals[i].x = _aiMesh->mNormals[i].x;
+		//				vertexNormals[i].y = _aiMesh->mNormals[i].y;
+		//				vertexNormals[i].z = _aiMesh->mNormals[i].z;
+		//			}
+		//		}
+		//
+		//		//----	TANGENTS, BITANGENTS	----
+		//		if (_aiMesh->HasTangentsAndBitangents()) {
+		//			vertexTangents.resize(verticesSize);
+		//			vertexBitangents.resize(verticesSize);
+		//			for (unsigned i = 0; i < verticesSize; ++i) {
+		//				vertexTangents[i].x = _aiMesh->mTangents[i].x;
+		//				vertexTangents[i].y = _aiMesh->mTangents[i].y;
+		//				vertexTangents[i].z = _aiMesh->mTangents[i].z;
+		//				vertexBitangents[i].x = _aiMesh->mBitangents[i].x;
+		//				vertexBitangents[i].y = _aiMesh->mBitangents[i].y;
+		//				vertexBitangents[i].z = _aiMesh->mBitangents[i].z;
+		//			}
+		//		}
+		//
+		//		//----	TEXTURE COORDINATES	----
+		//		if (_aiMesh->HasTextureCoords(0)) {
+		//			hasUVs = true;
+		//			uvs.resize(verticesSize);
+		//			for (unsigned i = 0; i < verticesSize; ++i) {
+		//				uvs[i].x = _aiMesh->mTextureCoords[0][i].x;
+		//				uvs[i].y = _aiMesh->mTextureCoords[0][i].y;
+		//			}
+		//		}
+		//	//}
+		//	//else std::cout << std::endl << "No mesh in imported object.";
+		//}
 
 		void Commit(const RTCDevice &_device) override {
 			geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
@@ -130,8 +125,6 @@ class TriangleMesh : public Object {
 		}
 
 	protected:
-		std::vector<Vec3> vertexNormals, vertexTangents, vertexBitangents;
-
 		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override {
 			if (hasUVs) {
 				_hit.uvCoords = maths::BarycentricInterpolation(

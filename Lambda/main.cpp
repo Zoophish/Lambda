@@ -22,44 +22,29 @@
 #include <random>
 
 int main() {
+	ResourceManager resources;
 	Scene scene;
 
+	Texture white(1, 1, Colour(1, 1, 1));
+	white.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	OrenNayarBRDF mat(&white, 2);
+
 	AssetImporter ai;
-	ai.Import("../content/sponza.obj");
-	TriangleMesh mesh;
-	mesh.LoadFromImport(ai);
-	mesh.smoothNormals = false;
-	mesh.hasUVs = false;
-	Texture albedo(1,1,Colour(1,1,1));
-//	albedo.LoadImageFile("../content/box_tex.png");
-	albedo.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	OrenNayarBRDF mat(&albedo, 1);
-	mesh.bxdf = &mat;
-	
-	scene.AddObject(mesh);
+	ai.Import(&resources, "E:\\Assets\\san-miguel.obj");
+	for (auto &it : resources.objectPool.pool) {
+		it.second->bxdf = &mat;
+		scene.AddObject(*it.second);
+	}
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/cloud_layers_2k.hdr");
+	envMap.LoadImageFile("../content/quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
-	ibl.offset = Vec2(PI*-.08, 0);
+	ibl.intensity = .5;
+	ibl.offset = Vec2(0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
-
-	ai.Import("../content/lucy.obj");
-	TriangleMesh lucy;
-	lucy.LoadFromImport(ai);
-	lucy.smoothNormals = false;
-	lucy.hasUVs = false;
-	const Real r = MicrofacetDistribution::RoughnessToAlpha(.05);
-	TrowbridgeReitzDistribution d(r,r);
-	FresnelDielectric fres(3);
-	Texture red(1, 1, Colour(1, .2, .2));
-	MicrofacetBRDF metal(&red, &d, &fres);
-	lucy.bxdf = &metal;
-	scene.AddObject(lucy);
 
 	scene.Commit();
 
@@ -72,19 +57,19 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.09);
-	ThinLensCamera cam(Vec3(5, 1, 0), 1, 1, 5);
+	ThinLensCamera cam(Vec3(0, 2, 10), 16, 9, 5);
 	//SphericalCamera cam(Vec3(0,1,0));
 	cam.aperture = &aperture2;
 	cam.aperture->size = 0;
 	cam.aperture->sampler = &sampler;
 	cam.SetFov(1.5);
-	cam.SetRotation(-PI*.5, 0);
+	cam.SetRotation(-PI*.5, -.05);
 
 	//Make the integrator.
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 
-	Film film(800, 800);
+	Film film(1280, 720);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -94,10 +79,10 @@ int main() {
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
 	renderDirective.spp = 1;
-	renderDirective.tileSizeX = 32;
-	renderDirective.tileSizeY = 32;
+	renderDirective.tileSizeX = 64;
+	renderDirective.tileSizeY = 64;
 
-	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp, 1);
+	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp, 4);
 	rdr.RenderOmp();
 
 	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(0, 0, 0));
