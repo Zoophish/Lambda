@@ -33,66 +33,6 @@ class TriangleMesh : public Object {
 			hasUVs = false;
 		}
 
-		//void LoadFromImport(const aiMesh* _aiMesh, const unsigned _index = 0) {
-		//	//if (_ai.scene && _ai.scene->HasMeshes()) {
-		//		//const aiMesh *mesh = _ai.scene->mMeshes[_index];
-		//
-		//		//----	VERTICES	----
-		//		verticesSize = _aiMesh->mNumVertices;
-		//		trianglesSize = _aiMesh->mNumFaces;
-		//
-		//		vertices.resize(verticesSize);
-		//		for (unsigned i = 0; i < verticesSize; ++i) {
-		//			vertices[i].x = _aiMesh->mVertices[i].x;
-		//			vertices[i].y = _aiMesh->mVertices[i].y;
-		//			vertices[i].z = _aiMesh->mVertices[i].z;
-		//		}
-		//
-		//		//----	TRIANGLES	----
-		//		triangles.resize(trianglesSize);
-		//		for (unsigned i = 0; i < trianglesSize; ++i) {
-		//			triangles[i].v0 = _aiMesh->mFaces[i].mIndices[0];
-		//			triangles[i].v1 = _aiMesh->mFaces[i].mIndices[1];
-		//			triangles[i].v2 = _aiMesh->mFaces[i].mIndices[2];
-		//		}
-		//
-		//		//----	NORMALS	----
-		//		if (_aiMesh->HasNormals()) {
-		//			vertexNormals.resize(verticesSize);
-		//			for (unsigned i = 0; i < verticesSize; ++i) {
-		//				vertexNormals[i].x = _aiMesh->mNormals[i].x;
-		//				vertexNormals[i].y = _aiMesh->mNormals[i].y;
-		//				vertexNormals[i].z = _aiMesh->mNormals[i].z;
-		//			}
-		//		}
-		//
-		//		//----	TANGENTS, BITANGENTS	----
-		//		if (_aiMesh->HasTangentsAndBitangents()) {
-		//			vertexTangents.resize(verticesSize);
-		//			vertexBitangents.resize(verticesSize);
-		//			for (unsigned i = 0; i < verticesSize; ++i) {
-		//				vertexTangents[i].x = _aiMesh->mTangents[i].x;
-		//				vertexTangents[i].y = _aiMesh->mTangents[i].y;
-		//				vertexTangents[i].z = _aiMesh->mTangents[i].z;
-		//				vertexBitangents[i].x = _aiMesh->mBitangents[i].x;
-		//				vertexBitangents[i].y = _aiMesh->mBitangents[i].y;
-		//				vertexBitangents[i].z = _aiMesh->mBitangents[i].z;
-		//			}
-		//		}
-		//
-		//		//----	TEXTURE COORDINATES	----
-		//		if (_aiMesh->HasTextureCoords(0)) {
-		//			hasUVs = true;
-		//			uvs.resize(verticesSize);
-		//			for (unsigned i = 0; i < verticesSize; ++i) {
-		//				uvs[i].x = _aiMesh->mTextureCoords[0][i].x;
-		//				uvs[i].y = _aiMesh->mTextureCoords[0][i].y;
-		//			}
-		//		}
-		//	//}
-		//	//else std::cout << std::endl << "No mesh in imported object.";
-		//}
-
 		void Commit(const RTCDevice &_device) override {
 			geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
 			rtcSetSharedGeometryBuffer(geometry, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, &vertices[0], 0, sizeof(vec3<float>), verticesSize);
@@ -118,9 +58,9 @@ class TriangleMesh : public Object {
 		}
 
 		inline Vec3 SamplePoint(const Triangle &_triangle, const Vec2 &_u) const {
-			const Vec3 v0 = vertices[_triangle.v0];
-			const Vec3 v1 = vertices[_triangle.v1];
-			const Vec3 v2 = vertices[_triangle.v2];
+			const Vec3 &v0 = vertices[_triangle.v0];
+			const Vec3 &v1 = vertices[_triangle.v1];
+			const Vec3 &v2 = vertices[_triangle.v2];
 			return v0 + (v1 - v0) * _u.x + (v2 - v0) * _u.y;
 		}
 
@@ -138,17 +78,17 @@ class TriangleMesh : public Object {
 					vertexNormals[triangles[_h.hit.primID].v0],
 					vertexNormals[triangles[_h.hit.primID].v1],
 					vertexNormals[triangles[_h.hit.primID].v2],
-					_h.hit.u, _h.hit.v);
+					_h.hit.u, _h.hit.v).Normalised();
 				_hit.tangent = maths::BarycentricInterpolation(
 					vertexTangents[triangles[_h.hit.primID].v0],
 					vertexTangents[triangles[_h.hit.primID].v1],
 					vertexTangents[triangles[_h.hit.primID].v2],
-					_h.hit.u, _h.hit.v);
+					_h.hit.u, _h.hit.v).Normalised();
 				_hit.bitangent = maths::BarycentricInterpolation(
 					vertexBitangents[triangles[_h.hit.primID].v0],
 					vertexBitangents[triangles[_h.hit.primID].v1],
 					vertexBitangents[triangles[_h.hit.primID].v2],
-					_h.hit.u, _h.hit.v);
+					_h.hit.u, _h.hit.v).Normalised();
 			}
 			else {
 				//Needs optimisation.

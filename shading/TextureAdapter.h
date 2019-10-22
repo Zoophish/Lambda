@@ -38,17 +38,18 @@ class TextureAdapter {
 		}
 
 		Spectrum GetUV(const Vec2 &_uv) const {
+			const Vec2 uv(maths::Fract(_uv.x), maths::Fract(_uv.y));
 			switch (textureType) {
 			case TextureType::RGB: {
-				const Colour c = reinterpret_cast<Texture *>(texture)->GetPixelUV(_uv.x, _uv.y);
+				const Colour c = reinterpret_cast<Texture *>(texture)->GetPixelUV(uv.x, uv.y);
 				const float tmp[3] = { c.r, c.g, c.b };
 				return Spectrum::FromRGB(tmp, type);
 			}
 			case TextureType::SPECTRAL: {
-				return reinterpret_cast<texture_t<Spectrum> *>(texture)->GetPixelUV(_uv.x, _uv.y);
+				return reinterpret_cast<texture_t<Spectrum> *>(texture)->GetPixelUV(uv.x, uv.y);
 			}
 			case TextureType::SCALAR: {
-				const Real scalar = reinterpret_cast<TextureR32 *>(texture)->GetPixelUV(_uv.x, _uv.y);
+				const Real scalar = reinterpret_cast<TextureR32 *>(texture)->GetPixelUV(uv.x, uv.y);
 				return Spectrum(scalar);
 			}
 			default:

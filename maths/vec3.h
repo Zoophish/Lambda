@@ -209,13 +209,13 @@ namespace maths {
 
 	template<class T>
 	inline T SphericalTheta(const vec3<T> &_v) {
-		return std::acos(std::max(std::min(_v.y, (T)1.), (T)-1.));
+		return std::acos(std::max(std::min(_v.y, (T)1), (T)-1));
 	}
 
 	template<class T>
 	inline T SphericalPhi(const vec3<T> &_v) {
 		const T p = std::atan2(_v.z, _v.x);
-		return (p < 0.) ? (p + 6.2831853) : p;
+		return (p < 0) ? (p + 3.14159265359 * 2.) : p;
 	}
 
 	#ifdef LAMBDA_VEC3_USE_SSE

@@ -5,7 +5,7 @@ class PathIntegrator : public Integrator {
 	public:
 		unsigned maxBounces;
 
-		PathIntegrator(Sampler *_sampler, const unsigned _maxBounces = 1024) {
+		PathIntegrator(Sampler *_sampler, const unsigned _maxBounces = 128) {
 			maxBounces = _maxBounces;
 			sampler = _sampler;
 		}
@@ -47,7 +47,7 @@ class PathIntegrator : public Integrator {
 						if (sampler->Get1D() < q) break;
 						beta /= (Real)1 - q;
 					}
-					
+
 				}
 				else {
 					L += beta * _scene.envLight->Le(r);

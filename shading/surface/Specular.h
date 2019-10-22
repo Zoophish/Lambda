@@ -74,13 +74,14 @@ class SpecularBRDF : public BxDF {
 		Spectrum f(const SurfaceScatterEvent &_event) const override {
 			return Spectrum(0);
 		}
-	
+		
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
 			_event.pdf = 1;
+			_pdf = 1;
 			_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
 			const Real cosTheta = _event.wiL.y;
 			_event.wi = _event.ToWorld(_event.wiL);
-			return fresnel->Evaluate(cosTheta, _event.eta) * albedo.GetUV(_event.hit->uvCoords) / std::abs(cosTheta);
+			return albedo.GetUV(_event.hit->uvCoords) / std::abs(cosTheta);
 		}
 };
 

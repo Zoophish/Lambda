@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <core/Object.h>
 #include <image/Texture.h>
+#include <core/Instance.h>
 
 template<class T>
 class ResourcePool {
@@ -37,6 +38,7 @@ For holding and sharing large data types with the rest of application.
 class ResourceManager {
 	public:
 		ResourcePool<Object> objectPool;
+		ResourcePool<InstanceProxy> proxyPool;
 		ResourcePool<Texture> texturePool;
 
 		ResourceManager() {}

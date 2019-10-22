@@ -6,9 +6,9 @@
 #include <iostream>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include "MeshImporter.h"
+#include "MeshImport.h"
 
-#define DEFAULT_IMPORT_FLAGS aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenSmoothNormals | aiProcess_OptimizeGraph
+#define DEFAULT_IMPORT_FLAGS aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_GenNormals | aiProcess_OptimizeGraph
 
 class AssetImporter {
 	public:
@@ -32,7 +32,7 @@ class AssetImporter {
 			scene = importer.ReadFile(_path, DEFAULT_IMPORT_FLAGS);
 			if (!scene) { std::cout << importer.GetErrorString(); return false; }
 			importer.ApplyPostProcessing(aiProcess_CalcTangentSpace);
-			MeshImporter::LoadMeshes(scene, _resourceManager);
+			MeshImport::LoadMeshes(scene, _resourceManager);
 			return true;
 		}
 

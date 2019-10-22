@@ -3,11 +3,13 @@
 
 class InstanceProxy {
 	public:
-		InstanceProxy(RTCDevice *_device, Object *_object) {
-			iScene = rtcNewScene(*_device);
-			iDevice = _device;
+		InstanceProxy(Object *_object) {
 			iObject = _object;
-			rtcCommitGeometry(iObject->geometry);
+		}
+
+		void Commit(const RTCDevice &_device) {
+			iScene = rtcNewScene(_device);
+			iObject->Commit(_device);
 			rtcAttachGeometry(iScene, iObject->geometry);
 			rtcCommitScene(iScene);
 		}
@@ -15,7 +17,6 @@ class InstanceProxy {
 	protected:
 		friend class Instance;
 		RTCScene iScene;
-		RTCDevice *iDevice;
 		Object *iObject;
 };
 
@@ -26,10 +27,10 @@ class Instance : public Object {
 		}
 
 		void Commit(const RTCDevice &_device) override {
-			geometry = rtcNewGeometry(*proxy->iDevice, RTC_GEOMETRY_TYPE_INSTANCE);
+			geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_INSTANCE);
 			rtcSetGeometryInstancedScene(geometry, proxy->iScene);
-			rtcRetainGeometry(geometry);
 			rtcSetGeometryTransform(geometry, 0, RTC_FORMAT_FLOAT3X4_COLUMN_MAJOR, &xfm[0]);
+			rtcRetainGeometry(geometry);
 			rtcCommitGeometry(geometry);
 		}
 

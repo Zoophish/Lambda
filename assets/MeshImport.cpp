@@ -1,18 +1,8 @@
-/*----	Sam Warren 2019	----
-Transfers Assimp aiMesh buffers into TriangleMesh compatible buffers.
-*/
-#pragma once
-#include <core/TriangleMesh.h>
-#include <assimp/scene.h>
-#include "ResourceManager.h"
+/*#include "MeshImport.h"
 
-namespace MeshImporter {
+namespace MeshImport {
 
-	/*
-	Loads a UV channel (default 0) from aiMesh into _tMesh's UV buffer.
-	Returns false if specified UV channel does not exist.
-	*/
-	static bool LoadUVBuffer(const aiMesh *_aiMesh, TriangleMesh *_tMesh, const unsigned _channel = 0) {
+	bool LoadUVBuffer(const aiMesh *_aiMesh, TriangleMesh *_tMesh, const unsigned _channel) {
 		if (_aiMesh->HasTextureCoords(_channel)) {
 			_tMesh->hasUVs = true;
 			_tMesh->uvs.resize(_tMesh->verticesSize);
@@ -25,8 +15,7 @@ namespace MeshImporter {
 		return false;
 	}
 
-	//TO DO: memcpy?
-	static void LoadMeshBuffers(const aiMesh *_aiMesh, TriangleMesh *_tMesh) {
+	void LoadMeshBuffers(const aiMesh *_aiMesh, TriangleMesh *_tMesh) {
 		//----	VERTICES	----
 		_tMesh->verticesSize = _aiMesh->mNumVertices;
 		_tMesh->trianglesSize = _aiMesh->mNumFaces;
@@ -75,23 +64,7 @@ namespace MeshImporter {
 		_tMesh->hasUVs = LoadUVBuffer(_aiMesh, _tMesh);
 	}
 
-	/*
-	Converts aiMatrix4x4 to Affine3.
-	*/
-	inline Affine3 aiMatToAff3(const aiMatrix4x4 &_aiMat) {
-		Affine3 aff;
-		aff[0] = _aiMat.a1; aff[1] = _aiMat.a2; aff[2] = _aiMat.a3;
-		aff[3] = _aiMat.b1; aff[4] = _aiMat.b2; aff[5] = _aiMat.b3;
-		aff[6] = _aiMat.c1; aff[7] = _aiMat.c2; aff[8] = _aiMat.c3;
-		aff[9] = _aiMat.d1; aff[10] = _aiMat.d2; aff[11] = _aiMat.d3;
-		return aff;
-	}
-
-	/*
-	Loads transform data from aiScene into any corresponding Objects in the ResourceManager.
-	- Renaming objects from their original in the resource pool will prevent its transform loading.
-	*/
-	static bool LoadTransforms(const aiScene *_scene, ResourceManager *_resourceManager) {
+	bool LoadTransforms(const aiScene *_scene, ResourceManager *_resourceManager) {
 		if (_scene->mRootNode && _resourceManager->objectPool.Size() > 0) {
 			for (auto &pair : _resourceManager->objectPool.pool) {
 				const aiNode *node = _scene->mRootNode->FindNode(pair.first.c_str());
@@ -102,10 +75,7 @@ namespace MeshImporter {
 		return false;
 	}
 
-	/*
-	Loads mesh data from aiScene into resource manager object pool.
-	*/
-	static bool LoadMeshes(const aiScene *_scene, ResourceManager *_resourceManager) {
+	bool LoadMeshes(const aiScene *_scene, ResourceManager *_resourceManager) {
 		if (_scene->HasMeshes()) {
 			for (unsigned i = 0; i < _scene->mNumMeshes; ++i) {
 				TriangleMesh *mesh = new TriangleMesh();
@@ -116,4 +86,5 @@ namespace MeshImporter {
 		}
 		return false;
 	}
-}
+
+}*/

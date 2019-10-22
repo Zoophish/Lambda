@@ -55,6 +55,9 @@ class Scene {
 				_hit.tFar = rayHit.ray.tfar;
 				_hit = objects[rayHit.hit.geomID]->Hit(rayHit);
 				_hit.object = objects[rayHit.hit.geomID];
+				if (rayHit.hit.instID[0] != RTC_INVALID_GEOMETRY_ID) {
+					_hit.object = objects[rayHit.hit.instID[0]];
+				}
 				_hit.primId = rayHit.hit.primID;
 				return true;
 			}

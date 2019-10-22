@@ -4,7 +4,7 @@
 
 class MicrofacetBRDF : public BxDF {
 	public:
-		Real etaT;
+		Real etaT = .0001;
 		TextureAdapter albedo;
 		MicrofacetDistribution *distribution;
 		Fresnel *fresnel;
@@ -22,23 +22,25 @@ class MicrofacetBRDF : public BxDF {
 			if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0);
 			if (wh.x == 0 && wh.y == 0 && wh.z == 0) return Spectrum(0);
 			wh = wh.Normalised();
-			const Spectrum F = fresnel->Evaluate(maths::Dot(_event.wiL, wh), etaT);
+			const Vec3 wiL(_event.wiL.x, maths::Clamp(_event.wiL.y, (Real)0, (Real)1), _event.wiL.z);
+			const Spectrum F = fresnel->Evaluate(maths::Dot(wiL, wh), etaT);
 			const Real D = distribution->D(wh);
-			const Real G = distribution->G(_event.woL, _event.wiL);
+			const Real G = distribution->G(_event.woL, wiL);
 			return albedo.GetUV(_event.hit->uvCoords) * D * G * F / (4 * cosThetaI * cosThetaO);
 		}
 
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override {
 			if (_event.woL.y == 0) return Spectrum(0);
-			const Vec3 wh = distribution->Sample_wh(_u, _event.woL);
+			const Vec3 wh = distribution->Sample_wh(_u, _event.woL).Normalised();
 			_event.wiL = Reflect(-_event.woL, wh);
 			if (!SameHemisphere(_event.woL, _event.wiL)) {
 				_pdf = 0;
 				return Spectrum(0);
 			}
 			_pdf = distribution->Pdf(wh) / (4 * maths::Dot(_event.woL, wh));
+			_event.pdf = _pdf;
 			_event.wi = _event.ToWorld(_event.wiL);
-			_event.hit->point += _event.hit->normalG * .001;
+			_event.hit->point += _event.hit->normalG * .0001;
 			return f(_event);
 		}
 

@@ -56,10 +56,9 @@ class EnvironmentLight : public Light {
 			if (sinTheta == 0) return 0;
 			const Vec3 wiOffset = maths::SphericalDirection(sinTheta, std::cos(theta), phi);
 			if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, wiOffset))) {
-				const Real _pdf = distribution->PDF(Vec2(phi * INV_PI2, theta * INV_PI).Wrap()) / (2 * PI * PI * sinTheta);;
-				return distribution->PDF(Vec2(phi * INV_PI2, theta * INV_PI).Wrap()) / (2 * PI * PI * sinTheta);
+				return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / (2 * PI * PI * sinTheta);
 			}
-			else return 0;
+			return 0;
 		}
 
 		Spectrum Le(const Ray &_r) const override {
@@ -76,7 +75,8 @@ class EnvironmentLight : public Light {
 		}
 
 		inline Spectrum Le(const Vec3 &_w) const {
-			const Vec2 uv = Vec2((maths::SphericalPhi(_w) + offset.x) * INV_PI2, (maths::SphericalTheta(_w) + offset.y) * INV_PI).Wrap();
+			const Vec2 uv = maths::Fract(Vec2((maths::SphericalPhi(_w) - offset.x) * INV_PI2,
+				(maths::SphericalTheta(_w) - offset.y) * INV_PI));
 			return radianceMap.GetUV(uv) * intensity;
 		}
 

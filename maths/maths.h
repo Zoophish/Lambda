@@ -57,6 +57,16 @@ namespace maths {
 	inline T BarycentricInterpolation(const T &_t0, const T &_t1, const T &_t2, const Real _u, const Real _v) {
 		return _t0 + (_t1 - _t0) * _u + (_t2 - _t0) * _v;
 	}
+
+	template<class T>
+	inline T Fract(const T _r) {
+		return _r - std::floor(_r);
+	}
+
+	template<class T>
+	inline vec2<T> Fract(const vec2<T> &_v) {
+		return vec2<T>(_v.x - std::floor(_v.x), _v.y - std::floor(_v.y));
+	}
 }
 
 #ifdef LAMBDA_MATHS_COMMON_TYPES

@@ -23,8 +23,9 @@ class BxDF {
 			_event.wiL = Sampling::SampleCosineHemisphere(_u);
 			if (_event.woL.y < 0) _event.wiL.y *= -1;
 			_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
+			_event.pdf = _pdf;
 			_event.wi = _event.ToWorld(_event.wiL);
-			_event.hit->point += _event.hit->normalG * .001;
+			_event.hit->point += _event.hit->normalG * .0001;
 			return f(_event);
 		}
 
@@ -33,7 +34,7 @@ class BxDF {
 		}
 
 		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const {
-			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;
+			return CosineHemispherePdf(_wo, _wi);
 		}
 
 		inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) const {
