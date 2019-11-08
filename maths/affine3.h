@@ -1,6 +1,6 @@
 /*
 ----	Sam Warren 2019	----
-3x4 Column-Major Affine Transformation Matrix + Translation Vector
+3x3 Column-Major Affine Transformation Matrix + Translation Vector
 */
 #pragma once
 #include <array>

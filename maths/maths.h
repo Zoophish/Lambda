@@ -17,7 +17,6 @@ from float will disable SSE.
 #pragma once
 #include <cmath>
 #include <algorithm>
-#include "real_t.h"
 #include "complex_t.h"
 #include "vec3.h"
 #include "vec2.h"
@@ -70,11 +69,6 @@ namespace maths {
 }
 
 #ifdef LAMBDA_MATHS_COMMON_TYPES
-typedef real_t<float> realf;
-typedef real_t<double> reald;
-typedef real_t<int> reali;
-typedef real_t<unsigned> realu;
-
 typedef complex_t<float> complexf;
 typedef complex_t<double> complexd;
 typedef complex_t<int> complexi;

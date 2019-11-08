@@ -22,13 +22,12 @@ class MeshLight : public Light {
 			const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 			const Vec2 u = _sampler->Get2D();
 			const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
-			if (_event.scene->MutualVisibility(_event.hit->point, p)) {
+			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON, p)) {
 				_event.wi = (p - _event.hit->point).Normalised();
 				Real triArea;
 				Vec3 normal;
 				mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
-				//Convert pdf to solid angle measure.
-				const Real denom = maths::Dot(normal, -_event.wi) * triArea;
+				const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
 				if (denom > 0) {
 					_event.wiL = _event.ToLocal(_event.wi);
 					_pdf *= maths::DistSq(_event.hit->point, p) / denom;
@@ -46,7 +45,7 @@ class MeshLight : public Light {
 			Real triArea;
 			Vec3 normal;
 			mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);
-			const Real denom = maths::Dot(normal, -_event.wi) * triArea;
+			const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
 			if(denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
 			return 0;
 		}

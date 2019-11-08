@@ -53,8 +53,8 @@ class TextureAdapter {
 				return Spectrum(scalar);
 			}
 			default:
-				return Spectrum(0);
 				throw std::runtime_error("A TextureAdapter with no texture had 'GetUV()' called.");
+				return Spectrum(0);
 			}
 		}
 

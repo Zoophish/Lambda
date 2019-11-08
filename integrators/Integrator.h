@@ -61,9 +61,6 @@ class Integrator {
 				}
 				if (!Li.IsBlack()) Ld += f * Li * weight / scatteringPDF;
 			}
-			//else {
-			//	std::cout << ".";
-			//}
 			return Ld;
 		}
 
