@@ -3,6 +3,8 @@
 #include <shading/surface/Lambertian.h>
 #include <shading/surface/Specular.h>
 #include <shading/surface/Microfacet.h>
+#include <shading/surface/Transmissive.h>
+#include <shading/surface/Mix.h>
 #include <shading/media/HomogenousMedium.h>
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/PathIntegrator.h>
@@ -25,33 +27,31 @@ int main() {
 	ResourceManager resources;
 	Scene scene;
 
-	Texture red(1, 1, Colour(.6, .9, .79));
+	Texture red(1, 1, Colour(1, .1, .1));
 	Texture yellow(1, 1, Colour(.9, .6, .6));
 	Texture white(1, 1, Colour(1, 1, 1));
 	Texture blue(1, 1, Colour(.63, .3, 1));
 	Texture grid; grid.LoadImageFile("../content/uv_grid.png"); grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	white.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	OrenNayarBRDF mat(&white, 1.8);
 	const Real alpha = MicrofacetDistribution::RoughnessToAlpha(0.009);
 	BeckmannDistribution d(alpha, alpha);
 	FresnelDielectric fres(2.5);
-	MicrofacetBRDF tbr(&blue, &d, &fres);
+
+	OrenNayarBRDF mat(&red, 1.8);
+	TextureR32 tr(1, 1, .8);
+	MicrofacetBRDF tbr(&white, &d, &fres);
 	tbr.etaT = .00001;
-	SpecularBRDF mat2(&white, &fres);
+	MixBSDF mat2(&mat, &tbr, .1);
 
 	AssetImporter ai;
 
-	ai.Import(&resources, "../content/Birch.obj");
+	ai.Import(&resources, "../content/lucy.obj");
 	MeshImport::LoadMeshes(ai.scene, &resources);
 	TriangleMesh mesh2;
 	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[0], &mesh2);
-	mesh2.bxdf = &mat;
+	mesh2.bxdf = &mat2;
 	mesh2.smoothNormals = true;
-	//scene.AddObject(mesh2);
-	for (auto &it : resources.objectPool.pool) {
-		it.second->bxdf = &mat;
-		scene.AddObject(*it.second);
-	}
+	scene.AddObject(mesh2);
 
 	//InstanceProxy proxy(&mesh2);
 	//proxy.Commit(scene.device);
@@ -79,7 +79,7 @@ int main() {
 	//mesh3.smoothNormals = false;
 	OrenNayarBRDF mat3(&grid, 2);
 	mesh3.bxdf = &mat3;
-	scene.AddObject(mesh3);
+	//scene.AddObject(mesh3);
 
 	ai.Import(&resources, "../content/AreaLight.obj");
 	TriangleMesh lightMesh;
@@ -92,8 +92,8 @@ int main() {
 	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	light.emission = &blckbdy;
 	light.intensity = 1.5;
-	scene.AddLight(&light);
-	scene.AddObject(lightMesh);
+	//scene.AddLight(&light);
+	//scene.AddObject(lightMesh);
 	
 	ai.Import(&resources, "../content/SideLight.obj");
 	TriangleMesh lightMesh2;
@@ -104,16 +104,16 @@ int main() {
 	texture_t<Spectrum> blckbdy2(1, 1, blck2);
 	light2.emission = &blckbdy2;
 	light2.intensity = 4.5;
-	scene.AddLight(&light2);
-	scene.AddObject(lightMesh2);
+	//scene.AddLight(&light2);
+	//scene.AddObject(lightMesh2);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/qwantani_2k.hdr");
+	envMap.LoadImageFile("../content/mutianyu_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
-	ibl.offset = Vec2(0, 0);
+	ibl.intensity = 1;
+	ibl.offset = Vec2(PI, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
@@ -131,7 +131,7 @@ int main() {
 	ThinLensCamera cam(Vec3(0, 1, 2.2), 16, 9, 2.2);
 	//SphericalCamera cam(Vec3(0,1,0));
 	cam.aperture = &aperture2;
-	cam.aperture->size = .002;
+	cam.aperture->size = .012;
 	cam.aperture->sampler = &sampler;
 	cam.SetFov(1.5);
 	cam.SetRotation(PI, -PI*.03f);
@@ -150,7 +150,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 16;
+	renderDirective.spp = 320;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

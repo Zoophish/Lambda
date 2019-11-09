@@ -26,7 +26,7 @@ class FresnelBSDF : public BxDF {
 				_event.wi = _event.ToWorld(_event.wiL);
 				const Real cosTheta = std::abs(_event.wiL.y);
 				_event.pdf = fr;
-				_event.hit->point += _event.hit->normalG * .001;
+				_event.hit->point += _event.hit->normalG * SURFACE_EPSILON;
 				return albedo.GetUV(_event.hit->uvCoords) * fr / cosTheta;
 			}
 			else {
