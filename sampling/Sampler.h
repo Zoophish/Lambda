@@ -1,7 +1,7 @@
 #pragma once
 #include <maths/maths.h>
-#include "SampleShifter.h"
- 
+class SampleShifter;
+
 class Sampler {
 	public:
 		SampleShifter *sampleShifter = nullptr;

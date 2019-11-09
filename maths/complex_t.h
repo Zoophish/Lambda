@@ -70,7 +70,7 @@ class complex_t {
 		inline bool operator==(const complex_t<T> &_rhs) const { return r == _rhs.r && i == _rhs.i; }
 		inline bool operator!=(const complex_t<T> &_rhs) const { return r != _rhs.r || i != _rhs.i; }
 
-		static complex_t<T> Pow(const complex_t<T> &_c) {
+		static inline complex_t<T> Pow(const complex_t<T> &_c) {
 			return 0;
 		}
 };

@@ -7,7 +7,11 @@ class InstanceProxy {
 			iObject = _object;
 		}
 
-		void Commit(const RTCDevice &_device) {
+		/*
+			Commits iObject to the instance and builds the internal accelleration stucture.
+				- Must be called before Instances are committed to a scene.
+		*/
+		inline void Commit(const RTCDevice &_device) {
 			iScene = rtcNewScene(_device);
 			iObject->Commit(_device);
 			rtcAttachGeometry(iScene, iObject->geometry);
@@ -26,18 +30,17 @@ class Instance : public Object {
 			proxy = _proxy;
 		}
 
-		void Commit(const RTCDevice &_device) override {
-			geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_INSTANCE);
-			rtcSetGeometryInstancedScene(geometry, proxy->iScene);
-			rtcSetGeometryTransform(geometry, 0, RTC_FORMAT_FLOAT3X4_COLUMN_MAJOR, &xfm[0]);
-			rtcRetainGeometry(geometry);
-			rtcCommitGeometry(geometry);
-		}
+		/*
+			Links the proxy and commits the transform.
+				- Proxy must be comitted before instance is.
+		*/
+		void Commit(const RTCDevice &_device) override;
 
 	protected:
 		InstanceProxy *proxy;
 
-		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override {
-			proxy->iObject->ProcessHit(_hit, _h);
-		}
+		/*
+			Uses proxy's iObject for hit information.
+		*/
+		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override;
 };

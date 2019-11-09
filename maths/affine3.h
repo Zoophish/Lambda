@@ -52,17 +52,17 @@ class affine3 {
 			return affine3<T>(a, b, c, p);
 		}
 
-		static affine3<T> GetRotationX(const T _theta) {
+		static inline affine3<T> GetRotationX(const T _theta) {
 			const T sinTheta = std::sin(_theta);
 			const T cosTheta = std::sqrt(1 - sinTheta * sinTheta);
 			return affine3<T>(vec3<T>(1, 0, 0), vec3<T>(0, cosTheta, -sinTheta), vec3<T>(0, sinTheta, cosTheta));
 		}
-		static affine3<T> GetRotationY(const T _theta) {
+		static inline affine3<T> GetRotationY(const T _theta) {
 			const T sinTheta = std::sin(_theta);
 			const T cosTheta = std::sqrt(1 - sinTheta * sinTheta);
 			return affine3<T>(vec3<T>(cosTheta, 0, sinTheta), vec3<T>(0, 1, 0), vec3<T>(-sinTheta, 0, cosTheta));
 		}
-		static affine3<T> GetRotationZ(const T _theta) {
+		static inline affine3<T> GetRotationZ(const T _theta) {
 			const T sinTheta = std::sin(_theta);
 			const T cosTheta = std::sqrt(1 - sinTheta * sinTheta);
 			return affine3<T>(vec3<T>(cosTheta, -sinTheta, 0), vec3<T>(sinTheta, cosTheta, 0), vec3<T>(0, 0, 1));

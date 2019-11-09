@@ -1,8 +1,8 @@
 /*
 ----	Sam Warren 2019	----
-	Single include header for foundational mathematics.
-	SIMD accellerated with SSE instructions; changing numerical precision type
-from float will disable SSE.
+	Single include header for foundational mathematics; all functions are inlined.
+	SSE supported for 32-bit float type; changing numerical precision type
+	from float will disable SSE.
 
 ----	General numerical precision definition:	----
 */
@@ -35,7 +35,7 @@ typedef affine3<Real> Affine3;
 #define INV_PI 1. / PI
 #define INV_PI2 1. / (2. * PI)
 #define INV_PI4 1. / (4. * PI)
-#define E 2.718281828459045
+#define E_NUM 2.718281828459045
 #define MAX_REAL std::numeric_limits<Real>::max()
 #define MIN_REAL std::numeric_limits<Real>::min()
 #define BITFLAG(_i) 1 << _i

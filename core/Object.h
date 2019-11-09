@@ -17,7 +17,10 @@ class Object : public Transformable {
 		
 		Object() {}
 		
-		RayHit Hit(const RTCRayHit &_h) const {
+		/*
+			Process hit information from Embree RTCRayHit to a Lambda RayHit.
+		*/
+		inline RayHit Hit(const RTCRayHit &_h) const {
 			RayHit hit;
 			hit.point.x = _h.ray.org_x + _h.ray.dir_x * _h.ray.tfar;
 			hit.point.y = _h.ray.org_y + _h.ray.dir_y * _h.ray.tfar;
@@ -27,7 +30,13 @@ class Object : public Transformable {
 			return hit;
 		}
 
+		/*
+			Commit geometry changes to Embree.
+		*/
 		virtual void Commit(const RTCDevice &_device) = 0;
 
+		/*
+			All derivatives must override to provide their own hit information.
+		*/
 		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
 };

@@ -27,99 +27,76 @@ class Scene {
 		Light* envLight;
 		Distribution::Piecewise1D lightDistribution;
 
-		Scene(const RTCSceneFlags _sceneFlags = RTC_SCENE_FLAG_NONE, const char* _deviceConfig = NULL) {
-			device = rtcNewDevice(_deviceConfig);
-			scene = rtcNewScene(device);
-			SetFlags(_sceneFlags);
-		}
+		Scene(const RTCSceneFlags _sceneFlags = RTC_SCENE_FLAG_NONE, const char *_deviceConfig = NULL);
 
+		/*
+			Sets Embree scene flags.
+		*/
 		inline void SetFlags(const RTCSceneFlags _flags = RTC_SCENE_FLAG_NONE) {
 			rtcSetSceneFlags(scene, _flags);
 		}
 
-		void Commit(const RTCBuildQuality _buildQuality = RTC_BUILD_QUALITY_HIGH) {
+		/*
+			Builds scene's accelleration structure and lighting distribution.
+		*/
+		inline void Commit(const RTCBuildQuality _buildQuality = RTC_BUILD_QUALITY_HIGH) {
 			rtcSetSceneBuildQuality(scene, _buildQuality);
 			rtcCommitScene(scene);
 			UpdateLightDistribution();
 		}
 
-		bool Intersect(const Ray &_ray, RayHit &_hit) const {
-			RTCRay eRay = _ray.ToRTCRay();
-			RTCRayHit rayHit;
-			rayHit.ray = eRay;
-			RTCIntersectContext context;
-			rtcInitIntersectContext(&context);
-			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
-			rtcIntersect1(scene, &context, &rayHit);
-			if(rayHit.hit.geomID != RTC_INVALID_GEOMETRY_ID && rayHit.ray.tfar > 0 && rayHit.ray.tfar < INFINITY) {
-				_hit.tFar = rayHit.ray.tfar;
-				_hit = objects[rayHit.hit.geomID]->Hit(rayHit);
-				_hit.object = objects[rayHit.hit.geomID];
-				if (rayHit.hit.instID[0] != RTC_INVALID_GEOMETRY_ID) {
-					_hit.object = objects[rayHit.hit.instID[0]];
-				}
-				_hit.primId = rayHit.hit.primID;
-				return true;
-			}
-			return false;
+		/*
+			Queries _ray against scene geometry.
+				- Returns true if intersection found.
+				- Hit information passed to _hit.
+		*/
+		bool Intersect(const Ray &_ray, RayHit &_hit) const;
+
+		/*
+			Returns true if points _p1 and _p2 are mutually visible against scene geometry.
+		*/
+		bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2) const;
+
+		/*
+			Returns true if _ray intersects no geometry within the scene.
+		*/
+		bool RayEscapes(const Ray &_ray) const;
+
+		/*
+			Explicitly adds _light to the lighting distribution without adding
+			intersectable geometry.
+		*/
+		inline void AddLight(Light *_light) {
+			lights.push_back(_light);
 		}
 
-		bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2) const {
-			const Vec3 diff = _p2 - _p1;
-			const Real mag = diff.Magnitude();
-			const Vec3 dir = diff / mag;
-			RTCRay eRay = Ray(_p1, dir).ToRTCRay();
-			RTCRayHit rayHit;
-			rayHit.ray = eRay;
-			RTCIntersectContext context;
-			rtcInitIntersectContext(&context);
-			context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
-			rtcIntersect1(scene, &context, &rayHit);
-			return rayHit.ray.tfar > (mag - 0.002);
-		}
+		/*
+			Commits changes to _obj's geometry and adds to scene geometry.
+			- _addLight will automatically add _obj's light (if any) to the lighting distribution.
+		*/
+		void AddObject(Object *_obj, const bool _addLight = true);
 
-		bool RayEscapes(const Ray &_ray) const {	
-			RTCRay eRay = _ray.ToRTCRay();
-			RTCIntersectContext context;
-			rtcInitIntersectContext(&context);
-			rtcOccluded1(scene, &context, &eRay);
-			return eRay.tfar != -INFINITY;
-		}
-
-		void AddObject(Object &_obj) {
-			_obj.Commit(device);
-			rtcAttachGeometryByID(scene, _obj.geometry, objects.size());
-			objects.push_back(&_obj);
-		}
-
-		void RemoveObject(const unsigned _i) {
+		/*
+			Removes the object indexed by _i from scene.
+		*/
+		inline void RemoveObject(const unsigned _i) {
 			rtcDetachGeometry(scene, _i);
 			objects.erase(objects.begin() + _i);
 		}
 
-		void AddLight(Light *_light) {
-			lights.push_back(_light);
-		}
-
+		/*
+			Returns bounding box of scene's geometry.
+		*/
 		inline Bounds GetBounds() const {
 			RTCBounds b;
 			rtcGetSceneBounds(scene, &b);
 			return Bounds(Vec3(b.lower_x, b.lower_y, b.lower_z), Vec3(b.upper_x, b.upper_y, b.upper_z));
 		}
 
-		void UpdateLightDistribution() {
-			if (envLight) {
-				RTCBounds b;
-				rtcGetSceneBounds(scene, &b);
-				const Real xd = b.upper_x - b.lower_x;
-				const Real yd = b.upper_y - b.lower_y;
-				const Real zd = b.upper_z - b.lower_z;
-				envLight->radius = std::max(std::max(xd, yd), zd) * .5;
-			}
-			std::unique_ptr<Real[]> importances(new Real[lights.size()]);
-			for (unsigned i = 0; i < lights.size(); ++i) {
-				importances[i] = lights[i]->Power();
-			}
-			lightDistribution = Distribution::Piecewise1D(&importances[0], lights.size());
-		}
+		/*
+			Commits changes to scene lighting ready for rendering.
+				- Automatically called when scene is committed.
+				- Call if lights have been changed but geometry hasn't.
+		*/
+		void UpdateLightDistribution();
 };

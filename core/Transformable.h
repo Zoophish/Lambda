@@ -38,8 +38,6 @@ class Transformable {
 			return parent ? parent->xfm * this->xfm : xfm;
 		}
 
-		//inline Transformable operator*(const Transformable &_rhs) { return Transformable(xfm * _rhs.xfm); }
-
 	private:
 		std::vector<Transformable*> children;
 		Transformable *parent;

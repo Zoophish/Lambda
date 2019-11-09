@@ -22,7 +22,7 @@ class Ray {
 			d = _d;
 		}
 
-		RTCRay ToRTCRay() const {
+		inline RTCRay ToRTCRay() const {
 			RTCRay ray;
 			ray.dir_x = d.x;
 			ray.dir_y = d.y;

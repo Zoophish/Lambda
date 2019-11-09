@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "Sampler.h"
+#include "SampleShifter.h"
 
 class HaltonSampler : public Sampler {
 	public:

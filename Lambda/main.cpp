@@ -51,7 +51,7 @@ int main() {
 	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[0], &mesh2);
 	mesh2.bxdf = &mat2;
 	mesh2.smoothNormals = true;
-	scene.AddObject(mesh2);
+	scene.AddObject(&mesh2);
 
 	//InstanceProxy proxy(&mesh2);
 	//proxy.Commit(scene.device);
@@ -76,10 +76,9 @@ int main() {
 	TriangleMesh mesh3;
 	ai.Import(&resources, "../content/Backdrop.obj");
 	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[0], &mesh3);
-	//mesh3.smoothNormals = false;
 	OrenNayarBRDF mat3(&grid, 2);
 	mesh3.bxdf = &mat3;
-	//scene.AddObject(mesh3);
+	scene.AddObject(&mesh3);
 
 	ai.Import(&resources, "../content/AreaLight.obj");
 	TriangleMesh lightMesh;
@@ -91,9 +90,9 @@ int main() {
 	texture_t<Spectrum> blckbdy(1, 1, blck);
 	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	light.emission = &blckbdy;
-	light.intensity = 1.5;
-	//scene.AddLight(&light);
-	//scene.AddObject(lightMesh);
+	light.intensity = .5;
+	scene.AddLight(&light);
+	scene.AddObject(&lightMesh);
 	
 	ai.Import(&resources, "../content/SideLight.obj");
 	TriangleMesh lightMesh2;
@@ -103,16 +102,16 @@ int main() {
 	Spectrum blck2 = Spectrum::FromXYZ(cs2);
 	texture_t<Spectrum> blckbdy2(1, 1, blck2);
 	light2.emission = &blckbdy2;
-	light2.intensity = 4.5;
-	//scene.AddLight(&light2);
-	//scene.AddObject(lightMesh2);
+	light2.intensity = 6;
+	scene.AddLight(&light2);
+	scene.AddObject(&lightMesh2);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
 	envMap.LoadImageFile("../content/mutianyu_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
@@ -150,7 +149,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 320;
+	renderDirective.spp = 8;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
