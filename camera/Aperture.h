@@ -10,68 +10,49 @@ class Aperture {
 		Sampler *sampler;
 		Real size;
 
+		/*
+			Samples and returns a point on the aperture plane.
+		*/
 		virtual Vec2 Sample_p(Real *_pdf = nullptr) const = 0;
 };
 
 class BladeAperture : public Aperture {
 	public:
-	unsigned blades;
+		unsigned blades;
 
-	BladeAperture(const unsigned _blades, const Real _size = 1) {
-		blades = _blades;
-		size = _size;
-	}
+		BladeAperture(const unsigned _blades, const Real _size = 1);
 
-	Vec2 Sample_p(Real *_pdf = nullptr) const override {
-		const Real d = PI2 / (Real)blades;
-		const Real rnd = PI2 * sampler->Get1D();
-		const Real thetaMin = std::floor(rnd / d) * d;
-		const Real thetaMax = thetaMin + d;
-		const Vec2 p1(std::cos(thetaMin), std::sin(thetaMin));
-		const Vec2 p2(std::cos(thetaMax), std::sin(thetaMax));
-		const Vec2 u = sampler->Get2D();
-		return (p1 * u.x + p2 * u.y) * size;
-	}
+		/*
+			Samples and returns a point in the aperture polygon.
+		*/
+		Vec2 Sample_p(Real *_pdf = nullptr) const override;
 };
 
 class CircularAperture : public Aperture {
 	public:
-		CircularAperture(const Real _size) {
-			size = _size;
-		}
+		CircularAperture(const Real _size);
 
-		Vec2 Sample_p(Real *_pdf = nullptr) const override {
-			return Sampling::SampleUnitDisk(sampler->Get2D()) * size - Vec2(size * .5, size * .5);
-		}
+		/*
+			Samples and returns a point on the aperture disk.
+		*/
+		Vec2 Sample_p(Real *_pdf = nullptr) const override;
 };
 
 class MaskedAperture : public Aperture {
 	public:
+		MaskedAperture(Texture *_mask, Sampler *_sampler, const Real _size = 1);
 
-		MaskedAperture(Texture *_mask, Sampler *_sampler, const Real _size = 1) {
-			mask = _mask;
-			sampler = _sampler;
-			InitDistribution();
-		}
-
-		Vec2 Sample_p(Real *_pdf = nullptr) const override {
-			return maskDistribution.SampleContinuous(sampler->Get2D(), _pdf) * size - Vec2(size * .5, size *.5);
-		}
+		/*
+			Samples and returns a point (proportional to mask) on the aperture plane.
+		*/
+		Vec2 Sample_p(Real *_pdf = nullptr) const override;
 
 	protected:
 		Texture *mask;
 		Distribution::Piecewise2D maskDistribution;
 		
-		void InitDistribution() {
-			const unsigned w = mask->GetWidth(), h = mask->GetHeight();
-			std::unique_ptr<Real[]> img(new Real[w * h]);
-			for (unsigned y = 0; y < h; ++y) {
-				const Real vp = (Real)y / (Real)h;
-				for (unsigned x = 0; x < w; ++x) {
-					Real up = (Real)x / (Real)w;
-					img[x + y * w] = std::abs(mask->GetPixelUV(up, vp).r);
-				}
-			}
-			maskDistribution = Distribution::Piecewise2D(img.get(), w, h);
-		}
+		/*
+			Generates sampling distibution for importnace sampling of aperture mask.
+		*/
+		void InitDistribution();
 };

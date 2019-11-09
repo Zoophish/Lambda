@@ -10,9 +10,7 @@
 #include <integrators/PathIntegrator.h>
 #include <integrators/UtilityIntegrators.h>
 #include <sampling/HaltonSampler.h>
-#include <camera/PinholeCamera.h>
-#include <camera/SphericalCamera.h>
-#include <camera/ThinLensCamera.h>
+#include <camera/Camera.h>
 #include <core/TriangleMesh.h>
 #include <core/Instance.h>
 #include <lighting/MeshLight.h>
@@ -20,7 +18,6 @@
 #include <lighting/MeshPortal.h>
 #include <render/MosaicRenderer.h>
 #include <lighting/Blackbody.h>
-#include <camera/Aperture.h>
 #include <random>
 
 int main() {
@@ -130,7 +127,7 @@ int main() {
 	ThinLensCamera cam(Vec3(0, 1, 2.2), 16, 9, 2.2);
 	//SphericalCamera cam(Vec3(0,1,0));
 	cam.aperture = &aperture2;
-	cam.aperture->size = .012;
+	cam.aperture->size = .02;
 	cam.aperture->sampler = &sampler;
 	cam.SetFov(1.5);
 	cam.SetRotation(PI, -PI*.03f);
@@ -149,7 +146,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 8;
+	renderDirective.spp = 12;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

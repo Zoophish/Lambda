@@ -3,9 +3,11 @@ A high performance physically-based renderer written in C++ as a project in my s
 
 ![Microfacet (Beckmann) test @100spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/box_outdoors.png)
 
-![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/glass_lucy_2.png)
+![Blackbody lamps and MixBSDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucy_blackbody.png)
 
 ![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png)
+
+![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/glass_lucy_2.png)
 
 ## Dependencies
 - Embree3 (https://www.embree.org/) (Requires SSE2)
@@ -31,11 +33,11 @@ A high performance physically-based renderer written in C++ as a project in my s
  - [x] Mesh lights
  - [x] Environment lights
  - [x] Light portals (mesh-based)
- - [ ] Microfacet BSDFs
+ - [x] Microfacet BSDFs
  - [x] Oren-Nayar BRDF
  - [x] Specular BSDF
  - [x] Fresnel BSDF
- - [ ] Mix BSDF
+ - [x] Mix BSDF
  - [ ] Participating Media (homogenous + heterogenous)
 
 **Non-Priority**
