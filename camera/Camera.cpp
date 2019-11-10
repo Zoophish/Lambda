@@ -4,6 +4,7 @@
 
 Camera::Camera(const Vec3 &_origin, const Real _x, const Real _y) {
 	origin = _origin;
+	aspect = _y / _x;
 	SetFov(1.1);
 	SetRotation(0, 0);
 }

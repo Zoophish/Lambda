@@ -1,6 +1,6 @@
 #pragma once
-#include <list>
 #include <integrators/Integrator.h>
+#include <sampling/SampleShifter.h>
 #include <camera/Film.h>
 #include <camera/Camera.h>
 
@@ -13,15 +13,6 @@ struct RenderTile {
 	Scene *scene;
 	unsigned x, y, w, h, spp;
 };
-
-//class TileRenderer {
-//	public:
-//		RenderTile *tile;
-//
-//		virtual void Render() const = 0;
-//};
-
-//
 
 namespace TileRenderers {
 

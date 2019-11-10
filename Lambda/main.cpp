@@ -124,11 +124,11 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.09);
-	ThinLensCamera cam(Vec3(0, 1, 2.2), 16, 9, 2.2);
+	PinholeCamera cam(Vec3(0, 1, 2.2), 16, 9);
 	//SphericalCamera cam(Vec3(0,1,0));
-	cam.aperture = &aperture2;
-	cam.aperture->size = .02;
-	cam.aperture->sampler = &sampler;
+	//aperture = &aperture2;
+	//aperture.>size = .02;
+	//aperture.sampler = &sampler;
 	cam.SetFov(1.5);
 	cam.SetRotation(PI, -PI*.03f);
 

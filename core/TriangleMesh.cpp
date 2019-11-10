@@ -17,9 +17,9 @@ Real TriangleMesh::Area() const {
 	Real area = 0;
 	for (size_t i = 0; i < trianglesSize; ++i) {
 		const Vec3 cross = maths::Cross(vertices[triangles[i].v1] - vertices[triangles[i].v0], vertices[triangles[i].v2] - vertices[triangles[i].v0]);
-		area += cross.Magnitude() * .5;
+		area += cross.Magnitude();
 	}
-	return area;
+	return area * .5;
 }
 
 void TriangleMesh::ProcessHit(RayHit &_hit, const RTCRayHit &_h) const {

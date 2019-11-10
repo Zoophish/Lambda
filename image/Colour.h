@@ -2,6 +2,9 @@
 //----	Generic colour class with 32-bit float precision as well as other colour formats for use in textures.	----
 #pragma once
 
+/*
+	Could be struct?
+*/
 class Colour {
 	public:
 		float r, g, b;
@@ -73,7 +76,10 @@ class Colour {
 		inline bool operator==(const Colour &_rhs) const { return r == _rhs.r && g == _rhs.g && b == _rhs.b; }
 		inline bool operator!=(const Colour &_rhs) const { return r != _rhs.r || g != _rhs.g || b != _rhs.b; }
 
-		static Colour Lerp(const Colour &_a, const Colour &_b, const float _r) {
+		/*
+			Need deprecating for maths::Lerp.
+		*/
+		static inline Colour Lerp(const Colour &_a, const Colour &_b, const float _r) {
 			return _a + (_b - _a) * _r;
 		}
 };
@@ -99,6 +105,20 @@ namespace ColourFormat {
 			a = _rgba[3];
 		}
 
-		inline float operator[](const unsigned _rhs) const { switch (_rhs) { case 0: return r; case 1: return g; case 2: return b; case 3: return a; } }
+		inline float operator[](const unsigned _rhs) const {
+			switch (_rhs) {case 0: return r; case 1: return g; case 2: return b; case 3: return a; }
+		}
+
+		inline RGBA32 operator+(const RGBA32 &_rhs) const {
+			return RGBA32(r + _rhs.r, g + _rhs.g, b + _rhs.b, a + _rhs.a);
+		}
+
+		inline RGBA32 operator-(const RGBA32 &_rhs) const {
+			return RGBA32(r - _rhs.r, g - _rhs.g, b - _rhs.b, a - _rhs.a);
+		}
+
+		inline RGBA32 operator*(const float _rhs) const {
+			return RGBA32(r * _rhs, g * _rhs, b * _rhs, a * _rhs);
+		}
 	};
 }

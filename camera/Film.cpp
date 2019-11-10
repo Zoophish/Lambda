@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Film.h"
 
 Film::Film(const unsigned _width, const unsigned _height) {

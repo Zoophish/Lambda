@@ -1,13 +1,14 @@
-/*
+/*	---- Sam Warren 2019 ----
 NOTE Morton and Hilbert will only work on textures with side lengths of 2^N.
 Textures may be arranged differently in memory for various benefits.
-	-	Scanline stores texels row by row and is required to save a texture to a file.
-	-	Morton ordering can improve locality preservation between 2D->1D mapping and is useful
-	for Textures in materials.
-	-	Hilbert is very similar to Morton, but can be faster in some situations.
-*/
+	-	Scanline stores texels row by row and is required to save a texture to a file. (i.e. Use for render textures)
+	-	Morton and Hilbert ordering can improve locality preservation between 2D->1D mapping. (i.e. Use for large material textures)
+	-	Hilbert and Morton slightly outperform each other in different scenarios, however Morton is more practical.
 
-//Some newer processors have Binary Manipulation Instruction Sets that can be used to accellerate Morton encoding/decoding.
+	
+Some newer processors have Binary Manipulation Instruction sets (BMI) that can be used to hardware accellerate Morton encoding/decoding.
+Disable this definition if runtime errors occur.
+*/
 #define USE_BMI
 
 #pragma once
@@ -21,7 +22,7 @@ namespace TextureEncoding {
 		static const uint64_t x2_mask = 0xAAAAAAAAAAAAAAAA;
 		static const uint64_t y2_mask = 0x5555555555555555;
 
-		inline uint64_t ShiftInterleave(const uint32_t _i) {
+		static inline uint64_t ShiftInterleave(const uint32_t _i) {
 			uint64_t word = _i;
 			word = (word ^ (word << 16)) & 0x0000ffff0000ffff;
 			word = (word ^ (word << 8)) & 0x00ff00ff00ff00ff;
@@ -32,7 +33,7 @@ namespace TextureEncoding {
 		}
 
 		//Based on: https://github.com/rawrunprotected/hilbert_curves
-		inline uint32_t HilbertXYToIndex(uint32_t n, uint32_t x, uint32_t y) {
+		static inline uint32_t HilbertXYToIndex(uint32_t n, uint32_t x, uint32_t y) {
 			x = x << (16 - n);
 			y = y << (16 - n);
 			uint32_t A, B, C, D;
@@ -83,23 +84,34 @@ namespace TextureEncoding {
 
 	}
 
-	//Texture sides MUST be of 2^N.
-	static size_t MortonMap(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+	/*
+		Texture sides MUST be of 2^N.
+	*/
+	static inline size_t MortonOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		#ifdef USE_BMI
 			return _pdep_u64(_y, y2_mask) | _pdep_u64(_x, x2_mask);
 		#else
 			return ShiftInterleave(_x) | (ShiftInterleave(_y) << 1);
 		#endif
 	}
-	//Texture size must be of 2^N and square.
-	static size_t HilbertMap(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+	/*
+		Texture size MUST be of 2^N and square.
+	*/
+	static inline size_t HilbertOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		return HilbertXYToIndex(_w, _x, _y);
 	}
-	//Any texture size works.
-	static size_t ScanlineRowMap(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+
+	/*
+		Any texture size works.
+	*/
+	static inline size_t ScanlineRowOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		return _y * _w + _x;
 	}
-	static size_t ScanlineColMap(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+
+	/*
+		Any texture size works.
+	*/
+	static inline size_t ScanlineColOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		return _x * _h + _y;
 	}
 }
