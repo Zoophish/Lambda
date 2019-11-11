@@ -1,8 +1,8 @@
 /*
-Used to decorrelate pixels' sample sets, which converts aliasing artifacts into noise.
-For the first maskDimensions of a sample set, a mask texture (e.g. blue noise) can be used dither the
-	samples which can provide a cleaer image at low sample counts. After these dimensions are used,
-	random toroidal shifts are applied.
+Used to change the correlation of pixels' sample sets, which converts aliasing artifacts into noise.
+For the first maskDimensions of a sample set, a mask texture's (e.g. blue noise) channels can be used dither the
+	samples which can provide a cleaner image at low sample counts. After these dimensions are used,
+	a random hash is used.
 */
 
 #pragma once
@@ -15,11 +15,14 @@ class SampleShifter {
 		unsigned maskDimensionStart = 1;
 		TextureRGBA32 *mask;
 
-		SampleShifter(TextureRGBA32 *_mask = nullptr, const unsigned _pixelIndex = 0) {
+		SampleShifter(TextureRGBA32 *_mask, const unsigned _pixelIndex = 0) {
 			pixelIndex = _pixelIndex;
 			mask = _mask;
 		}
 
+		/*
+			Specifies which pixel in the image the sample shifter is using.
+		*/
 		inline void SetPixelIndex(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 			if (mask) {
 				const unsigned xp = _x % mask->GetWidth();
@@ -30,36 +33,17 @@ class SampleShifter {
 				pixelIndex = _y * _w + _x;
 		}
 
-		Real Shift(const Real _point, const unsigned _dimensionIndex) const {
-			Real tmp = _point;
-			const int dim = _dimensionIndex - maskDimensionStart;
-			if (mask && dim >= 0 && dim < maskDimensions) {
-				ToroidalShift(tmp, (*mask)[pixelIndex][dim]);
-			}
-			else {
-				ToroidalShift(tmp, (Real)(Hash(pixelIndex * maxDimension + _dimensionIndex) * inv32));
-			}
-			return tmp;
-		}
+		/*
+			Shift the sample dimension, _point according to current pixelIndex. 
+		*/
+		Real Shift(const Real _point, const unsigned _dimensionIndex) const;
 
-	protected:
-		static constexpr unsigned maskDimensions = 4;
-		static constexpr double inv32 = 1.0 / 4294967296.0;
+	private:
+		static const unsigned maskDimensions = 4;
+		static constexpr double inv32 = 1. / 4294967296.;
 		unsigned pixelIndex;
 
-		inline void ToroidalShift(Real &_point, const Real _shift) const {
-			_point += _shift;
-			if (_point >= 1.) 
-				_point -= (Real)1;
-		}
+		static inline void ToroidalShift(Real &_point, const Real _shift);
 
-		inline uint32_t Hash(uint32_t a) const {
-			a = (a + 0x7ed55d16) + (a << 12);
-			a = (a ^ 0xc761c23c) ^ (a >> 19);
-			a = (a + 0x165667b1) + (a << 5);
-			a = (a + 0xd3a2646c) ^ (a << 9);
-			a = (a + 0xfd7046c5) + (a << 3);
-			a = (a ^ 0xb55a4f09) ^ (a >> 16);
-			return a;
-		}
+		static inline uint32_t Hash(uint32_t a);
 };

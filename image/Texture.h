@@ -104,7 +104,7 @@ class texture_t {
 
 		inline Format &operator[](const size_t _i) { return pixels[_i]; }
 		inline Format operator[](const size_t _i) const { return pixels[_i]; }
-
+		
 		inline Format GetPixelUV(const float _u, const float _v) const {
 			switch (interpolationMode) {
 			case InterpolationMode::INTERP_NEAREST :

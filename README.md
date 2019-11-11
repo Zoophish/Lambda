@@ -10,7 +10,7 @@ A high performance physically-based renderer written in C++ as a project in my s
 ![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/glass_lucy_2.png)
 
 ## Dependencies
-- Embree3 (https://www.embree.org/) (Requires SSE2)
+- Embree3 (https://www.embree.org/)
 - Assimp (http://www.assimp.org/)
 
 ## Roadmap of Features

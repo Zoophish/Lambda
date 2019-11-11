@@ -1,70 +1,41 @@
 #pragma once
-#include <vector>
 #include "Sampler.h"
 #include "SampleShifter.h"
 
 class HaltonSampler : public Sampler {
 	public:
-		HaltonSampler(const unsigned _sampleIndex = 0) {
-			sampleIndex = _sampleIndex;
-			sequence.resize(maxDimension);
-			SetSample(0);
-		}
+		HaltonSampler(const unsigned _sampleIndex = 0);
 
-		Sampler *clone() const override { return new HaltonSampler(*this); }
+		/*
+			Makes an identical copy of this sampler (needed for parallel rendering).
+		*/
+		Sampler *clone() const override;
 
-		void NextSample() override {
-			for (unsigned i = 0; i < maxDimension; ++i) {
-				sequence[i] = Halton(sampleIndex, primes[i]);
-			}
-			dimensionIndex = 0;
-			++sampleIndex;
-		}
+		/*
+			Progresses sequence points to next sample.
+		*/
+		void NextSample() override;
 
-		void SetSample(const unsigned _sampleIndex) override {
-			sampleIndex = _sampleIndex;
-			for (unsigned i = 0; i < maxDimension; ++i) {
-				sequence[i] = Halton(sampleIndex, primes[i]);
-			}
-			dimensionIndex = 0;
-		}
+		/*
+			Sets the sequence to a specific sample index (i.e. for resuming renders).
+		*/
+		void SetSample(const unsigned _sampleIndex) override;
 
-		Real Get1D() override {
-			Real out;
-			if (sampleShifter) {
-				out = sampleShifter->Shift(sequence[dimensionIndex % maxDimension], dimensionIndex);
-			}
-			else { out = sequence[dimensionIndex % maxDimension]; }
-			dimensionIndex++;
-			return out;
-		}
+		/*
+			Returns a 1D point in sample space of current sample. 
+		*/
+		Real Get1D() override;
 
-		Vec2 Get2D() override {
-			Vec2 out;
-			if (sampleShifter) {
-				out =  Vec2(sampleShifter->Shift(sequence[dimensionIndex % maxDimension], dimensionIndex),
-							sampleShifter->Shift(sequence[(dimensionIndex + 1) % maxDimension], dimensionIndex + 1));
-			}
-			else { out = Vec2(sequence[dimensionIndex % maxDimension], sequence[(dimensionIndex + 1) % maxDimension]); }
-			dimensionIndex += 2;
-			return out;
-
-		}
+		/*
+			Returns a 2D point in sample space of current sample.
+		*/
+		Vec2 Get2D() override;
 
 	protected:
 		static const unsigned maxDimension = 7;
-		static constexpr unsigned primes[maxDimension] = { 2,3,5,7,11,13,17 };
-		std::vector<Real> sequence;
+		static const unsigned primes[maxDimension];
+		Real sequence[maxDimension];
 
-		inline Real Halton(const int index, const int b) const {
-			Real result = 0;
-			Real f = 1. / (Real)b;
-			int i = index;
-			while (i > 0) {
-				result = result + f * (i % b);
-				i /= b;
-				f /= (Real)b;
-			}
-			return result;
-		}
+	private:
+		static inline Real Halton(const int index, const int b);
 };

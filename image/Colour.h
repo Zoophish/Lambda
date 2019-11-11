@@ -5,83 +5,73 @@
 /*
 	Could be struct?
 */
-class Colour {
-	public:
-		float r, g, b;
+struct Colour {
+	float r, g, b;
 
-		Colour() {}
+	Colour() {}
 
-		Colour(const float _r, const float _b, const float _g) {
-			r = _r;
-			b = _b;
-			g = _g;
-		}
+	Colour(const float _r, const float _b, const float _g) {
+		r = _r;
+		b = _b;
+		g = _g;
+	}
 
-		Colour(const float _l) {
-			r = _l;
-			g = _l;
-			b = _l;
-		}
+	Colour(const float _l) {
+		r = _l;
+		g = _l;
+		b = _l;
+	}
 
-		Colour(const float *_rgb) {
-			r = _rgb[0];
-			g = _rgb[1];
-			b = _rgb[2];
-		}
+	Colour(const float *_rgb) {
+		memcpy(this, _rgb, sizeof(float) * 3);
+	}
 
-		inline Colour operator*(const Colour &_rhs) const {
-			return Colour(r * _rhs.r, g * _rhs.g, b * _rhs.b);
-		}
-		inline Colour operator*(const float _rhs) const {
-			return Colour(r * _rhs, g * _rhs, b * _rhs);
-		}      
-		inline Colour operator/(const Colour &_rhs) const {
-			return Colour(r / _rhs.r, g / _rhs.g, b / _rhs.b);
-		}
-		inline Colour operator/(const float _rhs) const {
-			const float inv = 1.f / _rhs;
-			return Colour(r * inv, g * inv, b * inv);
-		}      
-		inline Colour operator+(const Colour &_rhs) const {
-			return Colour(r + _rhs.r, g + _rhs.g, b + _rhs.b);
-		}
-		inline Colour operator-(const Colour &_rhs) const {
-			return Colour(r - _rhs.r, g - _rhs.g, b - _rhs.b);
-		}
+	inline Colour operator*(const Colour &_rhs) const {
+		return Colour(r * _rhs.r, g * _rhs.g, b * _rhs.b);
+	}
+	inline Colour operator*(const float _rhs) const {
+		return Colour(r * _rhs, g * _rhs, b * _rhs);
+	}      
+	inline Colour operator/(const Colour &_rhs) const {
+		return Colour(r / _rhs.r, g / _rhs.g, b / _rhs.b);
+	}
+	inline Colour operator/(const float _rhs) const {
+		const float inv = 1.f / _rhs;
+		return Colour(r * inv, g * inv, b * inv);
+	}      
+	inline Colour operator+(const Colour &_rhs) const {
+		return Colour(r + _rhs.r, g + _rhs.g, b + _rhs.b);
+	}
+	inline Colour operator-(const Colour &_rhs) const {
+		return Colour(r - _rhs.r, g - _rhs.g, b - _rhs.b);
+	}
 
-		inline void operator*=(const Colour &_rhs) {
-			r *= _rhs.r; g *= _rhs.g; b *= _rhs.b;
-		}
-		inline void operator*=(const float _rhs) {
-			r *= _rhs; g *= _rhs; b *= _rhs;
-		}
-		inline void operator/=(const Colour &_rhs) {
-			r /= _rhs.r; g /= _rhs.g; b /= _rhs.b;
-		}
-		inline void operator/=(const float _rhs) {
-			const float inv = 1.f / _rhs;
-			r *= inv;
-			g *= inv;
-			b *= inv;
-		}
-		inline void operator+=(const Colour &_rhs) {
-			r += _rhs.r; g += _rhs.g; b += _rhs.b;
-		}
-		inline void operator-=(const Colour &_rhs) {
-			r -= _rhs.r;
-			g -= _rhs.g;
-			b -= _rhs.b;
-		}
+	inline void operator*=(const Colour &_rhs) {
+		r *= _rhs.r; g *= _rhs.g; b *= _rhs.b;
+	}
+	inline void operator*=(const float _rhs) {
+		r *= _rhs; g *= _rhs; b *= _rhs;
+	}
+	inline void operator/=(const Colour &_rhs) {
+		r /= _rhs.r; g /= _rhs.g; b /= _rhs.b;
+	}
+	inline void operator/=(const float _rhs) {
+		const float inv = 1.f / _rhs;
+		r *= inv;
+		g *= inv;
+		b *= inv;
+	}
+	inline void operator+=(const Colour &_rhs) {
+		r += _rhs.r; g += _rhs.g; b += _rhs.b;
+	}
+	inline void operator-=(const Colour &_rhs) {
+		r -= _rhs.r;
+		g -= _rhs.g;
+		b -= _rhs.b;
+	}
 
-		inline bool operator==(const Colour &_rhs) const { return r == _rhs.r && g == _rhs.g && b == _rhs.b; }
-		inline bool operator!=(const Colour &_rhs) const { return r != _rhs.r || g != _rhs.g || b != _rhs.b; }
-
-		/*
-			Need deprecating for maths::Lerp.
-		*/
-		static inline Colour Lerp(const Colour &_a, const Colour &_b, const float _r) {
-			return _a + (_b - _a) * _r;
-		}
+	inline bool operator==(const Colour &_rhs) const { return r == _rhs.r && g == _rhs.g && b == _rhs.b; }
+	inline bool operator!=(const Colour &_rhs) const { return r != _rhs.r || g != _rhs.g || b != _rhs.b; }
 };
 
 namespace ColourFormat {
@@ -99,10 +89,7 @@ namespace ColourFormat {
 		}
 
 		RGBA32(const float *_rgba) {
-			r = _rgba[0];
-			g = _rgba[1];
-			b = _rgba[2];
-			a = _rgba[3];
+			memcpy(this, _rgba, sizeof(float) * 4);
 		}
 
 		inline float operator[](const unsigned _rhs) const {

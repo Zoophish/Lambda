@@ -32,7 +32,9 @@ namespace TextureEncoding {
 			return word;
 		}
 
-		//Based on: https://github.com/rawrunprotected/hilbert_curves
+		/*
+			Based on: https://github.com/rawrunprotected/hilbert_curves
+		*/
 		static inline uint32_t HilbertXYToIndex(uint32_t n, uint32_t x, uint32_t y) {
 			x = x << (16 - n);
 			y = y << (16 - n);
