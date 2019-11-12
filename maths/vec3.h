@@ -5,6 +5,7 @@ Supports SSE instructions for vec3<float> which offers a significant performance
 #define LAMBDA_VEC3_USE_SSE
 
 #pragma once
+#include <math.h>
 #include <type_traits>
 #include <nmmintrin.h>
 

@@ -17,44 +17,42 @@ class BxDF {
 
 		const BxDFType type;
 
-		BxDF(const BxDFType _type) : type(_type) {}
+		BxDF(const BxDFType _type);
 
 		virtual Spectrum f(const SurfaceScatterEvent &_event) const = 0;
 
-		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
-			_event.wiL = Sampling::SampleCosineHemisphere(_u);
-			if (_event.woL.y < 0) _event.wiL.y *= -1;
-			_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
-			_event.pdf = _pdf;
-			_event.wi = _event.ToWorld(_event.wiL);
-			_event.hit->point += _event.hit->normalG * SURFACE_EPSILON;
-			return f(_event);
-		}
+		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const;
 
-		virtual Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const {
-			return Spectrum(0);
-		}
+		virtual Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const;
 
-		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const {
-			return CosineHemispherePdf(_wo, _wi);
-		}
+		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const;
 
-		inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) const {
+		static inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) {
 			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;
 		}
 };
 
-class ScaledBxDF : public BxDF {
+
+
+class LambertianBRDF : public BxDF {
 	public:
-		BxDF* bxdf;
-		Spectrum scale;
+		TextureAdapter albedo;
 
-		ScaledBxDF(BxDF *_bxdf, const Spectrum &_scale) : BxDF(bxdf->type) {
-			bxdf = _bxdf;
-			scale = _scale;
-		}
+		LambertianBRDF(Texture *_albedo = nullptr);
 
-		Spectrum f(const SurfaceScatterEvent &_event) const override {
-			return scale * bxdf->f(_event);
-		}
+		Spectrum f(const SurfaceScatterEvent &_event) const override;
+
+		Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const override;
+};
+
+
+
+class MixBSDF : public BxDF {
+	public:
+	BxDF *a, *b;
+	Real factor;
+
+	MixBSDF(BxDF *_a, BxDF *_b, const Real _factor = .5);
+
+	Spectrum f(const SurfaceScatterEvent &_event) const override;
 };

@@ -1,10 +1,6 @@
 //----	By Sam Warren 2019	----
 //----	Generic colour class with 32-bit float precision as well as other colour formats for use in textures.	----
-#pragma once
 
-/*
-	Could be struct?
-*/
 struct Colour {
 	float r, g, b;
 

@@ -1,10 +1,8 @@
 #include <assets/AssetImporter.h>
 #include <shading/surface/OrenNayar.h>
-#include <shading/surface/Lambertian.h>
 #include <shading/surface/Specular.h>
 #include <shading/surface/Microfacet.h>
-#include <shading/surface/Transmissive.h>
-#include <shading/surface/Mix.h>
+#include <shading/surface/Ghost.h>
 #include <shading/media/HomogenousMedium.h>
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/PathIntegrator.h>
@@ -45,7 +43,7 @@ int main() {
 	ai.Import(&resources, "../content/lucy.obj");
 	MeshImport::LoadMeshes(ai.scene, &resources);
 	TriangleMesh mesh2;
-	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[0], &mesh2);
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &mesh2);
 	mesh2.bxdf = &mat2;
 	mesh2.smoothNormals = true;
 	scene.AddObject(&mesh2);
@@ -72,14 +70,14 @@ int main() {
 	
 	TriangleMesh mesh3;
 	ai.Import(&resources, "../content/Backdrop.obj");
-	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[0], &mesh3);
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &mesh3);
 	OrenNayarBRDF mat3(&grid, 2);
 	mesh3.bxdf = &mat3;
 	scene.AddObject(&mesh3);
 
 	ai.Import(&resources, "../content/AreaLight.obj");
 	TriangleMesh lightMesh;
-	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[0], &lightMesh);
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
 	lightMesh.smoothNormals = false;
 	MeshLight light(&lightMesh);
 	Real cs[3] = { 78.3583, 79.1876, 64.5809 };
@@ -93,7 +91,7 @@ int main() {
 	
 	ai.Import(&resources, "../content/SideLight.obj");
 	TriangleMesh lightMesh2;
-	MeshImport::LoadMeshBuffers(ai.scene->mMeshes[1], &lightMesh2);
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
 	MeshLight light2(&lightMesh2);
 	Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
 	Spectrum blck2 = Spectrum::FromXYZ(cs2);
@@ -146,7 +144,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 12;
+	renderDirective.spp = 32;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

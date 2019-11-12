@@ -8,7 +8,7 @@
 */
 #define LAMBDA_MATHS_PRECISION float
 
-//----	Enable useful typdefs for mathematical types:
+//----	Enable standard typdefs for mathematical types:
 //#define LAMBDA_MATHS_COMMON_TYPES
 
 

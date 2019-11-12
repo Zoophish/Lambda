@@ -22,8 +22,7 @@ class MeshLight : public Light {
 			const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 			const Vec2 u = _sampler->Get2D();
 			const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
-			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON, p)) {
-				_event.wi = (p - _event.hit->point).Normalised();
+			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON, p, &_event.wi)) {
 				Real triArea;
 				Vec3 normal;
 				mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);

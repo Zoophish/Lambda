@@ -18,27 +18,30 @@ bool Scene::Intersect(const Ray &_ray, RayHit &_hit) const {
 		_hit.tFar = rayHit.ray.tfar;
 		_hit = objects[rayHit.hit.geomID]->Hit(rayHit);
 		_hit.object = objects[rayHit.hit.geomID];
-		if (rayHit.hit.instID[0] != RTC_INVALID_GEOMETRY_ID) {
-			_hit.object = objects[rayHit.hit.instID[0]];
-		}
+		if (rayHit.hit.instID[0] != RTC_INVALID_GEOMETRY_ID) _hit.object = objects[rayHit.hit.instID[0]];
+		else _hit.object = objects[rayHit.hit.geomID];
 		_hit.primId = rayHit.hit.primID;
 		return true;
 	}
 	return false;
 }
 
-bool Scene::MutualVisibility(const Vec3 &_p1, const Vec3 &_p2) const {
+bool Scene::MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, Vec3 *_w) const {
 	const Vec3 diff = _p2 - _p1;
 	const Real mag = diff.Magnitude();
 	const Vec3 dir = diff / mag;
 	RTCRay eRay = Ray(_p1, dir).ToRTCRay();
-	RTCRayHit rayHit;
-	rayHit.ray = eRay;
+	eRay.tfar = mag - .00001;
 	RTCIntersectContext context;
 	rtcInitIntersectContext(&context);
 	context.flags = RTC_INTERSECT_CONTEXT_FLAG_INCOHERENT;
-	rtcIntersect1(scene, &context, &rayHit);
-	return rayHit.ray.tfar > (mag - 0.002);
+	rtcOccluded1(scene, &context, &eRay);
+	if (_w) *_w = dir;
+	return eRay.tfar != -INFINITY;
+}
+
+bool Scene::MutualVisibility(const Vec3 &_p1, const Vec3 &_p2) const {
+	return MutualVisibility(_p1, _p2, nullptr);
 }
 
 bool Scene::RayEscapes(const Ray &_ray) const {

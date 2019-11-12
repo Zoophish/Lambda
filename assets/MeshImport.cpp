@@ -1,4 +1,4 @@
-/*#include "MeshImport.h"
+#include "MeshImport.h"
 
 namespace MeshImport {
 
@@ -15,7 +15,7 @@ namespace MeshImport {
 		return false;
 	}
 
-	void LoadMeshBuffers(const aiMesh *_aiMesh, TriangleMesh *_tMesh) {
+	void LoadMeshVertexBuffers(const aiMesh *_aiMesh, TriangleMesh *_tMesh) {
 		//----	VERTICES	----
 		_tMesh->verticesSize = _aiMesh->mNumVertices;
 		_tMesh->trianglesSize = _aiMesh->mNumFaces;
@@ -57,8 +57,8 @@ namespace MeshImport {
 				_tMesh->vertexBitangents[i].y = _aiMesh->mBitangents[i].y;
 				_tMesh->vertexBitangents[i].z = _aiMesh->mBitangents[i].z;
 			}
-			_tMesh->smoothNormals = _aiMesh->HasTangentsAndBitangents();
 		}
+		_tMesh->smoothNormals = _aiMesh->HasTangentsAndBitangents();
 
 		//----	TEXTURE COORDINATES	----
 		_tMesh->hasUVs = LoadUVBuffer(_aiMesh, _tMesh);
@@ -79,12 +79,14 @@ namespace MeshImport {
 		if (_scene->HasMeshes()) {
 			for (unsigned i = 0; i < _scene->mNumMeshes; ++i) {
 				TriangleMesh *mesh = new TriangleMesh();
-				LoadMeshBuffers(_scene->mMeshes[i], mesh);
+				LoadMeshVertexBuffers(_scene->mMeshes[i], mesh);
 				_resourceManager->objectPool.Append(_scene->mMeshes[i]->mName.C_Str(), mesh);
+				InstanceProxy *proxy = new InstanceProxy(mesh);
+				_resourceManager->proxyPool.Append(_scene->mMeshes[i]->mName.C_Str(), proxy);
 			}
 			return true;
 		}
 		return false;
 	}
 
-}*/
+}

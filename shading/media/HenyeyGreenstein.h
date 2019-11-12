@@ -3,7 +3,7 @@
 
 namespace Media {
 
-	inline Real PhaseHG(const Real _cosTheta, const Real _g) {
+	static inline Real PhaseHG(const Real _cosTheta, const Real _g) {
 		const Real g2 = _g * _g;
 		const Real denom = 1 + g2 + 2 * _g * _cosTheta;
 		return INV_PI4 * (1 - g2) / (denom * std::sqrt(denom));

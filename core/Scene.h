@@ -55,6 +55,7 @@ class Scene {
 		/*
 			Returns true if points _p1 and _p2 are mutually visible against scene geometry.
 		*/
+		bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, Vec3 *_w) const;
 		bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2) const;
 
 		/*
