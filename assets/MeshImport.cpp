@@ -75,17 +75,20 @@ namespace MeshImport {
 		return false;
 	}
 
-	bool LoadMeshes(const aiScene *_scene, ResourceManager *_resourceManager) {
+	bool PushMeshes(const aiScene *_scene, ResourceManager *_resourceManager, ImportMetrics *_metrics) {
 		if (_scene->HasMeshes()) {
 			for (unsigned i = 0; i < _scene->mNumMeshes; ++i) {
 				TriangleMesh *mesh = new TriangleMesh();
 				LoadMeshVertexBuffers(_scene->mMeshes[i], mesh);
 				_resourceManager->objectPool.Append(_scene->mMeshes[i]->mName.C_Str(), mesh);
-				InstanceProxy *proxy = new InstanceProxy(mesh);
-				_resourceManager->proxyPool.Append(_scene->mMeshes[i]->mName.C_Str(), proxy);
+				_metrics->AppendMetric(std::string(_scene->mMeshes[i]->mName.C_Str()) + ":	" +
+					std::to_string(_scene->mMeshes[i]->mNumVertices) + " verts, " +
+					std::to_string(_scene->mMeshes[i]->mNumFaces) + " tris");
 			}
-			return true;
+			_metrics->AppendMetric(std::to_string(_scene->mNumMeshes) + " meshes pushed.");
+			return !_metrics->HasErrors();
 		}
+		_metrics->AppendError("Asset has no meshes.");
 		return false;
 	}
 

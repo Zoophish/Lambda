@@ -3,9 +3,7 @@
 
 class InstanceProxy {
 	public:
-		InstanceProxy(Object *_object) {
-			iObject = _object;
-		}
+		InstanceProxy(Object *_object);
 
 		/*
 			Commits iObject to the instance and builds the internal accelleration stucture.
@@ -26,9 +24,7 @@ class InstanceProxy {
 
 class Instance : public Object {
 	public:
-		Instance(InstanceProxy *_proxy) {
-			proxy = _proxy;
-		}
+		Instance(InstanceProxy *_proxy);
 
 		/*
 			Links the proxy and commits the transform.

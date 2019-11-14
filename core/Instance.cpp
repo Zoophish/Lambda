@@ -1,5 +1,13 @@
 #include "Instance.h"
 
+InstanceProxy::InstanceProxy(Object *_object) {
+	iObject = _object;
+}
+
+Instance::Instance(InstanceProxy *_proxy) {
+	proxy = _proxy;
+}
+
 void Instance::Commit(const RTCDevice &_device) {
 	geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_INSTANCE);
 	rtcSetGeometryInstancedScene(geometry, proxy->iScene);

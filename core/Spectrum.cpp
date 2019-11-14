@@ -195,7 +195,7 @@ Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const un
 	if (_l <= _lambda[0]) return _lambda[0];
 	if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
 	// Find the sample interval that _l lies within
-	unsigned i;
+	unsigned i = 0;
 	while (_l > _lambda[i + 1]) ++i;
 	return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
 }

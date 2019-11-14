@@ -39,13 +39,13 @@ class MeshLight : public Light {
 
 		Real PDF_Li(const SurfaceScatterEvent &_event) const override {
 			RayHit hit;
-			if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * .0001, _event.wi), hit)) return 0;
+			if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON, _event.wi), hit)) return 0;
 			if (hit.object->light != this) return 0;
 			Real triArea;
 			Vec3 normal;
 			mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);
 			const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
-			if(denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
+			if (denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
 			return 0;
 		}
 

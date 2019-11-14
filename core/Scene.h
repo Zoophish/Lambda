@@ -22,7 +22,7 @@ class Scene {
 
 	public:
 		RTCDevice device;
-		std::vector<Object*> objects;
+		std::vector<Object*> objects; //Root(s) of object tree.
 		std::vector<Light*> lights;
 		Light* envLight;
 		Distribution::Piecewise1D lightDistribution;

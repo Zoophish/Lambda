@@ -25,91 +25,89 @@ int main() {
 	Texture red(1, 1, Colour(1, .1, .1));
 	Texture yellow(1, 1, Colour(.9, .6, .6));
 	Texture white(1, 1, Colour(1, 1, 1));
-	Texture blue(1, 1, Colour(.63, .3, 1));
+	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid; grid.LoadImageFile("../content/uv_grid.png"); grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	white.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	const Real alpha = MicrofacetDistribution::RoughnessToAlpha(0.009);
 	BeckmannDistribution d(alpha, alpha);
 	FresnelDielectric fres(2.5);
 
-	OrenNayarBRDF mat(&red, 1.8);
+	OrenNayarBRDF mat(&white, 1.8);
+	OrenNayarBRDF blueMat(&blue, 2);
 	TextureR32 tr(1, 1, .8);
 	MicrofacetBRDF tbr(&white, &d, &fres);
 	tbr.etaT = .00001;
-	MixBSDF mat2(&mat, &tbr, .1);
+	MixBSDF mat2(&blueMat, &tbr, .1);
 
 	AssetImporter ai;
 
-	ai.Import(&resources, "../content/lucy.obj");
-	MeshImport::LoadMeshes(ai.scene, &resources);
-	TriangleMesh mesh2;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &mesh2);
-	mesh2.bxdf = &mat2;
-	mesh2.smoothNormals = true;
-	scene.AddObject(&mesh2);
+	ai.Import("../content/lucy.obj");
+	TriangleMesh lucy;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
+	lucy.bxdf = &mat2;
+	lucy.smoothNormals = true;
+	//scene.AddObject(&lucy);
 
-	//InstanceProxy proxy(&mesh2);
-	//proxy.Commit(scene.device);
-	//Instance l1(&proxy);
-	//l1.bxdf = &mat;
-	//l1.SetScale(Vec3(.5, .5, .5));
-	//scene.AddObject(l1);
-	//
-	//Instance l2(&proxy);
-	//l2.bxdf = &tbr;
-	//l2.SetPosition(Vec3(1, 0, -.7));
-	//l2.SetScale(Vec3(.65, .65, .65));
-	//scene.AddObject(l2);
-	//
-	//FresnelBSDF redMat(&red, 2.4);
-	//Instance l3(&proxy);
-	//l3.bxdf = &mat2;
-	//l3.SetPosition(Vec3(-1, 0, -.7));
-	//l3.SetScale(Vec3(.65, .65, .65));
-	//scene.AddObject(l3);
-	
-	TriangleMesh mesh3;
-	ai.Import(&resources, "../content/Backdrop.obj");
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &mesh3);
-	OrenNayarBRDF mat3(&grid, 2);
-	mesh3.bxdf = &mat3;
-	scene.AddObject(&mesh3);
+	InstanceProxy proxy(&lucy);
+	proxy.Commit(scene.device);
+	Instance l1(&proxy);
+	l1.bxdf = &mat2;
+	l1.SetScale(Vec3(2, 2, 2));
+	scene.AddObject(&l1);
 
-	ai.Import(&resources, "../content/AreaLight.obj");
-	TriangleMesh lightMesh;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	lightMesh.smoothNormals = false;
-	MeshLight light(&lightMesh);
-	Real cs[3] = { 78.3583, 79.1876, 64.5809 };
-	Spectrum blck = Spectrum::FromXYZ(cs);
-	texture_t<Spectrum> blckbdy(1, 1, blck);
-	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	light.emission = &blckbdy;
-	light.intensity = .5;
-	scene.AddLight(&light);
-	scene.AddObject(&lightMesh);
+	AssetImporter ai2;
+	ai2.Import("D:\\Assets\\sponza.obj");
+	ai2.PushToResourceManager(&resources);
+	for (auto &it : resources.objectPool.pool) {
+		it.second->bxdf = &mat;
+		scene.AddObject(it.second);
+	}
+
+
+
+	//ai.Import(&resources, "../content/AreaLight.obj");
+	//TriangleMesh lightMesh;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	//lightMesh.smoothNormals = false;
+	//MeshLight light(&lightMesh);
+	//Real cs[3] = { 78.3583, 79.1876, 64.5809 };
+	//Spectrum blck = Spectrum::FromXYZ(cs);
+	//texture_t<Spectrum> blckbdy(1, 1, blck);
+	//blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	//light.emission = &blckbdy;
+	//light.intensity = .5;
+	//scene.AddLight(&light);
+	//scene.AddObject(&lightMesh);
 	
-	ai.Import(&resources, "../content/SideLight.obj");
-	TriangleMesh lightMesh2;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
-	MeshLight light2(&lightMesh2);
-	Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
-	Spectrum blck2 = Spectrum::FromXYZ(cs2);
-	texture_t<Spectrum> blckbdy2(1, 1, blck2);
-	light2.emission = &blckbdy2;
-	light2.intensity = 6;
-	scene.AddLight(&light2);
-	scene.AddObject(&lightMesh2);
+	//ai.Import(&resources, "../content/SideLight.obj");
+	//TriangleMesh lightMesh2;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
+	//MeshLight light2(&lightMesh2);
+	//Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
+	//Spectrum blck2 = Spectrum::FromXYZ(cs2);
+	//texture_t<Spectrum> blckbdy2(1, 1, blck2);
+	//light2.emission = &blckbdy2;
+	//light2.intensity = 6;
+	//scene.AddLight(&light2);
+	//scene.AddObject(&lightMesh2);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/mutianyu_2k.hdr");
+	envMap.LoadImageFile("../content/cloud_layers_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = 1.5;
 	ibl.offset = Vec2(PI, 0);
-	scene.AddLight(&ibl);
+	//scene.AddLight(&ibl);
 	scene.envLight = &ibl;
+
+	ai.Import("D:\\Assets\\sponza_portal.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh portal;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &portal);
+	MeshPortal portalLight(&ibl, &portal);
+	scene.AddLight(&portalLight);
+	scene.AddObject(&portal);
 
 	scene.Commit();
 
@@ -121,14 +119,12 @@ int main() {
 	HaltonSampler sampler;
 	sampler.sampleShifter = &sampleShifter;
 
-	CircularAperture aperture2(.09);
-	PinholeCamera cam(Vec3(0, 1, 2.2), 16, 9);
-	//SphericalCamera cam(Vec3(0,1,0));
-	//aperture = &aperture2;
-	//aperture.>size = .02;
-	//aperture.sampler = &sampler;
-	cam.SetFov(1.5);
-	cam.SetRotation(PI, -PI*.03f);
+	CircularAperture aperture2(.05);
+	ThinLensCamera cam(Vec3(-9, 1, 0), 16, 9, 9, &aperture2);
+	aperture2.size = .05;
+	aperture2.sampler = &sampler;
+	cam.SetFov(.7);
+	cam.SetRotation(PI*.5, PI*.015f);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);
@@ -144,7 +140,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 32;
+	renderDirective.spp = 1;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
@@ -157,5 +153,6 @@ int main() {
 
 	//Save to file.
 	tex.SaveToImageFile("out.png");
+	system("pause");
 	return 0;
 }

@@ -1,18 +1,19 @@
 #pragma once
-#include <assimp/scene.h>
+#include "ImportUtilities.h"
 #include <image/Texture.h>
-#include "ResourceManager.h"
+#include <shading/Material.h>
 
 namespace MaterialImport {
 
-	void LoadTextures(const aiScene *_scene, ResourceManager *_resourceManager) {
-		if (_scene->HasTextures) {
-			for (unsigned i = 0; i < _scene->mNumTextures; ++i) {
-				Texture *tex = new Texture();
-				tex->LoadImageFile(_scene->mTextures[i]->mFilename.C_Str());
-				//_scene->mMaterials[i]->GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0)
-			}
-		}
-	}
+	using namespace ImportUtilities;
 
+	/*
+		Pushes all textures referenced in _aiScene into _resourceManager.
+	*/
+	bool PushTextures(const aiScene *_aiScene, ResourceManager *_resource, ImportMetrics *_metrics);
+
+	/*
+		
+	*/
+	bool PushMaterials(const aiScene *_aiScene, ResourceManager *_resources, ImportMetrics *_metrics);
 }
