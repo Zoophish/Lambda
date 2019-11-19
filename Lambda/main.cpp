@@ -56,7 +56,7 @@ int main() {
 	scene.AddObject(&l1);
 
 	AssetImporter ai2;
-	ai2.Import("D:\\Assets\\sponza.obj");
+	ai2.Import("D:\\Assets\\sponza\\sponza.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		it.second->bxdf = &mat;
