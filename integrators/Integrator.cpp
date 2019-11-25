@@ -17,7 +17,7 @@ Spectrum Integrator::EstimateDirect(SurfaceScatterEvent &_event, const Scene &_s
 		Spectrum f;
 		if (_event.hit->object->bxdf) {
 			f = _event.hit->object->bxdf->f(_event) * std::abs(_event.wiL.y);
-			scatteringPDF = _event.hit->object->bxdf->Pdf(_event.woL, _event.wiL);
+			scatteringPDF = _event.hit->object->bxdf->Pdf(_event.woL, _event.wiL, _event);
 		}
 		if (!f.IsBlack() && scatteringPDF > 0) {
 			const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);

@@ -4,6 +4,7 @@ TODO: Benchmark virtual implementation vs void*.
 
 #pragma once
 #include <stdexcept>
+#include "../graph/GraphNode.h"
 #include <core/Spectrum.h>
 #include <image/Texture.h>
 

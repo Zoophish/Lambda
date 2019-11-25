@@ -16,7 +16,7 @@ Spectrum BxDF::Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, V
 	return Spectrum(0);
 }
 
-Real BxDF::Pdf(const Vec3 &_wo, const Vec3 &_wi) const {
+Real BxDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
 	return CosineHemispherePdf(_wo, _wi);
 }
 

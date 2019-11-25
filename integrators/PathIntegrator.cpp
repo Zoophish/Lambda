@@ -24,7 +24,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 			event.pdf = 1;
 
 			if (bounces == 0 && hit.object->light) {
-				L += hit.object->light->L(event); //Beta is always 1 here, so it is exlcuded from the product.
+				L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product.
 			}
 
 			if (hit.object->bxdf) {
@@ -37,7 +37,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 				Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);
 				if (lightPDF > 0 && !Li.IsBlack()) {	//Add light sample contribution
 					f = hit.object->bxdf->f(event) * std::abs(event.wiL.y);
-					scatteringPDF = hit.object->bxdf->Pdf(event.woL, event.wiL);
+					scatteringPDF = hit.object->bxdf->Pdf(event.woL, event.wiL, event);
 					if (!f.IsBlack() && scatteringPDF > 0) {
 						const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
 						Ld += Li * f * weight / lightPDF;
@@ -63,7 +63,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 						if (!Li.IsBlack()) Ld += Li * f * weight / scatteringPDF;
 					}
 				}
-				else break;	//Don't continue path bsdf is zero or if zero scattering pdf
+				else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
 
 				L += beta * (Ld / lightDistPdf);
 				beta *= f / event.pdf;

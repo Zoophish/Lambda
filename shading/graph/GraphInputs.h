@@ -5,20 +5,34 @@
 
 namespace ShaderGraph {
 
+	class ScalarInput : public Node {
+		public:
+			Real value;
+
+			ScalarInput(const Real _value);
+
+			void GetScalar(const SurfaceScatterEvent *_event, void *_out) const;
+	};
+
+
+
 	class RGBInput : public Node {
 		public:
 			Colour rgb;
 
 			RGBInput(const Colour &_rgb);
+			RGBInput(const Real *_rgb);
 
 			void GetColour(const SurfaceScatterEvent *_event, void *_out) const;
 	};
 
-	class TextureInput : public Node {
+
+
+	class ImageTextureInput : public Node {
 		public:
 			Texture *tex;
 
-			TextureInput(Texture *_tex);
+			ImageTextureInput(Texture *_tex);
 
 			void GetColour(const SurfaceScatterEvent *_event, void *_out) const;
 

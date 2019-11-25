@@ -1,8 +1,13 @@
 #include "OrenNayar.h"
 
-OrenNayarBRDF::OrenNayarBRDF(Texture *_albedo, const Real _sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
-	albedo.SetTexture(_albedo);
-	SetSigma(_sigma);
+//OrenNayarBRDF::OrenNayarBRDF(Texture *_albedo, const Real _sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
+//	albedo.SetTexture(_albedo);
+//	//SetSigma(_sigma);
+//}
+
+OrenNayarBRDF::OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
+	albedoSocket = _albedo;
+	sigmaSocket = _sigma;
 }
 
 Spectrum OrenNayarBRDF::f(const SurfaceScatterEvent &_event) const {
@@ -12,7 +17,12 @@ Spectrum OrenNayarBRDF::f(const SurfaceScatterEvent &_event) const {
 	const Real beta = std::min(thetaI, thetaO);
 	const Real phiI = std::acos(CosPhi(_event.wiL));
 	const Real phiO = std::acos(CosPhi(_event.woL));
-	return albedo.GetUV(_event.hit->uvCoords) * INV_PI * (A + B * std::max((Real)0, std::cos(phiI - phiO) * maths::Clamp(std::sin(alpha), (Real)-1, (Real)1) * maths::Clamp(std::tan(beta), (Real)-1, (Real)1)));
+	const Real sigma = (*sigmaSocket)->GetAsScalar(&_event);
+	const Real sigma2 = sigma * sigma;
+	const Real A = (Real)1 - sigma2 / ((Real)2 * (sigma2 + (Real).33));
+	const Real B = ((Real).45 * sigma2) / (sigma2 + (Real).09);
+	const Spectrum albedoSpec = (*albedoSocket)->GetAsSpectrum(&_event);
+	return albedoSpec * INV_PI * (A + B * std::max((Real)0, std::cos(phiI - phiO) * maths::Clamp(std::sin(alpha), (Real)-1, (Real)1) * maths::Clamp(std::tan(beta), (Real)-1, (Real)1)));
 }
 
 Spectrum OrenNayarBRDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {

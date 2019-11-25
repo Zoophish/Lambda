@@ -13,7 +13,7 @@ class FresnelBSDF : public BxDF {
 
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
 
-		Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const override;
+		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };
 
 class SpecularBRDF : public BxDF {
@@ -51,5 +51,5 @@ class SpecularBTDF : public BxDF {
 
 		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
 
-		Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const override;
+		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };

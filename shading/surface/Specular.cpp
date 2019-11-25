@@ -37,7 +37,7 @@ Spectrum FresnelBSDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real
 	}
 }
 
-Real FresnelBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi) const {
+Real FresnelBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
 	return 0;
 }
 
@@ -68,6 +68,6 @@ Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Rea
 	return ft * inv;
 }
 
-Real SpecularBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi) const {
+Real SpecularBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
 	return 0;
 }

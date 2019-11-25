@@ -1,4 +1,5 @@
 #pragma once
+#include "../graph/GraphNode.h"
 #include "../TextureAdapter.h"
 #include "../SurfaceScatterEvent.h"
 #include <sampling/Sampling.h>
@@ -25,7 +26,7 @@ class BxDF {
 
 		virtual Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const;
 
-		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi) const;
+		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const;	//First two arguments redundant but need checking.
 
 		static inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) {
 			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;

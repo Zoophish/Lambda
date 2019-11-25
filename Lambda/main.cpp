@@ -1,4 +1,6 @@
 #include <assets/AssetImporter.h>
+#include <shading/graph/GraphInputs.h>
+#include <shading/graph/GraphBXDF.h>
 #include <shading/surface/OrenNayar.h>
 #include <shading/surface/Specular.h>
 #include <shading/surface/Microfacet.h>
@@ -28,38 +30,44 @@ int main() {
 	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid; grid.LoadImageFile("../content/uv_grid.png"); grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	white.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	const Real alpha = MicrofacetDistribution::RoughnessToAlpha(0.009);
-	BeckmannDistribution d(alpha, alpha);
+	//const Real alpha = MicrofacetDistribution::RoughnessToAlpha(0.009);
+	BeckmannDistribution d;
 	FresnelDielectric fres(2.5);
 
-	OrenNayarBRDF mat(&white, 1.8);
-	OrenNayarBRDF blueMat(&blue, 2);
-	TextureR32 tr(1, 1, .8);
-	MicrofacetBRDF tbr(&white, &d, &fres);
-	tbr.etaT = .00001;
-	MixBSDF mat2(&blueMat, &tbr, .1);
+	ShaderGraph::RGBInput whiteNode({1,1,1});
+	ShaderGraph::ImageTextureInput gridNode(&grid);
+	ShaderGraph::ScalarInput sigmaNode(2.1);
+	ShaderGraph::OrenNayarBxDFNode mat(&whiteNode.outputSockets[0], &gridNode.outputSockets[1]);
+
+	ShaderGraph::MicrofacetBRDFNode microfacetBRDF(&whiteNode.outputSockets[0], &gridNode.outputSockets[1], &d, &fres);
+
+	//OrenNayarBRDF mat(&white, 1.8);
+	//OrenNayarBRDF blueMat(&blue, 2);
+	//MicrofacetBRDF tbr(&white, &d, &fres);
+	//tbr.etaT = .00001;
+	//MixBSDF mat2(&blueMat, &tbr, .1);
 
 	AssetImporter ai;
 
-	ai.Import("../content/lucy.obj");
-	TriangleMesh lucy;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
-	lucy.bxdf = &mat2;
-	lucy.smoothNormals = true;
+	//ai.Import("../content/lucy.obj");
+	//TriangleMesh lucy;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
+	//lucy.bxdf = &mat2;
+	//lucy.smoothNormals = true;
 	//scene.AddObject(&lucy);
 
-	InstanceProxy proxy(&lucy);
-	proxy.Commit(scene.device);
-	Instance l1(&proxy);
-	l1.bxdf = &mat2;
-	l1.SetScale(Vec3(2, 2, 2));
-	scene.AddObject(&l1);
+	//InstanceProxy proxy(&lucy);
+	//proxy.Commit(scene.device);
+	//Instance l1(&proxy);
+	//l1.bxdf = &mat2;
+	//l1.SetScale(Vec3(2, 2, 2));
+	//scene.AddObject(&l1);
 
 	AssetImporter ai2;
-	ai2.Import("D:\\Assets\\sponza\\sponza.obj");
+	ai2.Import("../content/sphere.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
-		it.second->bxdf = &mat;
+		it.second->bxdf = &microfacetBRDF;
 		scene.AddObject(it.second);
 	}
 
@@ -94,20 +102,20 @@ int main() {
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/cloud_layers_2k.hdr");
+	envMap.LoadImageFile("../content/quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 1.5;
-	ibl.offset = Vec2(PI, 0);
-	//scene.AddLight(&ibl);
+	ibl.offset = Vec2(PI*.5, 0);
+	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
-	ai.Import("D:\\Assets\\sponza_portal.obj");
-	ai.PushToResourceManager(&resources);
-	TriangleMesh portal;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &portal);
-	MeshPortal portalLight(&ibl, &portal);
-	scene.AddLight(&portalLight);
-	scene.AddObject(&portal);
+	//ai.Import("D:\\Assets\\sponza_portal.obj");
+	//ai.PushToResourceManager(&resources);
+	//TriangleMesh portal;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &portal);
+	//MeshPortal portalLight(&ibl, &portal);
+	//scene.AddLight(&portalLight);
+	//scene.AddObject(&portal);
 
 	scene.Commit();
 
@@ -123,8 +131,8 @@ int main() {
 	ThinLensCamera cam(Vec3(-9, 1, 0), 16, 9, 9, &aperture2);
 	aperture2.size = .05;
 	aperture2.sampler = &sampler;
-	cam.SetFov(.7);
-	cam.SetRotation(PI*.5, PI*.015f);
+	cam.SetFov(.4);
+	cam.SetRotation(PI*.5, PI*0);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);
@@ -140,7 +148,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 1;
+	renderDirective.spp = 32;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
