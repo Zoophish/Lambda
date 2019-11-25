@@ -37,7 +37,7 @@ int main() {
 	ShaderGraph::RGBInput whiteNode({1,1,1});
 	ShaderGraph::ImageTextureInput gridNode(&grid);
 	ShaderGraph::ScalarInput sigmaNode(2.1);
-	ShaderGraph::OrenNayarBxDFNode mat(&whiteNode.outputSockets[0], &gridNode.outputSockets[1]);
+	ShaderGraph::OrenNayarBxDFNode mat(&gridNode.outputSockets[0], &gridNode.outputSockets[1]);
 
 	ShaderGraph::MicrofacetBRDFNode microfacetBRDF(&whiteNode.outputSockets[0], &gridNode.outputSockets[1], &d, &fres);
 
@@ -71,40 +71,48 @@ int main() {
 		scene.AddObject(it.second);
 	}
 
+	ai.Import("../content/Backdrop.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh backdropMesh;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &backdropMesh);
+	backdropMesh.bxdf = &mat;
+	scene.AddObject(&backdropMesh);
 
 
-	//ai.Import(&resources, "../content/AreaLight.obj");
-	//TriangleMesh lightMesh;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	//lightMesh.smoothNormals = false;
-	//MeshLight light(&lightMesh);
-	//Real cs[3] = { 78.3583, 79.1876, 64.5809 };
-	//Spectrum blck = Spectrum::FromXYZ(cs);
-	//texture_t<Spectrum> blckbdy(1, 1, blck);
-	//blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	//light.emission = &blckbdy;
-	//light.intensity = .5;
-	//scene.AddLight(&light);
-	//scene.AddObject(&lightMesh);
+	ai.Import("../content/AreaLight.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh lightMesh;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	lightMesh.smoothNormals = false;
+	MeshLight light(&lightMesh);
+	Real cs[3] = { 78.3583, 79.1876, 64.5809 };
+	Spectrum blck = Spectrum::FromXYZ(cs);
+	texture_t<Spectrum> blckbdy(1, 1, blck);
+	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	light.emission = &blckbdy;
+	light.intensity = .3;
+	scene.AddLight(&light);
+	scene.AddObject(&lightMesh);
 	
-	//ai.Import(&resources, "../content/SideLight.obj");
-	//TriangleMesh lightMesh2;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
-	//MeshLight light2(&lightMesh2);
-	//Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
-	//Spectrum blck2 = Spectrum::FromXYZ(cs2);
-	//texture_t<Spectrum> blckbdy2(1, 1, blck2);
-	//light2.emission = &blckbdy2;
-	//light2.intensity = 6;
-	//scene.AddLight(&light2);
-	//scene.AddObject(&lightMesh2);
+	ai.Import("../content/SideLight.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh lightMesh2;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
+	MeshLight light2(&lightMesh2);
+	Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
+	Spectrum blck2 = Spectrum::FromXYZ(cs2);
+	texture_t<Spectrum> blckbdy2(1, 1, blck2);
+	light2.emission = &blckbdy2;
+	light2.intensity = 4;
+	scene.AddLight(&light2);
+	scene.AddObject(&lightMesh2);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
 	envMap.LoadImageFile("../content/quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1.5;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
@@ -128,11 +136,11 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(-9, 1, 0), 16, 9, 9, &aperture2);
-	aperture2.size = .05;
+	ThinLensCamera cam(Vec3(0, 1, 2.2), 16, 9, 2.2, &aperture2);
+	aperture2.size = .001;
 	aperture2.sampler = &sampler;
-	cam.SetFov(.4);
-	cam.SetRotation(PI*.5, PI*0);
+	cam.SetFov(1.5);
+	cam.SetRotation(PI, PI*-.01);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);
@@ -148,7 +156,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 32;
+	renderDirective.spp = 4;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

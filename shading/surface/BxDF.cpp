@@ -22,26 +22,27 @@ Real BxDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_eve
 
 
 
-LambertianBRDF::LambertianBRDF(Texture *_albedo) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
-	albedo.SetTexture(_albedo);
+LambertianBRDF::LambertianBRDF(ShaderGraph::Socket **_aledoSocket) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
+	albedoSocket = _aledoSocket;
 }
 
 Spectrum LambertianBRDF::f(const SurfaceScatterEvent &_event) const {
-	return albedo.GetUV(_event.hit->uvCoords) * INV_PI;
+	return (*albedoSocket)->GetAsSpectrum(&_event) * INV_PI;
 }
 
 Spectrum LambertianBRDF::Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const {
-	return albedo.GetUV(_event.hit->uvCoords);
+	return (*albedoSocket)->GetAsSpectrum(&_event);
 }
 
 
 
-MixBSDF::MixBSDF(BxDF *_a, BxDF *_b, const Real _factor) : BxDF(BxDF_DIFFUSE) {
-	a = _a;
-	b = _b;
-	factor = _factor;
+MixBSDF::MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket) : BxDF(BxDF_DIFFUSE) {
+	aSocket = _aSocket;
+	bSocket = _bSocket;
+	ratioSocket = _ratioSocket;
 }
 
 Spectrum MixBSDF::f(const SurfaceScatterEvent &_event) const {
-	return a->f(_event) * ((Real)1 - factor) + b->f(_event) * factor;
+	const Real ratio = (*ratioSocket)->GetAsScalar(&_event);
+	return (*aSocket)->GetAsBxDF(&_event)->f(_event) * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->f(_event) * ratio;
 }

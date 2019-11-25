@@ -1,11 +1,5 @@
 #include "Microfacet.h"
 
-//MicrofacetBRDF::MicrofacetBRDF(Texture *_albedo, MicrofacetDistribution *_distribution, Fresnel *_fresnel) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_GLOSSY)) {
-//	albedo.SetTexture(_albedo);
-//	distribution = _distribution;
-//	fresnel = _fresnel;
-//}
-
 MicrofacetBRDF::MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_roughnesSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_GLOSSY)) {
 	albedoSocket = _albedoSocket;
 	roughnessSocket = _roughnesSocket;

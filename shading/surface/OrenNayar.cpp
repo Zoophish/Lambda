@@ -1,10 +1,5 @@
 #include "OrenNayar.h"
 
-//OrenNayarBRDF::OrenNayarBRDF(Texture *_albedo, const Real _sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
-//	albedo.SetTexture(_albedo);
-//	//SetSigma(_sigma);
-//}
-
 OrenNayarBRDF::OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
 	albedoSocket = _albedo;
 	sigmaSocket = _sigma;

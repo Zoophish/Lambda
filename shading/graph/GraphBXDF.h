@@ -2,25 +2,60 @@
 #include "GraphNode.h"
 #include "../surface/OrenNayar.h"
 #include "../surface/Microfacet.h"
+#include "../surface/Ghost.h"
+#include "../surface/Specular.h"
 
 namespace ShaderGraph {
 
-	class OrenNayarBxDFNode : public Node, public OrenNayarBRDF {
+	class BxDFNode : public Node {
 		public:
-			OrenNayarBxDFNode(Socket *_albedo, Socket *_roughness) : Node(2, 1), OrenNayarBRDF(&inputSockets[0], &inputSockets[1]) {
-				inputSockets[0] = _albedo;
-				inputSockets[1] = _roughness;
-				//outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_BXDF, this, "BRDF"); //void(*)(..) needs casting to a BxDF type WHENEVER using TYPE_BXDF?
+			BxDFNode(const unsigned _numIn, const unsigned _numOut) : Node(_numIn, _numOut) {}
+
+		protected:
+			void GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+				_out = (void *)this;
 			}
 	};
 
-	class MicrofacetBRDFNode : public Node, public MicrofacetBRDF {
+	class MixBxDFNode : public BxDFNode, MixBSDF {
 		public:
-			MicrofacetBRDFNode(Socket *_albedo, Socket *_roughness, MicrofacetDistribution *_distribution, Fresnel *_fresnel)
-			: Node(2, 1), MicrofacetBRDF(&inputSockets[0], &inputSockets[1], _distribution, _fresnel) {
-				inputSockets[0] = _albedo;
-				inputSockets[1] = _roughness;
-			}
+		MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio);
+	};
+
+	class LambertianBRDFNode : public BxDFNode, public LambertianBRDF {
+		public:
+			LambertianBRDFNode(Socket *_albedo);
+	};
+
+	class OrenNayarBxDFNode : public BxDFNode, public OrenNayarBRDF {
+		public:
+			OrenNayarBxDFNode(Socket *_albedo, Socket *_roughness);
+
+	};
+
+	class MicrofacetBRDFNode : public BxDFNode, public MicrofacetBRDF {
+		public:
+			MicrofacetBRDFNode(Socket *_albedo, Socket *_roughness, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
+	};
+
+	class GhostBTDFNode : public BxDFNode, public GhostBTDF {
+		public:
+			GhostBTDFNode(Socket *_alpha);
+	};
+
+	class FresnelBSDFNode : public BxDFNode, public FresnelBSDF {
+		public:
+			FresnelBSDFNode(Socket *_albedo, Socket *_ior);
+	};
+
+	class SpecularBRDFNode : public BxDFNode, public SpecularBRDF {
+		public:
+			SpecularBRDFNode(Socket *_albedo, Fresnel *_fresnel);
+	};
+
+	class SpecularBTDFNode : public BxDFNode, public SpecularBTDF {
+		public:
+			SpecularBTDFNode(Socket *_albedo, const Real _etaT);
 	};
 	
 }

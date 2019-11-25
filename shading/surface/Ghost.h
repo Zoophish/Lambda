@@ -3,9 +3,9 @@
 
 class GhostBTDF : public BxDF {
 	public:
-		TextureAdapter alpha;
+		ShaderGraph::Socket **alphaSocket;
 
-		GhostBTDF(TextureR32 *_alpha);
+		GhostBTDF(ShaderGraph::Socket **_alphaSocket);
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override;
 

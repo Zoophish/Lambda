@@ -54,14 +54,20 @@ namespace ShaderGraph {
 			return Vec2(0, 0);
 		}
 
+		inline BxDF* GetAsBxDF(const SurfaceScatterEvent *_event) const {
+			if (callback.operator bool() && socketType == SocketType::TYPE_BXDF) {
+				BxDF *v;
+				callback(_event, &v);
+				return v;
+			}
+			return nullptr;
+		}
+
 		inline Spectrum GetAsSpectrum(const SurfaceScatterEvent *_event, const SpectrumType _type = SpectrumType::Reflectance) {
 			const Vec2 uv(maths::Fract(_event->hit->uvCoords.x), maths::Fract(_event->hit->uvCoords.y));
 			switch (socketType) {
 			case ShaderGraph::SocketType::TYPE_COLOUR:
-			{
-				const Colour c = GetAsColour(_event);
-				return Spectrum::FromRGB((Real *)&c, _type);//Remove pointer cast if doesn't work.
-			}
+				return Spectrum::FromRGB((Real *) &GetAsColour(_event), _type);
 			case ShaderGraph::SocketType::TYPE_SCALAR:
 				return Spectrum(GetAsScalar(_event));
 			default:

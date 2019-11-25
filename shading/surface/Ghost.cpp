@@ -1,7 +1,7 @@
 #include "Ghost.h"
 
-GhostBTDF::GhostBTDF(TextureR32 *_alpha) : BxDF(BxDF_TRANSMISSION) {
-	alpha = _alpha;
+GhostBTDF::GhostBTDF(ShaderGraph::Socket **_alphaSocket) : BxDF(BxDF_TRANSMISSION) {
+	alphaSocket = _alphaSocket;
 }
 
 Spectrum GhostBTDF::f(const SurfaceScatterEvent &_event) const {
@@ -10,7 +10,7 @@ Spectrum GhostBTDF::f(const SurfaceScatterEvent &_event) const {
 
 Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
 	_event.pdf = 1;
-	const Spectrum out = alpha.GetUV(_event.hit->uvCoords) / std::abs(_event.wiL.y);
+	const Spectrum out = (*alphaSocket)->GetAsSpectrum(&_event) / std::abs(_event.wiL.y);
 	if (out[0] > 0) {
 		_event.pdf = 1;
 		_event.wi = -_event.wo;

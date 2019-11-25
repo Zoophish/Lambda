@@ -36,11 +36,13 @@ namespace ShaderGraph {
 	}
 
 	void ImageTextureInput::GetColour(const SurfaceScatterEvent *_event, void *_out) const {
-		*reinterpret_cast<Colour *>(_out) = tex->GetPixelUV(_event->hit->uvCoords.x, _event->hit->uvCoords.y);
+		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+		*reinterpret_cast<Colour *>(_out) = tex->GetPixelUV(uvs.x, uvs.y);
 	}
 
 	void ImageTextureInput::GetScalar(const SurfaceScatterEvent *_event, void *_out) const {
-		*reinterpret_cast<Real *>(_out) = tex->GetPixelUV(_event->hit->uvCoords.x, _event->hit->uvCoords.y).r;
+		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+		*reinterpret_cast<Real *>(_out) = tex->GetPixelUV(uvs.x, uvs.y).r;
 	}
 
 

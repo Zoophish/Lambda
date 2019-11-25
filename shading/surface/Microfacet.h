@@ -6,13 +6,10 @@
 class MicrofacetBRDF : public BxDF {
 	public:
 		Real etaT = .0001;
-		TextureAdapter albedo;
 		ShaderGraph::Socket **albedoSocket, **roughnessSocket;
 		MicrofacetDistribution *distribution;
 		Fresnel *fresnel;
 
-
-		//MicrofacetBRDF(Texture *_albedo, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
 
 		MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_roughnessSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
 

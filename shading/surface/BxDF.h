@@ -1,6 +1,5 @@
 #pragma once
 #include "../graph/GraphNode.h"
-#include "../TextureAdapter.h"
 #include "../SurfaceScatterEvent.h"
 #include <sampling/Sampling.h>
 
@@ -37,9 +36,9 @@ class BxDF {
 
 class LambertianBRDF : public BxDF {
 	public:
-		TextureAdapter albedo;
+		ShaderGraph::Socket **albedoSocket;
 
-		LambertianBRDF(Texture *_albedo = nullptr);
+		LambertianBRDF(ShaderGraph::Socket **_albedoSocket);
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override;
 
@@ -50,10 +49,9 @@ class LambertianBRDF : public BxDF {
 
 class MixBSDF : public BxDF {
 	public:
-	BxDF *a, *b;
-	Real factor;
+	ShaderGraph::Socket **aSocket, **bSocket, **ratioSocket;
 
-	MixBSDF(BxDF *_a, BxDF *_b, const Real _factor = .5);
+	MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket);
 
 	Spectrum f(const SurfaceScatterEvent &_event) const override;
 };
