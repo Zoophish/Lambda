@@ -17,7 +17,6 @@
 #include <lighting/EnvironmentLight.h>
 #include <lighting/MeshPortal.h>
 #include <render/MosaicRenderer.h>
-#include <lighting/Blackbody.h>
 #include <random>
 
 int main() {
@@ -30,7 +29,6 @@ int main() {
 	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid; grid.LoadImageFile("../content/uv_grid.png"); grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	white.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	//const Real alpha = MicrofacetDistribution::RoughnessToAlpha(0.009);
 	BeckmannDistribution d;
 	FresnelDielectric fres(2.5);
 
@@ -41,27 +39,7 @@ int main() {
 
 	ShaderGraph::MicrofacetBRDFNode microfacetBRDF(&whiteNode.outputSockets[0], &gridNode.outputSockets[1], &d, &fres);
 
-	//OrenNayarBRDF mat(&white, 1.8);
-	//OrenNayarBRDF blueMat(&blue, 2);
-	//MicrofacetBRDF tbr(&white, &d, &fres);
-	//tbr.etaT = .00001;
-	//MixBSDF mat2(&blueMat, &tbr, .1);
-
 	AssetImporter ai;
-
-	//ai.Import("../content/lucy.obj");
-	//TriangleMesh lucy;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
-	//lucy.bxdf = &mat2;
-	//lucy.smoothNormals = true;
-	//scene.AddObject(&lucy);
-
-	//InstanceProxy proxy(&lucy);
-	//proxy.Commit(scene.device);
-	//Instance l1(&proxy);
-	//l1.bxdf = &mat2;
-	//l1.SetScale(Vec3(2, 2, 2));
-	//scene.AddObject(&l1);
 
 	AssetImporter ai2;
 	ai2.Import("../content/sphere.obj");
@@ -89,7 +67,8 @@ int main() {
 	Spectrum blck = Spectrum::FromXYZ(cs);
 	texture_t<Spectrum> blckbdy(1, 1, blck);
 	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	light.emission = &blckbdy;
+	ShaderGraph::SpectralTextureInput blckbdyNode(&blckbdy);
+	light.emission = &blckbdyNode.outputSockets[0];
 	light.intensity = .3;
 	scene.AddLight(&light);
 	scene.AddObject(&lightMesh);
@@ -102,7 +81,8 @@ int main() {
 	Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
 	Spectrum blck2 = Spectrum::FromXYZ(cs2);
 	texture_t<Spectrum> blckbdy2(1, 1, blck2);
-	light2.emission = &blckbdy2;
+	ShaderGraph::SpectralTextureInput blckbdyNode2(&blckbdy2);
+	light2.emission = &blckbdyNode2.outputSockets[0];
 	light2.intensity = 4;
 	scene.AddLight(&light2);
 	scene.AddObject(&lightMesh2);

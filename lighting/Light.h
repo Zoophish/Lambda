@@ -8,6 +8,7 @@ struct SurfaceScatterEvent;
 class Light {
 	public:
 		//TO SELF: Should be specific to EnvironmentLight but is a temporary circular dependancy issue fix.
+
 		//Indication that lighting and scene implementation needs redesign.
 		Real radius;
 

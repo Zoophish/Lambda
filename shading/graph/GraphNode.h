@@ -19,6 +19,7 @@ namespace ShaderGraph {
 		TYPE_COLOUR,
 		TYPE_VEC2,
 		TYPE_VEC3,
+		TYPE_SPECTRUM,
 		TYPE_BXDF
 	};
 	
@@ -66,10 +67,19 @@ namespace ShaderGraph {
 		inline Spectrum GetAsSpectrum(const SurfaceScatterEvent *_event, const SpectrumType _type = SpectrumType::Reflectance) {
 			const Vec2 uv(maths::Fract(_event->hit->uvCoords.x), maths::Fract(_event->hit->uvCoords.y));
 			switch (socketType) {
-			case ShaderGraph::SocketType::TYPE_COLOUR:
+			case SocketType::TYPE_COLOUR:
 				return Spectrum::FromRGB((Real *) &GetAsColour(_event), _type);
-			case ShaderGraph::SocketType::TYPE_SCALAR:
+			case SocketType::TYPE_SCALAR:
 				return Spectrum(GetAsScalar(_event));
+			case SocketType::TYPE_SPECTRUM:
+			{
+				if (callback.operator bool() && socketType == SocketType::TYPE_SPECTRUM) {
+					Spectrum out;
+					callback(_event, &out);
+					return out;
+				}
+				return Spectrum(0);
+			}
 			default:
 				return Spectrum(0);
 			}

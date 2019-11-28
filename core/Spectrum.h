@@ -129,7 +129,6 @@ class CoefficientSpectrum {
 			return tmp;
 		}
 
-		//!= should be here.
 		bool IsBlack() const {
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				if (c[i] != 0) return false;

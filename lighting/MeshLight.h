@@ -1,20 +1,19 @@
 #pragma once
 #include <sampling/Piecewise.h>
 #include <core/TriangleMesh.h>
-#include <shading/TextureAdapter.h>
+#include <shading/graph/GraphNode.h>
 #include <shading/SurfaceScatterEvent.h>
 #include <core/Scene.h>
 #include "Light.h"
 
 class MeshLight : public Light {
 	public:
-		TextureAdapter emission;
+		ShaderGraph::Socket *emission;
 		Real intensity = 1;
 
 		MeshLight(TriangleMesh *_mesh) {
 			mesh = _mesh;
 			_mesh->light = this;
-			emission.type = SpectrumType::Illuminant;
 			InitDistribution();
 		}
 
@@ -30,7 +29,7 @@ class MeshLight : public Light {
 				if (denom > 0) {
 					_event.wiL = _event.ToLocal(_event.wi);
 					_pdf *= maths::DistSq(_event.hit->point, p) / denom;
-					return emission.GetUV(u) * intensity * INV_PI;
+					return emission->GetAsSpectrum(&_event, SpectrumType::Illuminant) * intensity * INV_PI;
 				}
 			}
 			_pdf = 0;
@@ -50,7 +49,7 @@ class MeshLight : public Light {
 		}
 
 		Spectrum L(const SurfaceScatterEvent &_event) const override {
-			return emission.GetUV(_event.hit->uvCoords) * intensity * INV_PI;
+			return emission->GetAsSpectrum(&_event, SpectrumType::Illuminant) * intensity * INV_PI;
 		}
 
 		Real Area() const override {
