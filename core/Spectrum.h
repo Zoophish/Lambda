@@ -360,7 +360,7 @@ class alignas(16) RGBSpectrum : public CoefficientSpectrum<3> {
 				xyz[1] += val * CIE_Y[i];
 				xyz[2] += val * CIE_Z[i];
 			}
-			Real scale = (Real)(CIE_lambda[nCIESamples - 1] - CIE_lambda[0]) / (Real)(CIE_Y_integral * nCIESamples);
+			Real scale = Real(CIE_lambda[nCIESamples - 1] - CIE_lambda[0]) / Real(CIE_Y_integral * nCIESamples);
 			xyz[0] *= scale;
 			xyz[1] *= scale;
 			xyz[2] *= scale;

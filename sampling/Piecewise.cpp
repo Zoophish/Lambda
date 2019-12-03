@@ -2,21 +2,6 @@
 
 namespace Distribution {
 
-	template<class T>
-	static inline unsigned FindInterval(const int _size, const T &_predicate) {
-		int first = 0, len = _size;
-		while (len > 0) {
-			int half = len >> 1, middle = first + half;
-			if (_predicate(middle)) {
-				first = middle + 1;
-				len -= half + 1;
-			}
-			else
-				len = half;
-		}
-		return maths::Clamp(first - 1, 0, _size - 2);
-	}
-
 	Piecewise1D::Piecewise1D() {}
 
 	Piecewise1D::Piecewise1D(const Real *_d, const unsigned _n) : pdf(_d, _d + _n), cdf(_n + 1) {
@@ -37,7 +22,7 @@ namespace Distribution {
 	}
 
 	Real Piecewise1D::SampleContinuous(const Real _u, Real *_pdf, int *_off) const {
-		const unsigned offset = FindInterval(cdf.size(), [&](int index) { return cdf[index] <= _u; });
+		const unsigned offset = maths::FindInterval(cdf.size(), [&](int index) { return cdf[index] <= _u; });
 		if (_off) *_off = offset;
 		Real du = _u - cdf[offset];
 		if ((cdf[offset + 1] - cdf[offset]) > 0) {
@@ -49,7 +34,7 @@ namespace Distribution {
 
 
 	unsigned Piecewise1D::SampleDiscrete(Real _u, Real *_pdf, Real *_uRemapped) const {
-		unsigned offset = FindInterval(cdf.size(), [&](int index) { return cdf[index] <= _u; });
+		unsigned offset = maths::FindInterval(cdf.size(), [&](int index) { return cdf[index] <= _u; });
 		if (_pdf) *_pdf = pdf[offset] / (integral * pdf.size());
 		if (_uRemapped)
 			*_uRemapped = (_u - cdf[offset]) / (cdf[offset + 1] - cdf[offset]);

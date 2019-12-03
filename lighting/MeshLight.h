@@ -1,7 +1,7 @@
 #pragma once
 #include <sampling/Piecewise.h>
 #include <core/TriangleMesh.h>
-#include <shading/graph/GraphNode.h>
+#include <shading/graph/ShaderGraph.h>
 #include <shading/SurfaceScatterEvent.h>
 #include <core/Scene.h>
 #include "Light.h"

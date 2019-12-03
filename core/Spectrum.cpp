@@ -62,7 +62,7 @@ void  SortSpectrumSamples(Real* _lambda, Real* _vals, const unsigned _n) {
 //	const Real ve = maths::Lerp(_vals[i], _vals[i + 1], (_lambdaEnd - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
 //	sum += .5 * (_lambda[i + 1] - _lambda[i]) * (ve + _vals[i]);
 //
-//	return sum / (_lambdaEnd - _lambdaStart);
+//	return sum /  (_lambdaEnd - _lambdaStart);
 //}
 
 Real AverageSpectrumSamples(const Real *_lambda, const Real *_vals, const unsigned _n, const Real _lambdaStart, const Real _lambdaEnd) {
@@ -76,7 +76,7 @@ Real AverageSpectrumSamples(const Real *_lambda, const Real *_vals, const unsign
 		sum += _vals[_n - 1] * (_lambdaEnd - _lambda[_n - 1]);
 
 	// Advance to first relevant wavelength segment
-	int i = 0;
+	unsigned i = 0;
 	while (_lambdaStart > _lambda[i + 1]) ++i;
 
 	// Loop over wavelength sample segments and add contributions
@@ -190,12 +190,10 @@ SampledSpectrum::SampledSpectrum(const RGBSpectrum& _r, SpectrumType _type) {
 	*this = SampledSpectrum::FromRGB(rgb, _type);
 }
 
-Real InterpolateSpectrumSamples(const Real* _lambda, const Real* _vals, const unsigned _n, const Real _l) {
-	// Handle cases outside of samples' range
-	if (_l <= _lambda[0]) return _lambda[0];
-	if (_l >= _lambda[_n - 1]) return _lambda[_n - 1];
-	// Find the sample interval that _l lies within
-	unsigned i = 0;
-	while (_l > _lambda[i + 1]) ++i;
-	return maths::Lerp(_vals[i], _vals[i + 1], (_l - _lambda[i]) / (_lambda[i + 1] - _lambda[i]));
+Real InterpolateSpectrumSamples(const Real *_lambda, const Real *_vals, const unsigned _n, const Real _l) {
+	if (_l <= _lambda[0]) return _vals[0];
+	if (_l >= _lambda[_n - 1]) return _vals[_n - 1];
+	int offset = maths::FindInterval(_n, [&](int index) { return _lambda[index] <= _l; });
+	Real t = (_l - _lambda[offset]) / (_lambda[offset + 1] - _lambda[offset]);
+	return maths::Lerp(_vals[offset], _vals[offset + 1], t);
 }

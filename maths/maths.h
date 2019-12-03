@@ -66,6 +66,26 @@ namespace maths {
 	inline vec2<T> Fract(const vec2<T> &_v) {
 		return vec2<T>(_v.x - std::floor(_v.x), _v.y - std::floor(_v.y));
 	}
+
+	template<class T>
+	inline vec3<T> Fract(const vec3<T> &_v) {
+		return vec3<T>(_v.x - std::floor(_v.x), _v.y - std::floor(_v.y), _v.z - std::floor(_v.z));
+	}
+
+	template<class T>
+	inline unsigned FindInterval(const int _size, const T &_predicate) {
+		int first = 0, len = _size;
+		while (len > 0) {
+			int half = len >> 1, middle = first + half;
+			if (_predicate(middle)) {
+				first = middle + 1;
+				len -= half + 1;
+			}
+			else
+				len = half;
+		}
+		return maths::Clamp(first - 1, 0, _size - 2);
+	}
 }
 
 #ifdef LAMBDA_MATHS_COMMON_TYPES

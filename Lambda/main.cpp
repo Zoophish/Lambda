@@ -32,17 +32,17 @@ int main() {
 	BeckmannDistribution d;
 	FresnelDielectric fres(2.5);
 
-	ShaderGraph::RGBInput whiteNode({1,1,1});
+	ShaderGraph::RGBInput whiteNode({1,.5,.5});
 	ShaderGraph::ImageTextureInput gridNode(&grid);
-	ShaderGraph::ScalarInput sigmaNode(2.1);
+	ShaderGraph::ScalarInput sigmaNode(.3);
 	ShaderGraph::OrenNayarBxDFNode mat(&gridNode.outputSockets[0], &gridNode.outputSockets[1]);
-
-	ShaderGraph::MicrofacetBRDFNode microfacetBRDF(&whiteNode.outputSockets[0], &gridNode.outputSockets[1], &d, &fres);
+	  
+	ShaderGraph::MicrofacetBRDFNode microfacetBRDF(&whiteNode.outputSockets[0], &sigmaNode.outputSockets[0], &d, &fres);
 
 	AssetImporter ai;
 
 	AssetImporter ai2;
-	ai2.Import("../content/sphere.obj");
+	ai2.Import("../content/lucy.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		it.second->bxdf = &microfacetBRDF;
@@ -68,24 +68,28 @@ int main() {
 	texture_t<Spectrum> blckbdy(1, 1, blck);
 	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	ShaderGraph::SpectralTextureInput blckbdyNode(&blckbdy);
-	light.emission = &blckbdyNode.outputSockets[0];
-	light.intensity = .3;
+	ShaderGraph::ScalarInput temp1(2700);
+	ShaderGraph::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	light.emission = &blckInpt1.outputSockets[0];
+	light.intensity = 35;
 	scene.AddLight(&light);
 	scene.AddObject(&lightMesh);
 	
-	ai.Import("../content/SideLight.obj");
-	ai.PushToResourceManager(&resources);
-	TriangleMesh lightMesh2;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
-	MeshLight light2(&lightMesh2);
-	Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
-	Spectrum blck2 = Spectrum::FromXYZ(cs2);
-	texture_t<Spectrum> blckbdy2(1, 1, blck2);
-	ShaderGraph::SpectralTextureInput blckbdyNode2(&blckbdy2);
-	light2.emission = &blckbdyNode2.outputSockets[0];
-	light2.intensity = 4;
-	scene.AddLight(&light2);
-	scene.AddObject(&lightMesh2);
+	//ai.Import("../content/SideLight.obj");
+	//ai.PushToResourceManager(&resources);
+	//TriangleMesh lightMesh2;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
+	//MeshLight light2(&lightMesh2);
+	//Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
+	//Spectrum blck2 = Spectrum::FromXYZ(cs2);
+	//texture_t<Spectrum> blckbdy2(1, 1, blck2);
+	//ShaderGraph::SpectralTextureInput blckbdyNode2(&blckbdy2);
+	//ShaderGraph::ScalarInput temp(4500);
+	//ShaderGraph::BlackbodyInput blckInpt(&temp.outputSockets[0]);
+	//light2.emission = &blckInpt.outputSockets[0];
+	//light2.intensity = .8;
+	//scene.AddLight(&light2);
+	//scene.AddObject(&lightMesh2);
 
 	//Make environment lighting.
 	Texture envMap;
@@ -136,7 +140,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 4;
+	renderDirective.spp = 8;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

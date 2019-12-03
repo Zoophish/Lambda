@@ -1,5 +1,5 @@
 #pragma once
-#include "graph/GraphNode.h"
+#include "graph/ShaderGraph.h"
 #include "surface/BxDF.h"
 
 class MicrofacetDistribution {

@@ -75,29 +75,29 @@ namespace ShaderGraph {
 		const Real kb = 1.3806488e-23;
 		for (unsigned i = 0; i < _n; ++i) {
 			const Real l = _lambda[i] * 1e-9;
-			const Real lambda5 = (l * l) * (l * l) * l;
-			_Le[i] = (2 * h * c * c) / (lambda5 * (std::exp((h * c) / (l * kb * _T)) - 1));
-		}
+			const Real lambda5 = l * l * l * l * l;
+			_Le[i] = ((Real)2 * h * c * c) / (lambda5 * (std::exp((h * c) / (l * kb * _T)) - (Real)1));
+		} 
 	}
 
 	inline void BlackbodyInput::BlackbodyNormalized(const Real *_lambda, int _n, Real _temp, Real *_Le) const {
 		Blackbody(_lambda, _n, _temp, _Le);
-		Real lambdaMax = 2.8977721e-3 / _temp * 1e9;
+		const Real lambdaMax = 2.8977721e-3 / _temp * 1e9;
 		Real maxL;
 		Blackbody(&lambdaMax, 1, _temp, &maxL);
-		for (int i = 0; i < _n; ++i) _Le[i] /= maxL;
-	}
+		for (unsigned i = 0; i < _n; ++i) _Le[i] /= maxL;
+	} 
 
 	inline Spectrum BlackbodyInput::MakeBlackbodySpectrum(const Real _temp, const unsigned _samples) const {
-		std::unique_ptr<Real[]> lambdas(new Real[_samples]);
+		std::unique_ptr<Real[]> lambdas(new Real[_samples]); //Shader memory arena.
 		const int interval = sampledLambdaEnd - sampledLambdaStart;
-		const Real invSamples = 1 / _samples;
+		const Real invSamples = (Real)1 / _samples;
 		for (unsigned i = 0; i < _samples; ++i) {
 			lambdas[i] = (Real)sampledLambdaStart + (Real)interval * invSamples * (Real)i;
 		}
-		std::unique_ptr<Real[]> v(new Real[nSpectralSamples]);
-		BlackbodyNormalized(&lambdas[0], nSpectralSamples, _temp, &v[0]);
-		return Spectrum::FromSampled(&lambdas[0], &v[0], nSpectralSamples);
+		std::unique_ptr<Real[]> v(new Real[_samples]);
+		BlackbodyNormalized(&lambdas[0], _samples, _temp, &v[0]);
+		return Spectrum::FromSampled(&lambdas[0], &v[0], _samples);
 	}
 
 	/*

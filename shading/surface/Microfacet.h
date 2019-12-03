@@ -1,5 +1,5 @@
 #pragma once
-#include "../graph/GraphNode.h"
+#include "../graph/ShaderGraph.h"
 #include "../Fresnel.h"
 #include "../MicrofacetDistribution.h"
 

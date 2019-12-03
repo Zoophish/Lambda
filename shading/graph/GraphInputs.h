@@ -1,5 +1,5 @@
 #pragma once
-#include "GraphNode.h"
+#include "ShaderGraph.h"
 #include <image/Texture.h>
 #include <shading/SurfaceScatterEvent.h>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "GraphNode.h"
+#include "ShaderGraph.h"
 #include "../surface/OrenNayar.h"
 #include "../surface/Microfacet.h"
 #include "../surface/Ghost.h"
