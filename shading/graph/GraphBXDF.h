@@ -9,7 +9,7 @@ namespace ShaderGraph {
 
 	class BxDFNode : public Node {
 		public:
-			BxDFNode(const unsigned _numIn, const unsigned _numOut) : Node(_numIn, _numOut) {}
+			BxDFNode(const unsigned _numIn, const unsigned _numOut, const std::string &_nodeTag) : Node(_numIn, _numOut, _nodeTag) {}
 
 		protected:
 			void GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
@@ -17,9 +17,9 @@ namespace ShaderGraph {
 			}
 	};
 
-	class MixBxDFNode : public BxDFNode, MixBSDF {
+	class MixBxDFNode : public BxDFNode, public MixBSDF {
 		public:
-		MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio);
+			MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio);
 	};
 
 	class LambertianBRDFNode : public BxDFNode, public LambertianBRDF {

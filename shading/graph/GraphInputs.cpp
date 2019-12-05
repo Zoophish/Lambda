@@ -6,7 +6,7 @@ namespace ShaderGraph {
 		---------- Scalar Input ----------
 	*/
 
-	ScalarInput::ScalarInput(const Real _value) : Node(0, 1) {
+	ScalarInput::ScalarInput(const Real _value) : Node(0, 1, "Scalar") {
 		value = _value;
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, this->GetScalar, "Scalar");
 	}
@@ -19,7 +19,7 @@ namespace ShaderGraph {
 		---------- RGB Input ----------
 	*/
 
-	RGBInput::RGBInput(const Colour &_rgb) : Node(0, 1) {
+	RGBInput::RGBInput(const Colour &_rgb) : Node(0, 1, "RGB") {
 		rgb = _rgb;
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_COLOUR, this->GetColour, "Colour");
 	}
@@ -37,7 +37,7 @@ namespace ShaderGraph {
 		---------- Spectral Input ----------
 	*/
 
-	SpectralInput::SpectralInput(Real *_lambda, Real *_vals, const unsigned _n) : Node(0,1) {
+	SpectralInput::SpectralInput(Real *_lambda, Real *_vals, const unsigned _n) : Node(0, 1, "Spectrum") {
 		for (unsigned i = 0; i < nSpectralSamples; ++i) {
 			const Real l0 = maths::Lerp(sampledLambdaStart, sampledLambdaEnd, (Real)i * invNSpectralSamples);
 			const Real l1 = maths::Lerp(sampledLambdaStart, sampledLambdaEnd, (Real)(i + 1) * invNSpectralSamples);
@@ -59,14 +59,14 @@ namespace ShaderGraph {
 		---------- Blackbody Input ----------
 	*/
 
-	BlackbodyInput::BlackbodyInput(Socket *_temperatureSocket, const unsigned _samples) : Node(1, 1) {
+	BlackbodyInput::BlackbodyInput(Socket *_temperatureSocket, const unsigned _samples) : Node(1, 1, "Blackbody Spectrum") {
 		samples = _samples;
-		inputSockets[0] = _temperatureSocket;
+		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _temperatureSocket);
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SPECTRUM, this->GetSpectrum, "Spectrum");
 	}
 
 	void BlackbodyInput::GetSpectrum(const SurfaceScatterEvent *_event, void *_out) const {
-		*reinterpret_cast<Spectrum *>(_out) = MakeBlackbodySpectrum(inputSockets[0]->GetAsScalar(_event), samples);
+		*reinterpret_cast<Spectrum *>(_out) = MakeBlackbodySpectrum(inputSockets[0].socket->GetAsScalar(_event), samples);
 	}
 
 	void BlackbodyInput::Blackbody(const Real *_lambda, int _n, Real _T, Real *_Le) const {
@@ -104,7 +104,7 @@ namespace ShaderGraph {
 		---------- Image-Texture Input ----------
 	*/
 
-	ImageTextureInput::ImageTextureInput(Texture *_tex) : Node(0, 2) {
+	ImageTextureInput::ImageTextureInput(Texture *_tex) : Node(0, 2, "Image Texture") {
 		tex = _tex;
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_COLOUR, this->GetColour, "Colour");
 		outputSockets[1] = MAKE_SOCKET(SocketType::TYPE_SCALAR, this->GetScalar, "Scalar");
@@ -124,7 +124,7 @@ namespace ShaderGraph {
 		--------- Spectral-Texture Input ----------
 	*/
 
-	SpectralTextureInput::SpectralTextureInput(texture_t<Spectrum> *_tex) : Node(0, 1) {
+	SpectralTextureInput::SpectralTextureInput(texture_t<Spectrum> *_tex) : Node(0, 1, "Spectral Texture") {
 		tex = _tex;
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SPECTRUM, this->GetSpectrum, "Spectrum");
 	}

@@ -25,7 +25,7 @@ class MeshPortal : public Light {
 			const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 			const Vec2 u = _sampler->Get2D();
 			const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
-			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON, p, &_event.wi)) {
+			if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * .00001, p, &_event.wi)) {
 				Real triArea;
 				Vec3 normal;
 				mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
@@ -42,7 +42,7 @@ class MeshPortal : public Light {
 
 		Real PDF_Li(const SurfaceScatterEvent &_event) const override {
 			RayHit hit;
-			if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON, _event.wi), hit)) return 0;
+			if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit)) return 0;
 			if (hit.object->light != this) return 0;
 			Real triArea;
 			Vec3 normal;

@@ -45,7 +45,7 @@ namespace ShaderGraph {
 		public:
 			unsigned samples;
 
-			BlackbodyInput(Socket* _temperatureSocket, const unsigned _samples = 3);
+			BlackbodyInput(Socket* _temperatureSocket, const unsigned _samples = Spectrum::nSamples);
 
 			void GetSpectrum(const SurfaceScatterEvent *_event, void *_out) const;
 

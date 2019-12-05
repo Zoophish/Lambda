@@ -11,7 +11,7 @@ class Scene;
 
 struct SurfaceScatterEvent {
 	Vec3 wo, wi, woL, wiL;
-	Real pdf, eta = 1.;
+	Real pdf, eta = 1;
 	RayHit *hit;
 	const Scene *scene;
 

@@ -12,7 +12,7 @@ namespace ShaderGraph {
 
 	#define MAKE_SOCKET(_type, _callback, _tag) {	(_type), MAKE_SOCKET_CALLBACK(_callback), (_tag)	};
 
-	#define MAKE_INPUT_SOCKET(_type, _socketPtr) {	(_type), (_socketPtr)	};
+	#define MAKE_EMPTY_SOCKET(_type, _tag) {	(_type), nullptr, (_tag)	};
 
 	enum class SocketType {
 		TYPE_SCALAR,
@@ -57,9 +57,9 @@ namespace ShaderGraph {
 
 		inline BxDF* GetAsBxDF(const SurfaceScatterEvent *_event) const {
 			if (callback.operator bool() && socketType == SocketType::TYPE_BXDF) {
-				BxDF *v = nullptr;
-				callback(_event, v);
-				return v;
+				void *v;
+				callback(_event, &v);
+				return reinterpret_cast<BxDF*>(v);
 			}
 			return nullptr;
 		}
@@ -86,29 +86,19 @@ namespace ShaderGraph {
 		}
 	};
 
-	struct SocketRef {
-		SocketType socketType;
-		Socket *socket;
-
-		void operator=(Socket *_rhs) { 
-			if (_rhs->socketType == socketType)
-				socket = _rhs;
-			else
-				throw std::runtime_error("Socket types do not match.");
-		}
-	};
-
 	class Node {
 		public:
-			const std::string nodeTag;
-			const unsigned numIn, numOut;
-			const std::unique_ptr<SocketRef[]> inputSockets;
-			const std::unique_ptr<Socket[]> outputSockets;
+			std::string nodeTag;
+			unsigned numIn, numOut;
+			std::unique_ptr<Socket*[]> inputSockets;
+			std::unique_ptr<Socket[]> outputSockets;
 
-			Node(const unsigned _numIn, const unsigned _numOut, const std::string &_nodeTag = "node tag") :
-				nodeTag(_nodeTag),
-				numIn(_numIn), numOut(_numOut),
-				inputSockets(new SocketRef[_numIn]), outputSockets(new Socket[_numOut]) {}
+			Node(const unsigned _numIn, const unsigned _numOut) {
+				numIn = _numIn;
+				numOut = _numOut;
+				inputSockets.reset(new Socket*[numIn]);
+				outputSockets.reset(new Socket[numOut]);
+			}
 	};
 
 }

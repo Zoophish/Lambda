@@ -49,9 +49,9 @@ class LambertianBRDF : public BxDF {
 
 class MixBSDF : public BxDF {
 	public:
-	ShaderGraph::Socket **aSocket, **bSocket, **ratioSocket;
+		ShaderGraph::Socket **aSocket, **bSocket, **ratioSocket;
 
-	MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket);
+		MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket);
 
-	Spectrum f(const SurfaceScatterEvent &_event) const override;
+		Spectrum f(const SurfaceScatterEvent &_event) const override;
 };

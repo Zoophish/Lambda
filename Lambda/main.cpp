@@ -17,6 +17,7 @@
 #include <lighting/EnvironmentLight.h>
 #include <lighting/MeshPortal.h>
 #include <render/MosaicRenderer.h>
+#include <utility/Memory.h>
 #include <random>
 
 int main() {
@@ -28,66 +29,64 @@ int main() {
 	Texture white(1, 1, Colour(1, 1, 1));
 	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid; grid.LoadImageFile("../content/uv_grid.png"); grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	white.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	Texture checker; checker.LoadImageFile("../content/checker.jpg"); checker.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	BeckmannDistribution d;
 	FresnelDielectric fres(2.5);
 
-	ShaderGraph::RGBInput whiteNode({1,.5,.5});
-	ShaderGraph::ImageTextureInput gridNode(&grid);
-	ShaderGraph::ScalarInput sigmaNode(.3);
-	ShaderGraph::OrenNayarBxDFNode mat(&gridNode.outputSockets[0], &gridNode.outputSockets[1]);
+	MemoryArena graphArena;
+	namespace sg = ShaderGraph;
+	sg::RGBInput *whiteNode = graphArena.New<sg::RGBInput>(Colour(1, 1, 1));
+	sg::ImageTextureInput *gridNode = graphArena.New<sg::ImageTextureInput>(&grid);
+	sg::ImageTextureInput *checkNode = graphArena.New<sg::ImageTextureInput>(&checker);
+	Texture scratches(1,1,Colour(1,1,1));// scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
+	sg::ImageTextureInput *sigmaNode = graphArena.New<sg::ImageTextureInput>(&scratches);
+	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(3);
+	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	  
-	ShaderGraph::MicrofacetBRDFNode microfacetBRDF(&whiteNode.outputSockets[0], &sigmaNode.outputSockets[0], &d, &fres);
+	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[1], &d, &fres);
 
-	AssetImporter ai;
+	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
 	AssetImporter ai2;
-	ai2.Import("../content/lucy.obj");
+	ai2.Import("../content/sponza.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
-		it.second->bxdf = &microfacetBRDF;
+		it.second->bxdf = mat;
 		scene.AddObject(it.second);
 	}
 
+	AssetImporter ai;
 	ai.Import("../content/Backdrop.obj");
 	ai.PushToResourceManager(&resources);
 	TriangleMesh backdropMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &backdropMesh);
-	backdropMesh.bxdf = &mat;
-	scene.AddObject(&backdropMesh);
+	backdropMesh.bxdf = mat;
+	//scene.AddObject(&backdropMesh);
 
 
-	ai.Import("../content/AreaLight.obj");
+	ai.Import("../content/sponza_portal.obj");
 	ai.PushToResourceManager(&resources);
 	TriangleMesh lightMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
 	lightMesh.smoothNormals = false;
 	MeshLight light(&lightMesh);
-	Real cs[3] = { 78.3583, 79.1876, 64.5809 };
-	Spectrum blck = Spectrum::FromXYZ(cs);
-	texture_t<Spectrum> blckbdy(1, 1, blck);
-	blckbdy.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	ShaderGraph::SpectralTextureInput blckbdyNode(&blckbdy);
-	ShaderGraph::ScalarInput temp1(2700);
-	ShaderGraph::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	sg::ScalarInput temp1(2500);
+	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
 	light.emission = &blckInpt1.outputSockets[0];
-	light.intensity = 35;
+	light.intensity = 100;
 	scene.AddLight(&light);
 	scene.AddObject(&lightMesh);
 	
-	//ai.Import("../content/SideLight.obj");
-	//ai.PushToResourceManager(&resources);
-	//TriangleMesh lightMesh2;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
-	//MeshLight light2(&lightMesh2);
-	//Real cs2[3] = { 60.8556, 62.7709, 103.5163 };
-	//Spectrum blck2 = Spectrum::FromXYZ(cs2);
-	//texture_t<Spectrum> blckbdy2(1, 1, blck2);
-	//ShaderGraph::SpectralTextureInput blckbdyNode2(&blckbdy2);
-	//ShaderGraph::ScalarInput temp(4500);
-	//ShaderGraph::BlackbodyInput blckInpt(&temp.outputSockets[0]);
-	//light2.emission = &blckInpt.outputSockets[0];
-	//light2.intensity = .8;
+	ai.Import("../content/SideLight.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh lightMesh2;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
+	MeshLight light2(&lightMesh2);
+	sg::ScalarInput temp(10000);
+	sg::BlackbodyInput blckInpt(&temp.outputSockets[0]);
+	light2.emission = &blckInpt.outputSockets[0];
+	light2.intensity = 23;
 	//scene.AddLight(&light2);
 	//scene.AddObject(&lightMesh2);
 
@@ -97,7 +96,7 @@ int main() {
 	envMap.LoadImageFile("../content/quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 0;
-	ibl.offset = Vec2(PI*.5, 0);
+	ibl.offset = Vec2(0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
@@ -120,11 +119,11 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(0, 1, 2.2), 16, 9, 2.2, &aperture2);
-	aperture2.size = .001;
+	ThinLensCamera cam(Vec3(-4, 2, 0), 16, 9, 5, &aperture2);
+	aperture2.size = .002;
 	aperture2.sampler = &sampler;
-	cam.SetFov(1.5);
-	cam.SetRotation(PI, PI*-.01);
+	cam.SetFov(1.4);
+	cam.SetRotation(PI*.5, PI*-.05);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);
@@ -140,7 +139,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 8;
+	renderDirective.spp = 4;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

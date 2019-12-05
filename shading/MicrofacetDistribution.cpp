@@ -4,11 +4,6 @@
 	---------- Beckmann ----------
 */
 
-//BeckmannDistribution::BeckmannDistribution(const Real __alpha.x, const Real __alpha.y) {
-//	_alpha.x = __alpha.x;
-//	_alpha.y = __alpha.y;
-//}
-
 BeckmannDistribution::BeckmannDistribution() {}
 
 Real BeckmannDistribution::D(const Vec3 &_wh, const Vec2 &_alpha) const {
@@ -44,11 +39,6 @@ Vec3 BeckmannDistribution::Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2
 /*
 	---------- Towbridge-Reitz ----------
 */
-
-//TrowbridgeReitzDistribution::TrowbridgeReitzDistribution(const Real __alpha.x, const Real __alpha.y) {
-//	_alpha.x = __alpha.x;
-//	_alpha.y = __alpha.y;
-//}
 
 TrowbridgeReitzDistribution::TrowbridgeReitzDistribution() {}
 
