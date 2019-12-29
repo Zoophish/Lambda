@@ -139,7 +139,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 4;
+	renderDirective.spp = 2;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

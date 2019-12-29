@@ -1,20 +1,22 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <functional>
+#include <utility/Delegate.h>
 #include <image/Texture.h>
 #include <core/Spectrum.h>
 #include "../SurfaceScatterEvent.h"
 
 namespace ShaderGraph {
 
-	#define MAKE_SOCKET_CALLBACK(_func) [this](const SurfaceScatterEvent *_event, void *_out) { _func(_event, _out); }
+	using NodeDelegate = ConstDelegate<void, const SurfaceScatterEvent *, void *>;
 
-	#define MAKE_SOCKET(_type, _callback, _tag) {	(_type), MAKE_SOCKET_CALLBACK(_callback), (_tag)	};
+	#define MAKE_SOCKET_CALLBACK(_func) NodeDelegate::FromFunction<std::remove_reference<decltype(*this)>::type, (_func)>(this)
+
+	#define MAKE_SOCKET(_type, _callback, _tag) {	(_type), MAKE_SOCKET_CALLBACK(_callback), (_tag)	}
 
 	#define MAKE_INPUT_SOCKET(_type, _socketPtr) {	(_type), (_socketPtr)	};
 
-	enum class SocketType {
+	enum class SocketType : uint8_t {
 		TYPE_SCALAR,
 		TYPE_COLOUR,
 		TYPE_VEC2,
@@ -25,11 +27,11 @@ namespace ShaderGraph {
 	
 	struct Socket {
 		SocketType socketType;
-		std::function<void(const SurfaceScatterEvent *, void *)> callback;
+		NodeDelegate callback;
 		std::string tag;
 
 		inline Real GetAsScalar(const SurfaceScatterEvent *_event) const {
-			if(callback.operator bool() && socketType == SocketType::TYPE_SCALAR) {
+			if(callback && socketType == SocketType::TYPE_SCALAR) {
 				Real r;
 				callback(_event, &r);
 				return r;
@@ -109,6 +111,18 @@ namespace ShaderGraph {
 				nodeTag(_nodeTag),
 				numIn(_numIn), numOut(_numOut),
 				inputSockets(new SocketRef[_numIn]), outputSockets(new Socket[_numOut]) {}
+
 	};
 
+	static bool Connect(SocketRef &_socketRef, const Socket &_socket) {
+		if (_socketRef.socketType == _socket.socketType) {
+			_socketRef.socket = (Socket*)&_socket;
+			return true;
+		}
+		return false;
+	}
+
+	static void Disconnect(SocketRef &_socketRef) {
+		_socketRef.socket = nullptr;
+	}
 }

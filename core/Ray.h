@@ -1,7 +1,6 @@
 /*----	By Sam Warren 2019	----
-  ----	Basic ray class and ray-hit struct.	----
+	Basic ray class and ray-hit struct.
 
-	Since Embree only supports 32-bit float precision, vec3f used as Vec3 in maths.h.
 	Can be converted to an Embree RTCRay type when querying ray against a scene.
 */
 

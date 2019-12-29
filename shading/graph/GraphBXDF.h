@@ -7,6 +7,8 @@
 
 namespace ShaderGraph {
 
+	#define MAKE_BXDF_SOCKET(_type, _callback, _tag) {	(_type), NodeDelegate::FromFunction<BxDFNode, (_callback)>(this), (_tag)	}
+
 	class BxDFNode : public Node {
 		public:
 			BxDFNode(const unsigned _numIn, const unsigned _numOut, const std::string &_nodeTag) : Node(_numIn, _numOut, _nodeTag) {}
