@@ -22,7 +22,7 @@ namespace TextureEncoding {
 		static const uint64_t x2_mask = 0xAAAAAAAAAAAAAAAA;
 		static const uint64_t y2_mask = 0x5555555555555555;
 
-		static inline uint64_t ShiftInterleave(const uint32_t _i) {
+		inline uint64_t ShiftInterleave(const uint32_t _i) {
 			uint64_t word = _i;
 			word = (word ^ (word << 16)) & 0x0000ffff0000ffff;
 			word = (word ^ (word << 8)) & 0x00ff00ff00ff00ff;
@@ -35,7 +35,7 @@ namespace TextureEncoding {
 		/*
 			Based on: https://github.com/rawrunprotected/hilbert_curves
 		*/
-		static inline uint32_t HilbertXYToIndex(uint32_t n, uint32_t x, uint32_t y) {
+		inline uint32_t HilbertXYToIndex(uint32_t n, uint32_t x, uint32_t y) {
 			x = x << (16 - n);
 			y = y << (16 - n);
 			uint32_t A, B, C, D;
@@ -89,7 +89,7 @@ namespace TextureEncoding {
 	/*
 		Texture sides MUST be of 2^N.
 	*/
-	static inline size_t MortonOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+	inline size_t MortonOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		#ifdef USE_BMI
 			return _pdep_u64(_y, y2_mask) | _pdep_u64(_x, x2_mask);
 		#else
@@ -99,21 +99,21 @@ namespace TextureEncoding {
 	/*
 		Texture size MUST be of 2^N and square.
 	*/
-	static inline size_t HilbertOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+	inline size_t HilbertOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		return HilbertXYToIndex(_w, _x, _y);
 	}
 
 	/*
 		Any texture size works.
 	*/
-	static inline size_t ScanlineRowOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+	inline size_t ScanlineRowOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		return _y * _w + _x;
 	}
 
 	/*
 		Any texture size works.
 	*/
-	static inline size_t ScanlineColOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
+	inline size_t ScanlineColOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 		return _x * _h + _y;
 	}
 }

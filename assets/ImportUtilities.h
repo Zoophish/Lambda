@@ -8,10 +8,10 @@
 namespace ImportUtilities {
 
 	struct ImportMetrics {
-		std::string name;
+		std::string name, path;
 		std::vector<std::string> metrics, errors;
 
-		ImportMetrics(const std::string &_name);
+		ImportMetrics(const std::string &_name, const std::string &_path = "");
 		
 		void AppendMetric(const std::string &_metric);
 
@@ -20,6 +20,8 @@ namespace ImportUtilities {
 		void LogMetrics() const;
 
 		void LogErrors() const;
+
+		void LogAll() const;
 
 		bool HasErrors() const;
 	};

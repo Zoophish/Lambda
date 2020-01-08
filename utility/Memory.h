@@ -32,9 +32,9 @@ class MemoryArena {
 
 		void FreeAll();
 
-		template<class T, typename... Args>
-		inline T *New(Args... _args) {
-			return new((T *)Alloc(sizeof(T))) T(_args...);
+		template<class T, typename... params>
+		inline T *New(params... _params) {
+			return new((T *)Alloc(sizeof(T))) T(_params...);
 		}
 
 		template<class T>

@@ -3,8 +3,11 @@
 
 namespace ImportUtilities {
 
-	ImportMetrics::ImportMetrics(const std::string &_name) {
+	ImportMetrics::ImportMetrics(const std::string &_name, const std::string &_path) {
 		name = _name;
+		const size_t lastSlash = _path.find_last_of("\\/");
+		if (lastSlash != std::string::npos) path = _path.substr(0, lastSlash);
+		else path = _path;
 	}
 
 	void ImportMetrics::AppendMetric(const std::string &_metric) {
@@ -31,6 +34,11 @@ namespace ImportUtilities {
 		for (auto &it : errors) {
 			std::cout << std::endl << '	' << it;
 		}
+	}
+
+	void ImportMetrics::LogAll() const {
+		LogMetrics();
+		if(errors.size() > 0) LogErrors();
 	}
 
 	bool ImportMetrics::HasErrors() const {

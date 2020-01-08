@@ -36,6 +36,12 @@ class ResourcePool {
 			}
 			return false;
 		}
+
+		inline bool Find(const std::string &_tag) const {
+			const std::unordered_map<std::string, T *>::const_iterator it = pool.find(_tag);
+			if (it != pool.end()) return true;
+			return false;
+		}
 };
 
 /*
