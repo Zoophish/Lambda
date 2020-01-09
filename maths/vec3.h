@@ -24,9 +24,7 @@ class vec3 {
 		}
 
 		vec3(const T *_xyz) {
-			x = _xyz[0];
-			y = _xyz[1];
-			z = _xyz[2];
+			memcpy(this, _xyz, 3 * sizeof(T));
 		}
 
 		inline vec3<T> operator+(const vec3<T> &_rhs) const { return vec3<T>(x + _rhs.x, y + _rhs.y, z + _rhs.z); }
@@ -105,9 +103,7 @@ class alignas(16) vec3<float> {
 		}
 
 		vec3(const float *_xyz) {
-			x = _xyz[0];
-			y = _xyz[1];
-			z = _xyz[2];
+			memcpy(this, _xyz, 3 * sizeof(float));
 		}
 
 		inline vec3<float> operator+(const vec3<float> &_rhs) const {

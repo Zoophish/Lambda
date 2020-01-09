@@ -1,25 +1,27 @@
 //----	By Sam Warren 2019	----
 //----	Generic colour class with 32-bit float precision as well as other colour formats for use in textures.	----
 
-struct Colour {
-	float r, g, b;
+struct alignas(16) Colour {
+	float r, g, b, a;
 
 	Colour() {}
 
-	Colour(const float _r, const float _b, const float _g) {
+	Colour(const float _r, const float _g, const float _b, const float _a = 1) {
 		r = _r;
-		b = _b;
 		g = _g;
+		b = _b;
+		a = _a;
 	}
 
-	Colour(const float _l) {
+	Colour(const float _l, const bool _alpha = false) {
 		r = _l;
 		g = _l;
 		b = _l;
+		a = _alpha ? _l : 1;
 	}
 
-	Colour(const float *_rgb) {
-		memcpy(this, _rgb, sizeof(float) * 3);
+	Colour(const float *_rgba, const bool _alpha = false) {
+		memcpy(this, _rgba, sizeof(float) * (_alpha ? 4 : 3));
 	}
 
 	inline Colour operator*(const Colour &_rhs) const {
@@ -68,40 +70,11 @@ struct Colour {
 
 	inline bool operator==(const Colour &_rhs) const { return r == _rhs.r && g == _rhs.g && b == _rhs.b; }
 	inline bool operator!=(const Colour &_rhs) const { return r != _rhs.r || g != _rhs.g || b != _rhs.b; }
+
+	inline float operator[](const unsigned _rhs) const {
+		return reinterpret_cast<float *>(const_cast<Colour*>(this))[_rhs];
+	}
+	inline float &operator[](const unsigned _rhs) {
+		return reinterpret_cast<float *>(this)[_rhs];
+	}
 };
-
-namespace ColourFormat {
-
-	typedef Colour RGB32;
-
-	struct RGBA32 {
-		float r, g, b, a;
-
-		RGBA32(const float _r = 0, const float _g = 0, const float _b = 0, const float _a = 0) {
-			r = _r;
-			g = _g;
-			b = _b;
-			a = _a;
-		}
-
-		RGBA32(const float *_rgba) {
-			memcpy(this, _rgba, sizeof(float) * 4);
-		}
-
-		inline float operator[](const unsigned _rhs) const {
-			switch (_rhs) {case 0: return r; case 1: return g; case 2: return b; case 3: return a; }
-		}
-
-		inline RGBA32 operator+(const RGBA32 &_rhs) const {
-			return RGBA32(r + _rhs.r, g + _rhs.g, b + _rhs.b, a + _rhs.a);
-		}
-
-		inline RGBA32 operator-(const RGBA32 &_rhs) const {
-			return RGBA32(r - _rhs.r, g - _rhs.g, b - _rhs.b, a - _rhs.a);
-		}
-
-		inline RGBA32 operator*(const float _rhs) const {
-			return RGBA32(r * _rhs, g * _rhs, b * _rhs, a * _rhs);
-		}
-	};
-}

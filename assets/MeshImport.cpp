@@ -7,12 +7,16 @@ namespace MeshImport {
 			_tMesh->hasUVs = true;
 			_tMesh->uvs.resize(_tMesh->verticesSize);
 			for (size_t i = 0; i < _tMesh->verticesSize; ++i) {
-				_tMesh->uvs[i].x = _aiMesh->mTextureCoords[_channel][i].x;
-				_tMesh->uvs[i].y = _aiMesh->mTextureCoords[_channel][i].y;
+				_tMesh->uvs[i].x = (Real)1 - _aiMesh->mTextureCoords[_channel][i].x;
+				_tMesh->uvs[i].y = (Real)1 - _aiMesh->mTextureCoords[_channel][i].y;
 			}
 			return true;
 		}
 		return false;
+	}
+
+	inline Real CheckReal(const Real _val) {
+		return std::isnan(_val) || std::isinf(_val) ? 0 : _val;
 	}
 
 	void LoadMeshVertexBuffers(const aiMesh *_aiMesh, TriangleMesh *_tMesh) {
@@ -50,12 +54,12 @@ namespace MeshImport {
 			_tMesh->vertexTangents.resize(_tMesh->verticesSize);
 			_tMesh->vertexBitangents.resize(_tMesh->verticesSize);
 			for (size_t i = 0; i < _tMesh->verticesSize; ++i) {
-				_tMesh->vertexTangents[i].x = _aiMesh->mTangents[i].x;
-				_tMesh->vertexTangents[i].y = _aiMesh->mTangents[i].y;
-				_tMesh->vertexTangents[i].z = _aiMesh->mTangents[i].z;
-				_tMesh->vertexBitangents[i].x = _aiMesh->mBitangents[i].x;
-				_tMesh->vertexBitangents[i].y = _aiMesh->mBitangents[i].y;
-				_tMesh->vertexBitangents[i].z = _aiMesh->mBitangents[i].z;
+				_tMesh->vertexTangents[i].x = CheckReal(_aiMesh->mTangents[i].x);
+				_tMesh->vertexTangents[i].y = CheckReal(_aiMesh->mTangents[i].y);
+				_tMesh->vertexTangents[i].z = CheckReal(_aiMesh->mTangents[i].z);
+				_tMesh->vertexBitangents[i].x = CheckReal(_aiMesh->mBitangents[i].x);
+				_tMesh->vertexBitangents[i].y = CheckReal(_aiMesh->mBitangents[i].y);
+				_tMesh->vertexBitangents[i].z = CheckReal(_aiMesh->mBitangents[i].z);
 			}
 		}
 		_tMesh->smoothNormals = _aiMesh->HasTangentsAndBitangents();

@@ -7,6 +7,14 @@ namespace MaterialImport {
 
 	namespace sg = ShaderGraph;
 
+	enum MaterialAttributes {
+		MTL_ATTRIB_NONE = 0,
+		MTL_ATTRIB_DIFFUSE = BITFLAG(1),
+		MTL_ATTRIB_GLOSSY = BITFLAG(2),
+		MTL_ATTRIB_EMISSIVE = BITFLAG(3),
+		MTL_ATTRIB_ALPHA = BITFLAG(4),
+	};
+
 	template<class Format>
 	void aiTextureToTexture(const aiTexture *_aiTexture, texture_t<Format> *_texture) {
 		static constexpr Real inv256 = 1. / 256.;
@@ -33,6 +41,7 @@ namespace MaterialImport {
 				const std::string fullPath = _metrics->path + "\\" + path.C_Str();
 				if (!_resources->texturePool.Find(path.C_Str())) {
 					Texture *tex = new Texture;
+					//Check if dimensions are part of 2^n. Change encoder?
 					tex->LoadImageFile(fullPath.c_str());
 					_resources->texturePool.Append(path.C_Str(), tex);
 					_metrics->AppendMetric(fullPath + " [" + std::to_string(tex->GetWidth()) + "x" + std::to_string(tex->GetHeight()) + "] pushed.");
@@ -59,12 +68,27 @@ namespace MaterialImport {
 		return numTextures > 0;
 	}
 
+	inline bool HasTransparency(const aiMaterial *_aiMaterial) {
+		if (_aiMaterial->GetTexture(aiTextureType_OPACITY, 0, nullptr)) return true;
+		
+	}
+
+	inline int GetAttributes(const aiMaterial *_aiMaterial) {
+		int attributes = MTL_ATTRIB_NONE;
+		attributes += _aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, nullptr) == aiReturn_SUCCESS ? MTL_ATTRIB_DIFFUSE : MTL_ATTRIB_NONE;
+		attributes += _aiMaterial->GetTexture(aiTextureType_SHININESS, 0, nullptr) == aiReturn_SUCCESS ? MTL_ATTRIB_GLOSSY : MTL_ATTRIB_NONE;
+		attributes += _aiMaterial->GetTexture(aiTextureType_OPACITY, 0, nullptr) == aiReturn_SUCCESS ? MTL_ATTRIB_ALPHA : MTL_ATTRIB_NONE;
+		attributes += _aiMaterial->GetTexture(aiTextureType_EMISSIVE, 0, nullptr) == aiReturn_SUCCESS ? MTL_ATTRIB_EMISSIVE : MTL_ATTRIB_NONE;
+		return attributes;
+	}
+
 	//DEBUG / TEST - Diffuse material with diffuse texture from assimp.
-	inline void aiMaterialToMaterial(const aiMaterial *_aiMaterial, const ResourceManager *_resources, Material *_material, ImportMetrics *_metrics) {
+	void aiMaterialToMaterial(const aiMaterial *_aiMaterial, const ResourceManager *_resources, Material *_material, ImportMetrics *_metrics) {
+		//const int attributes = GetAttributes(_aiMaterial);
 		aiString diffusePath;
-		const bool hasDiffuse = aiGetMaterialTexture(_aiMaterial, aiTextureType_DIFFUSE, 0, &diffusePath) == aiReturn_SUCCESS;
+		const bool hasDiffuse = _aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &diffusePath) == aiReturn_SUCCESS;
 		Texture *tex = nullptr;
-		if (hasDiffuse && _resources->texturePool.Find(aiScene::GetShortFilename(diffusePath.C_Str()), tex)) {
+		if (hasDiffuse && _resources->texturePool.Find(diffusePath.C_Str(), tex)) {
 			sg::ImageTextureInput *img = _material->graphArena.New<sg::ImageTextureInput>(tex);
 			sg::ScalarInput *sig = _material->graphArena.New<sg::ScalarInput>(1.5);
 			_material->bxdf = _material->graphArena.New<sg::OrenNayarBxDFNode>(&img->outputSockets[0], &sig->outputSockets[0]);

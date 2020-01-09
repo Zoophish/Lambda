@@ -4,6 +4,7 @@ Structure that provides access to necessary information needed for shading.
 
 //TO DO: Rename to SurfaceEvent?
 #pragma once
+#include <iostream>
 #include <maths/maths.h>
 #include <core/Ray.h>
 class BxDF;
@@ -16,7 +17,7 @@ struct SurfaceScatterEvent {
 	const Scene *scene;
 
 	inline Vec3 ToLocal(const Vec3 &_v) const {
-		if(hit) return maths::ToSpace(_v, hit->tangent, hit->normalS, hit->bitangent);
+		return maths::ToSpace(_v, hit->tangent, hit->normalS, hit->bitangent);
 	}
 	
 	inline Vec3 ToWorld(const Vec3 &_v) const {
