@@ -1,6 +1,13 @@
 //----	By Sam Warren 2019	----
 //----	Generic colour class with 32-bit float precision as well as other colour formats for use in textures.	----
 
+//Uses the SSE operator implementations.
+#define COLOUR_USE_SSE
+
+#ifdef COLOUR_USE_SSE
+#include <nmmintrin.h>
+#endif
+
 struct alignas(16) Colour {
 	float r, g, b, a;
 
@@ -24,57 +31,113 @@ struct alignas(16) Colour {
 		memcpy(this, _rgba, sizeof(float) * (_alpha ? 4 : 3));
 	}
 
-	inline Colour operator*(const Colour &_rhs) const {
-		return Colour(r * _rhs.r, g * _rhs.g, b * _rhs.b);
-	}
-	inline Colour operator*(const float _rhs) const {
-		return Colour(r * _rhs, g * _rhs, b * _rhs);
-	}      
-	inline Colour operator/(const Colour &_rhs) const {
-		return Colour(r / _rhs.r, g / _rhs.g, b / _rhs.b);
-	}
-	inline Colour operator/(const float _rhs) const {
-		const float inv = 1.f / _rhs;
-		return Colour(r * inv, g * inv, b * inv);
-	}      
-	inline Colour operator+(const Colour &_rhs) const {
-		return Colour(r + _rhs.r, g + _rhs.g, b + _rhs.b);
-	}
-	inline Colour operator-(const Colour &_rhs) const {
-		return Colour(r - _rhs.r, g - _rhs.g, b - _rhs.b);
-	}
-
-	inline void operator*=(const Colour &_rhs) {
-		r *= _rhs.r; g *= _rhs.g; b *= _rhs.b;
-	}
-	inline void operator*=(const float _rhs) {
-		r *= _rhs; g *= _rhs; b *= _rhs;
-	}
-	inline void operator/=(const Colour &_rhs) {
-		r /= _rhs.r; g /= _rhs.g; b /= _rhs.b;
-	}
-	inline void operator/=(const float _rhs) {
-		const float inv = 1.f / _rhs;
-		r *= inv;
-		g *= inv;
-		b *= inv;
-	}
-	inline void operator+=(const Colour &_rhs) {
-		r += _rhs.r; g += _rhs.g; b += _rhs.b;
-	}
-	inline void operator-=(const Colour &_rhs) {
-		r -= _rhs.r;
-		g -= _rhs.g;
-		b -= _rhs.b;
-	}
-
-	inline bool operator==(const Colour &_rhs) const { return r == _rhs.r && g == _rhs.g && b == _rhs.b; }
-	inline bool operator!=(const Colour &_rhs) const { return r != _rhs.r || g != _rhs.g || b != _rhs.b; }
-
 	inline float operator[](const unsigned _rhs) const {
-		return reinterpret_cast<float *>(const_cast<Colour*>(this))[_rhs];
+		return reinterpret_cast<float *>(const_cast<Colour *>(this))[_rhs];
 	}
 	inline float &operator[](const unsigned _rhs) {
 		return reinterpret_cast<float *>(this)[_rhs];
 	}
+
+	#ifndef COLOUR_USE_SSE
+		inline Colour operator*(const Colour &_rhs) const {
+			return Colour(r * _rhs.r, g * _rhs.g, b * _rhs.b, a * _rhs.a);
+		}
+		inline Colour operator*(const float _rhs) const {
+			return Colour(r * _rhs, g * _rhs, b * _rhs, a * _rhs);
+		}      
+		inline Colour operator/(const Colour &_rhs) const {
+			return Colour(r / _rhs.r, g / _rhs.g, b / _rhs.b, a / _rhs.a);
+		}
+		inline Colour operator/(const float _rhs) const {
+			const float inv = 1.f / _rhs;
+			return Colour(r * inv, g * inv, b * inv, a * inv);
+		}      
+		inline Colour operator+(const Colour &_rhs) const {
+			return Colour(r + _rhs.r, g + _rhs.g, b + _rhs.b, a + _rhs.a);
+		}
+		inline Colour operator-(const Colour &_rhs) const {
+			return Colour(r - _rhs.r, g - _rhs.g, b - _rhs.b, a - _rhs.a);
+		}
+
+		inline void operator*=(const Colour &_rhs) {
+			r *= _rhs.r; g *= _rhs.g; b *= _rhs.b; a *= _rhs.a;
+		}
+		inline void operator*=(const float _rhs) {
+			r *= _rhs; g *= _rhs; b *= _rhs; a *= _rhs;
+		}
+		inline void operator/=(const Colour &_rhs) {
+			r /= _rhs.r; g /= _rhs.g; b /= _rhs.b; a /= _rhs.a;
+		}
+		inline void operator/=(const float _rhs) {
+			const float inv = 1.f / _rhs;
+			r *= inv; g *= inv; b *= inv; a *= inv;
+		}
+		inline void operator+=(const Colour &_rhs) {
+			r += _rhs.r; g += _rhs.g; b += _rhs.b; a += _rhs.a;
+		}
+		inline void operator-=(const Colour &_rhs) {
+			r -= _rhs.r; g -= _rhs.g; b -= _rhs.b; a -= +_rhs.a;
+		}
+
+		inline bool operator==(const Colour &_rhs) const { return r == _rhs.r && g == _rhs.g && b == _rhs.b && a == _rhs.a; }
+		inline bool operator!=(const Colour &_rhs) const { return r != _rhs.r || g != _rhs.g || b != _rhs.b || a != _rhs.a; }
+	#endif
+
+	#ifdef COLOUR_USE_SSE		
+		inline Colour operator+(const Colour &_rhs) const {
+			return Colour(_mm_add_ps(_mm_load_ps(reinterpret_cast<const float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+		}
+		inline Colour operator-(const Colour &_rhs) const {
+			return Colour(_mm_sub_ps(_mm_load_ps(reinterpret_cast<const float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+		}
+		inline Colour operator*(const Colour &_rhs) const {
+			return Colour(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+		}
+		inline Colour operator/(const Colour &_rhs) const {
+			return Colour(_mm_div_ps(_mm_load_ps(reinterpret_cast<const float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+		}
+		inline Colour operator*(const float _rhs) const {
+			return Colour(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float *>(this)), _mm_set_ps1(_rhs)));
+		}
+		inline Colour operator/(const float _rhs) const {
+			return Colour(_mm_mul_ps(_mm_load_ps(reinterpret_cast<const float *>(this)), _mm_set_ps1(1.f / _rhs)));
+		}
+
+		inline Colour &operator+=(const Colour &_rhs) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _mm_add_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+			return *this;
+		}
+		inline Colour &operator-=(const Colour &_rhs) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _mm_sub_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+			return *this;
+		}
+		inline Colour &operator*=(const Colour &_rhs) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+			return *this;
+		}
+		inline Colour &operator/=(const Colour &_rhs) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _mm_div_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_load_ps(reinterpret_cast<const float *>(&_rhs))));
+			return *this;
+		}
+		inline Colour &operator*=(const float _rhs) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_set_ps1(_rhs)));
+			return *this;
+		}
+		inline Colour &operator/=(const float _rhs) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_set_ps1(1.f / _rhs)));
+			return *this;
+		}
+
+		inline bool operator==(const Colour &_rhs) {
+			return _mm_movemask_ps(_mm_cmpeq_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_load_ps(reinterpret_cast<float *>(this)))) == 0xffff;
+		}
+		inline bool operator!=(const Colour &_rhs) {
+			return _mm_movemask_ps(_mm_cmpeq_ps(_mm_load_ps(reinterpret_cast<float *>(this)), _mm_load_ps(reinterpret_cast<float *>(this)))) != 0xffff;
+		}
+
+	private:
+		Colour(const __m128 &_rgba) {
+			_mm_store_ps(reinterpret_cast<float *>(this), _rgba);
+		}
+	#endif
 };

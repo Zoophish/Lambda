@@ -10,8 +10,7 @@ namespace GraphImport {
 		const unsigned *mEnd = &_aiNode->mMeshes[_aiNode->mNumMeshes];
 		for (unsigned *it = _aiNode->mMeshes; it < mEnd; ++it) {
 			const std::string objName = _aiScene->mMeshes[*it]->mName.C_Str();
-			Object *objRef = nullptr;
-			_resources->objectPool.Find(objName, objRef);
+			Object *objRef = _resources->objectPool.Find(objName);
 			if (!objRef) _metrics->AppendError(objName + " not found in resources.");
 			else {
 				objRef->xfm = aiMatToAff3(_aiNode->mTransformation);

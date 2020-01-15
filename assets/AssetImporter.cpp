@@ -22,7 +22,7 @@ void AssetImporter::PushToResourceManager(ResourceManager *_resources, const Imp
 		if (_impOpt & IMP_MESHES) {
 			ImportUtilities::ImportMetrics meshImportMetrics(std::string(path.c_str()) + " meshes", path);
 			if (!MeshImport::PushMeshes(scene, _resources, &meshImportMetrics)) std::cout << std::endl << "Mesh import failed.";
-			meshImportMetrics.LogAll();
+			//meshImportMetrics.LogAll();
 		}
 		if (_impOpt & IMP_TEXTURES) {
 			ImportUtilities::ImportMetrics textureImportMetrics(std::string(path.c_str()) + " textures", path);
@@ -37,7 +37,7 @@ void AssetImporter::PushToResourceManager(ResourceManager *_resources, const Imp
 		if (_impOpt & IMP_GRAPH) {
 			ImportUtilities::ImportMetrics graphImportMetrics(std::string(path.c_str()) + " graph", path);
 			if (!GraphImport::PushGraph(scene, _resources, &graphImportMetrics)) std::cout << std::endl << "Graph import failed.";
-			graphImportMetrics.LogAll();
+			//graphImportMetrics.LogAll();
 		}
 
 	}

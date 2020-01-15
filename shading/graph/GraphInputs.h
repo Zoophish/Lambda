@@ -72,6 +72,17 @@ namespace ShaderGraph {
 
 
 
+	class ImageTextureChannelInput : public Node {
+		public:
+			Texture *tex;
+			uint8_t channel;
+
+			ImageTextureChannelInput(Texture *_tex, const uint8_t _channel = 0);
+
+			void GetScalar(const SurfaceScatterEvent *_event, void *_out) const;
+	};
+
+
 	class SpectralTextureInput : public Node {
 		public:
 			texture_t<Spectrum> *tex;

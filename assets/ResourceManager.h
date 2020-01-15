@@ -28,19 +28,25 @@ class ResourcePool {
 			return pool.size();
 		}
 
-		inline bool Find(const std::string &_tag, T *&_res) const {
-			const std::unordered_map<std::string, T*>::const_iterator it = pool.find(_tag);
-			if (it != pool.end()) {
-				_res = it->second;
-				return true;
-			}
-			return false;
-		}
+		//inline bool Find(const std::string &_tag, T *&_res) const {
+		//	const std::unordered_map<std::string, T*>::const_iterator it = pool.find(_tag);
+		//	if (it != pool.end()) {
+		//		_res = it->second;
+		//		return true;
+		//	}
+		//	return false;
+		//}
+		//
+		//inline bool Find(const std::string &_tag) const {
+		//	const std::unordered_map<std::string, T *>::const_iterator it = pool.find(_tag);
+		//	if (it != pool.end()) return true;
+		//	return false;
+		//}
 
-		inline bool Find(const std::string &_tag) const {
+		inline T *Find(const std::string &_tag) const {
 			const std::unordered_map<std::string, T *>::const_iterator it = pool.find(_tag);
-			if (it != pool.end()) return true;
-			return false;
+			if (it != pool.end()) return it->second;
+			return nullptr;
 		}
 };
 

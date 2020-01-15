@@ -3,11 +3,13 @@
 
 class GhostBTDF : public BxDF {
 	public:
-		ShaderGraph::Socket **alphaSocket;
+	ShaderGraph::Socket **alphaSocket;
 
-		GhostBTDF(ShaderGraph::Socket **_alphaSocket);
+	GhostBTDF(ShaderGraph::Socket **_alphaSocket);
 
-		Spectrum f(const SurfaceScatterEvent &_event) const override;
+	Spectrum f(const SurfaceScatterEvent &_event) const override;
 
-		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
+	Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
+
+	Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };

@@ -25,10 +25,14 @@ Spectrum EnvironmentLight::Sample_Li(SurfaceScatterEvent &_event, Sampler *_samp
 	const Real theta = uv.y * PI + offset.y;
 	const Real phi = uv.x * PI2 + offset.x;
 	const Real cosTheta = std::cos(theta), sinTheta = std::sin(theta);
-	if (sinTheta == 0) { _pdf = 0; }
+	if (sinTheta == 0) { 
+		_pdf = 0;
+		return Spectrum(0);
+	}
 	const Real sinPhi = std::sin(phi), cosPhi = std::cos(phi);
 	_event.wi = maths::SphericalDirection(sinTheta, cosTheta, phi);
-	if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi))) {
+	const Real ep = _event.woL.y < 0 ? -.00001 : .00001;
+	if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * ep, _event.wi))) {
 		_event.wiL = _event.ToLocal(_event.wi);
 		_pdf /= 2 * PI * PI * sinTheta;
 		return radianceMap.GetUV(uv) * intensity;
@@ -38,13 +42,14 @@ Spectrum EnvironmentLight::Sample_Li(SurfaceScatterEvent &_event, Sampler *_samp
 }
 
 Real EnvironmentLight::PDF_Li(const SurfaceScatterEvent &_event) const {
-	const Real theta = maths::SphericalTheta(_event.wi) + offset.y;
-	const Real phi = maths::SphericalPhi(_event.wi) + offset.x;
+	const Real theta = maths::SphericalTheta(_event.wi) - offset.y;
+	const Real phi = maths::SphericalPhi(_event.wi) - offset.x;
 	const Real sinTheta = std::sin(theta);
 	if (sinTheta == 0) return 0;
 	const Vec3 wiOffset = maths::SphericalDirection(sinTheta, std::cos(theta), phi);
-	if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * .00001, wiOffset))) {
-		return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / (2 * PI * PI * sinTheta);
+	const Real ep = _event.woL.y < 0 ? -.00001 : .00001;
+	if (_event.scene->RayEscapes(Ray(_event.hit->point + _event.hit->normalG * ep, wiOffset))) {
+		return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / ((Real)2 * PI * PI * sinTheta);
 	}
 	return 0;
 }

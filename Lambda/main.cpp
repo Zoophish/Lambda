@@ -35,13 +35,14 @@ int main() {
 
 	MemoryArena graphArena;
 	namespace sg = ShaderGraph;
-	sg::RGBInput *whiteNode = graphArena.New<sg::RGBInput>(Colour(0, 1, 0));
+	sg::RGBInput *whiteNode = graphArena.New<sg::RGBInput>(Colour(1, 1, 1));
+	sg::RGBInput *redNode = graphArena.New<sg::RGBInput>(Colour(1, .3, .3));
 	sg::ImageTextureInput *gridNode = graphArena.New<sg::ImageTextureInput>(&grid);
 	sg::ImageTextureInput *checkNode = graphArena.New<sg::ImageTextureInput>(&checker);
 	Texture scratches(1,1, Colour(.5,.5,.5)); //scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
 	sg::ImageTextureInput *sigmaNode = graphArena.New<sg::ImageTextureInput>(&scratches);
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&redNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	  
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[1], &d, &fres);
@@ -49,7 +50,7 @@ int main() {
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
 	AssetImporter ai2;
-	ai2.Import("D:\\Assets\\sponza\\sponza.obj");
+	ai2.Import("D:\\Assets\\xFrogScene.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
@@ -64,7 +65,7 @@ int main() {
 	ai.PushToResourceManager(&resources);
 	TriangleMesh backdropMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &backdropMesh);
-	backdropMesh.bxdf = mat;
+	backdropMesh.bxdf = mixMat;
 	scene.AddObject(&backdropMesh);
 
 
@@ -95,11 +96,11 @@ int main() {
 
 	//Make environment lighting.
 	Texture envMap;
-	envMap.interpolationMode = InterpolationMode::INTERP_BILINEAR;
-	envMap.LoadImageFile("../content/cloud_layers_2k.hdr");
+	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	envMap.LoadImageFile("..\\content\\quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 1;
-	ibl.offset = Vec2(PI*0, 0);
+	ibl.offset = Vec2(PI*-.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
@@ -122,11 +123,11 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(8, 2, 0), 16, 9, 7.8, &aperture2);
+	ThinLensCamera cam(Vec3(0, 1, 12), 16, 9, 12, &aperture2);
 	aperture2.size = .002;
 	aperture2.sampler = &sampler;
-	cam.SetFov(.65);
-	cam.SetRotation(PI * -.5, PI * -.036);
+	cam.SetFov(.35);
+	cam.SetRotation(-PI, PI*0);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);
@@ -141,7 +142,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 2;
+	renderDirective.spp = 16;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

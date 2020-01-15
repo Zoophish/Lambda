@@ -10,14 +10,21 @@ Spectrum GhostBTDF::f(const SurfaceScatterEvent &_event) const {
 
 Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
 	_event.pdf = 1;
-	const Spectrum out = (*alphaSocket)->GetAsSpectrum(&_event) / std::abs(_event.wiL.y);
-	if (out[0] > 0) {
+	const Real alpha = (*alphaSocket)->GetAsScalar(&_event);
+	const bool isInside = _event.woL.y < 0;
+	if (alpha > 0) {
 		_event.pdf = 1;
+		_pdf = 1;
 		_event.wi = -_event.wo;
 		_event.wiL = _event.ToLocal(_event.wi);
-		_event.hit->point += _event.wi * SURFACE_EPSILON;
-		return out;
+		_event.hit->point += _event.hit->normalG * SURFACE_EPSILON * 2 * (Real)(isInside ? 1 : -1);
+		return Spectrum(alpha / std::abs(_event.wiL.y));
 	}
 	_event.pdf = 0;
-	return out;
+	_pdf = 0;
+	return Spectrum(0);
+}
+
+Real GhostBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
+	return 0;
 }

@@ -54,4 +54,8 @@ class MixBSDF : public BxDF {
 		MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket);
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override;
+
+		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
+
+		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };

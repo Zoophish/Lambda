@@ -50,7 +50,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 				r.d = event.wi;
 				scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex
 				if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scatter light contribution
-					if (lightPDF != 0) {
+					if (lightPDF > 0) {
 						Li = Spectrum(0);
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
 						if (scatterIntersect) {
@@ -66,7 +66,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 				else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
 
 				L += beta * (Ld / lightDistPdf);
-				beta *= f / event.pdf;
+				beta *= f / scatteringPDF;
 			}
 			else {
 				r.o = event.hit->point + r.d * .0005;

@@ -38,9 +38,9 @@ static bool WriteData(const uint32_t *_p, const char *_path, const unsigned _w, 
 	return false;
 }
 
-/*
-	---------- RGB32 ----------
-*/
+bool texture_t<Colour>::GetFileInfo(const char *_path, int *_width, int *_height) {
+	return stbi_info(_path, _width, _height, nullptr);
+}
 
 void texture_t<Colour>::SaveToImageFile(const char *_path, const bool _gammaCorrect, const bool _alpha) const {
 	const std::string format = PathFormat(_path);
@@ -73,7 +73,7 @@ void texture_t<Colour>::LoadImageFile(const char *_path, int _channels) {
 					const int g = _channels > 1 ? r + 1 : 0;
 					const int b = _channels > 2 ? r + 2 : 0;
 					const int a = _channels > 3 ? r + 3 : 0;
-					SetPixelCoord(x, y, Colour(&data[r], true));
+					SetPixelCoord(x, y, Colour(&data[r], _channels > 3));
 				}
 			}
 			std::cout << std::endl << "Loaded image.";

@@ -58,9 +58,10 @@ namespace ShaderGraph {
 		}
 
 		inline BxDF* GetAsBxDF(const SurfaceScatterEvent *_event) const {
-			if (callback.operator bool() && socketType == SocketType::TYPE_BXDF) {
+			if (callback && socketType == SocketType::TYPE_BXDF) {
 				BxDF *v = nullptr;
-				callback(_event, v);
+				BxDF **vRef = &v;
+				callback(_event, vRef);
 				return v;
 			}
 			return nullptr;
@@ -110,7 +111,8 @@ namespace ShaderGraph {
 			Node(const unsigned _numIn, const unsigned _numOut, const std::string &_nodeTag = "node tag") :
 				nodeTag(_nodeTag),
 				numIn(_numIn), numOut(_numOut),
-				inputSockets(new SocketRef[_numIn]), outputSockets(new Socket[_numOut]) {}
+				inputSockets(new SocketRef[_numIn]),
+				outputSockets(new Socket[_numOut]) {}
 
 	};
 

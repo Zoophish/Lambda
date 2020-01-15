@@ -46,3 +46,22 @@ Spectrum MixBSDF::f(const SurfaceScatterEvent &_event) const {
 	const Real ratio = (*ratioSocket)->GetAsScalar(&_event);
 	return (*aSocket)->GetAsBxDF(&_event)->f(_event) * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->f(_event) * ratio;
 }
+
+Spectrum MixBSDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+	const Real ratio = (*ratioSocket)->GetAsScalar(&_event);
+	if (_u.x > ratio) { //Not valid
+		const Spectrum af = (*aSocket)->GetAsBxDF(&_event)->Sample_f(_event, _u, _event.pdf);
+		_pdf = _event.pdf;
+		return af * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->f(_event) * ratio;
+	}
+	else { //use refs, bad code
+		const Spectrum bf = (*bSocket)->GetAsBxDF(&_event)->Sample_f(_event, _u, _event.pdf);
+		_pdf = _event.pdf;
+		return bf * ratio + (*aSocket)->GetAsBxDF(&_event)->f(_event) * ((Real)1 - ratio);
+	}
+}
+
+Real MixBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
+	const Real ratio = (*ratioSocket)->GetAsScalar(&_event);
+	return (*aSocket)->GetAsBxDF(&_event)->Pdf(_wo, _wi, _event) * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->Pdf(_wo, _wi, _event) * ratio;
+}

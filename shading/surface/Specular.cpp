@@ -84,7 +84,7 @@ Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Rea
 	Refract(_event.wo, Vec3(0, 1, 0) * (outside ? 1 : -1), etaI / etaT, &_event.wi);
 	Spectrum ft = (*albedoSocket)->GetAsSpectrum(&_event) * (Spectrum(1) - fresnel.Evaluate(std::abs(_event.wi.y), etaT));
 	ft *= (etaI * etaI) / (etaT * etaT);
-	const Real inv = (Real)1 / std::abs(_event.wi.y);
+	const Real inv = (Real)1 / std::abs(_event.wiL.y);
 	_event.wi = _event.ToWorld(_event.wi);
 	_event.hit->point += _event.hit->normalS * .0004;
 	return ft * inv;

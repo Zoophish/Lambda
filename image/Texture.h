@@ -211,6 +211,8 @@ class texture_t<Colour> {
 			}
 		}
 
+		static bool GetFileInfo(const char *_path, int *_width, int *_height);
+
 		void SaveToImageFile(const char *_path, const bool _gammaCorrect = true, const bool _alpha = true) const;
 
 		void LoadImageFile(const char *_path, int _channels = 4);

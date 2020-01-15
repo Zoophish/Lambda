@@ -130,6 +130,7 @@ class CoefficientSpectrum {
 		}
 
 		bool IsBlack() const {
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				if (c[i] != 0) return false;
 			return true;
@@ -148,6 +149,7 @@ class CoefficientSpectrum {
 
 		static CoefficientSpectrum Sqrt(const CoefficientSpectrum &_s) {
 			CoefficientSpectrum tmp;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::sqrt(_s.c[i]);
 			return tmp;
@@ -160,6 +162,7 @@ class CoefficientSpectrum {
 		}
 		static CoefficientSpectrum Exp(const CoefficientSpectrum &_s) {
 			CoefficientSpectrum tmp;
+			#pragma omp simd
 			for (unsigned i = 0; i < spectrumSamples; ++i)
 				tmp.c[i] = std::exp(_s.c[i]);
 			return tmp;

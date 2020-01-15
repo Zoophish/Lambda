@@ -121,6 +121,21 @@ namespace ShaderGraph {
 	}
 
 	/*
+		--------- Image-Texture-Channel Input ---------
+	*/
+
+	ImageTextureChannelInput::ImageTextureChannelInput(Texture *_tex, const uint8_t _channel) : Node(0, 1, "Image Channel") {
+		tex = _tex;
+		channel = _channel;
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &ImageTextureChannelInput::GetScalar, "Scalar");
+	}
+
+	void ImageTextureChannelInput::GetScalar(const SurfaceScatterEvent *_event, void *_out) const {
+		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+		*reinterpret_cast<Real *>(_out) = tex->GetPixelUV(uvs.x, uvs.y)[channel];
+	}
+
+	/*
 		--------- Spectral-Texture Input ----------
 	*/
 
