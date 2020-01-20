@@ -18,7 +18,6 @@
 #include <lighting/Portal.h>
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
-#include <random>
 
 int main() {
 	ResourceManager resources;
@@ -36,13 +35,13 @@ int main() {
 	MemoryArena graphArena;
 	namespace sg = ShaderGraph;
 	sg::RGBInput *whiteNode = graphArena.New<sg::RGBInput>(Colour(1, 1, 1));
-	sg::RGBInput *redNode = graphArena.New<sg::RGBInput>(Colour(1, .3, .3));
+	sg::RGBInput *greenNode = graphArena.New<sg::RGBInput>(Colour(.1, 1, .1));
 	sg::ImageTextureInput *gridNode = graphArena.New<sg::ImageTextureInput>(&grid);
 	sg::ImageTextureInput *checkNode = graphArena.New<sg::ImageTextureInput>(&checker);
 	Texture scratches(1,1, Colour(.5,.5,.5)); //scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
 	sg::ImageTextureInput *sigmaNode = graphArena.New<sg::ImageTextureInput>(&scratches);
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&redNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&greenNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	  
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[1], &d, &fres);
@@ -63,10 +62,10 @@ int main() {
 	AssetImporter ai;
 	ai.Import("../content/lucy.obj");
 	ai.PushToResourceManager(&resources);
-	TriangleMesh backdropMesh;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &backdropMesh);
-	backdropMesh.bxdf = mixMat;
-	scene.AddObject(&backdropMesh);
+	TriangleMesh lucy;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
+	lucy.bxdf = fresMat;
+	scene.AddObject(&lucy);
 
 
 	ai.Import("../content/TopLight.obj");
@@ -133,7 +132,7 @@ int main() {
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 	NormalPass normalPass(&sampler);
-	Film film(1280, 720);
+	Film film(1920, 1080);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -142,12 +141,16 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 16;
+	renderDirective.spp = 32;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
-	ThreadedMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp, 4);
-	rdr.RenderOmp();
+	AsyncMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
+	auto start = std::chrono::system_clock::now();
+	rdr.Render();
+	auto end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end - start;
+	std::cout << std::endl << "TIME: " << elapsed_seconds.count();
 
 	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(0, 0, 0));
 	//Convert film to an RGB image;

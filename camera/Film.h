@@ -3,8 +3,8 @@
 #include <core/Spectrum.h>
 
 struct FilmPixel {
-	Spectrum spec = Spectrum(0);
-	unsigned sampleCount = 1;
+	Spectrum spectrum = Spectrum(0);
+	unsigned nSamples = 1;
 };
 
 typedef texture_t<FilmPixel> FilmData;

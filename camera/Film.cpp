@@ -6,8 +6,8 @@ Film::Film(const unsigned _width, const unsigned _height) {
 }
 
 void Film::AddSample(const Spectrum &_s, const unsigned _x, const unsigned _y) {
-	filmData.Pixel(_x, _y).spec += _s;
-	filmData.Pixel(_x, _y).sampleCount++;
+	filmData.Pixel(_x, _y).spectrum += _s;
+	filmData.Pixel(_x, _y).nSamples++;
 }
 
 void Film::ToRGBTexture(Texture *_output) const {
@@ -15,7 +15,7 @@ void Film::ToRGBTexture(Texture *_output) const {
 		const size_t size = filmData.GetWidth() * filmData.GetHeight();
 		for (size_t i = 0; i < size; ++i) {
 			float xyz[3];
-			const Spectrum out = (Spectrum)(filmData[i].spec / (Real)filmData[i].sampleCount);
+			const Spectrum out = (Spectrum)(filmData[i].spectrum / (Real)filmData[i].nSamples);
 			out.ToRGB(xyz);
 
 			(*_output)[i] = Colour(&xyz[0]);

@@ -1,5 +1,8 @@
 #pragma once
-#include "RenderTile.h"
+#include <integrators/Integrator.h>
+#include <sampling/SampleShifter.h>
+#include <camera/Film.h>
+#include <camera/Camera.h>
 
 struct RenderDirective {
 	Film *film;
@@ -11,44 +14,33 @@ struct RenderDirective {
 	unsigned tileSizeX, tileSizeY, spp;
 };
 
-struct RenderMosaic {
-	unsigned nX, nY;
-	std::vector<RenderTile> tiles;
-
-	RenderTile &operator()(const unsigned _x, const unsigned _y) {
-		return tiles[_y * nX + _x];
-	}
+struct RenderTile {
+	Film *film;
+	std::unique_ptr<Integrator> integrator;
+	std::unique_ptr<Sampler> sampler;
+	std::unique_ptr<SampleShifter> sampleShifter;
+	Camera *camera;
+	Scene *scene;
+	unsigned x, y, w, h, spp;
 };
 
-static RenderMosaic CreateMosaic(const RenderDirective &_directive) {
-	const unsigned w = _directive.film->filmData.GetWidth();
-	const unsigned h = _directive.film->filmData.GetHeight();
-	const unsigned rX = w % _directive.tileSizeX, rY = h % _directive.tileSizeY;
-	const unsigned nX = (w / _directive.tileSizeX) + (rX > 0 ? 1 : 0);
-	const unsigned nY = (h / _directive.tileSizeY) + (rY > 0 ? 1 : 0);
-	const bool padX = rX > 0, padY = rY > 0;
-	RenderMosaic out;
-	out.nX = nX; out.nY = nY;
-	out.tiles.resize(nX * nY);
-	for (unsigned y = 0; y < nY; ++y) {
-		for (unsigned x = 0; x < nX; ++x) {
-			RenderTile &t = out.tiles[y * nX + x];
-			t.camera = _directive.camera;
-			t.film = _directive.film;
-			t.integrator.reset(_directive.integrator->clone()); //Each tile has own copy - thread independence.
-			t.sampler.reset(_directive.sampler->clone()); //
-			t.sampleShifter.reset(new SampleShifter(*_directive.sampleShifter)); //
-			t.sampler->sampleShifter = t.sampleShifter.get();
-			t.integrator->sampler = t.sampler.get();
-			t.scene = _directive.scene;
-			t.spp = _directive.spp;
-			if (padX && x == nX - 1) t.w = rX;
-			else t.w = _directive.tileSizeX;
-			if (padY && y == nY - 1) t.h = rY;
-			else t.h = _directive.tileSizeY;
-			t.x = x * _directive.tileSizeX;
-			t.y = y * _directive.tileSizeY;
-		}
+struct RenderMosaic {
+	unsigned nX, nY;
+	std::unique_ptr<RenderTile[]> tiles;
+
+	RenderMosaic() {
+		nX = 0;
+		nY = 0;
 	}
-	return out;
+
+	RenderMosaic(const RenderDirective &_directive);
+};
+
+
+namespace TileRenderers {
+
+	void UniformSpp(const RenderTile *_tile);
+
+	//Will render until max spp reached, but stops rendering pixels that are suitably converged.
+	void MaxSpp(const RenderTile *_tile);
 }
