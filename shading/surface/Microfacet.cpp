@@ -22,10 +22,10 @@ Spectrum MicrofacetBRDF::f(const SurfaceScatterEvent &_event) const {
 	return albedoSpec * D * G * F / (4 * cosThetaI * cosThetaO);
 }
 
-Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	if (_event.woL.y == 0) return Spectrum(0);
 	const Vec2 alpha = MicrofacetDistribution::RoughnessToAlpha((*roughnessSocket)->GetAsScalar(&_event));
-	const Vec3 wh = distribution->Sample_wh(_u, _event.woL, alpha).Normalised();
+	const Vec3 wh = distribution->Sample_wh(_sampler, _event.woL, alpha).Normalised();
 	_event.wiL = Reflect(-_event.woL, wh);
 	if (!SameHemisphere(_event.woL, _event.wiL)) {
 		_pdf = 0;

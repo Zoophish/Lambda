@@ -43,7 +43,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 						Ld += Li * f * weight / lightPDF;
 					}
 				}
-				f = hit.object->bxdf->Sample_f(event, sampler->Get2D(), scatteringPDF);
+				f = hit.object->bxdf->Sample_f(event, *sampler, scatteringPDF);
 				f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL.
 				lightPDF = l->PDF_Li(event);	//Evaluated before hit is altered to next path vertex
 				r.o = hit.point;

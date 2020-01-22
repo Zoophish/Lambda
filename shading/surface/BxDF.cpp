@@ -2,8 +2,8 @@
 
 BxDF::BxDF(const BxDFType _type) : type(_type) {}
 
-Spectrum BxDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
-	_event.wiL = Sampling::SampleCosineHemisphere(_u);
+Spectrum BxDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+	_event.wiL = Sampling::SampleCosineHemisphere(_sampler.Get2D());
 	if (_event.woL.y < 0) _event.wiL.y *= -1;
 	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
 	_event.pdf = _pdf;
@@ -47,15 +47,15 @@ Spectrum MixBSDF::f(const SurfaceScatterEvent &_event) const {
 	return (*aSocket)->GetAsBxDF(&_event)->f(_event) * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->f(_event) * ratio;
 }
 
-Spectrum MixBSDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+Spectrum MixBSDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	const Real ratio = (*ratioSocket)->GetAsScalar(&_event);
-	if (_u.x > ratio) { //Not valid
-		const Spectrum af = (*aSocket)->GetAsBxDF(&_event)->Sample_f(_event, _u, _event.pdf);
+	if (_sampler.Get1D() > ratio) {
+		const Spectrum af = (*aSocket)->GetAsBxDF(&_event)->Sample_f(_event, _sampler, _event.pdf);
 		_pdf = _event.pdf;
 		return af * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->f(_event) * ratio;
 	}
 	else { //use refs, bad code
-		const Spectrum bf = (*bSocket)->GetAsBxDF(&_event)->Sample_f(_event, _u, _event.pdf);
+		const Spectrum bf = (*bSocket)->GetAsBxDF(&_event)->Sample_f(_event, _sampler, _event.pdf);
 		_pdf = _event.pdf;
 		return bf * ratio + (*aSocket)->GetAsBxDF(&_event)->f(_event) * ((Real)1 - ratio);
 	}

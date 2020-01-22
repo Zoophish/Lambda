@@ -8,7 +8,7 @@ Spectrum GhostBTDF::f(const SurfaceScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_event.pdf = 1;
 	const Real alpha = (*alphaSocket)->GetAsScalar(&_event);
 	const bool isInside = _event.woL.y < 0;

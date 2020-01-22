@@ -9,5 +9,5 @@ class OrenNayarBRDF : public BxDF {
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override;
 
-		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
+		Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 };

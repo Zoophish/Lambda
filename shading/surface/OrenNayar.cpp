@@ -20,8 +20,8 @@ Spectrum OrenNayarBRDF::f(const SurfaceScatterEvent &_event) const {
 	return albedoSpec * INV_PI * (A + B * std::max((Real)0, std::cos(phiI - phiO) * maths::Clamp(std::sin(alpha), (Real)-1, (Real)1) * maths::Clamp(std::tan(beta), (Real)-1, (Real)1)));
 }
 
-Spectrum OrenNayarBRDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
-	_event.wiL = Sampling::SampleCosineHemisphere(_u);
+Spectrum OrenNayarBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+	_event.wiL = Sampling::SampleCosineHemisphere(_sampler.Get2D());
 	const bool isInside = _event.woL.y < 0;
 	if (isInside) _event.wiL.y *= -1;
 	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);

@@ -93,8 +93,7 @@ class texture_t {
 		inline Format GetPixelCoord(const unsigned _x, const unsigned _y) const {
 			return pixels[(*Order)(width, height, _x, _y)];
 		}
-
-		inline Format &Pixel(const unsigned _x, const unsigned _y) {
+		inline Format &GetPixelCoord(const unsigned _x, const unsigned _y) {
 			return pixels[(*Order)(width, height, _x, _y)];
 		}
 
@@ -188,8 +187,7 @@ class texture_t<Colour> {
 		inline Colour GetPixelCoord(const unsigned _x, const unsigned _y) const {
 			return pixels[(*Order)(width, height, _x, _y)];
 		}
-
-		inline Colour &Pixel(const unsigned _x, const unsigned _y) {
+		inline Colour &GetPixelCoord(const unsigned _x, const unsigned _y) {
 			return pixels[(*Order)(width, height, _x, _y)];
 		}
 

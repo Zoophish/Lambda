@@ -24,16 +24,15 @@ Real BeckmannDistribution::Lambda(const Vec3 &_w, const Vec2 &_alpha) const {
 	return (1 - 1.259f * a + 0.396f * a * a) / (3.535f * a + 2.181f * a * a);
 }
 
-Vec3 BeckmannDistribution::Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const {
-	if (true) {
-		const Real log = _u.x == 1 ? 0 : std::log(1 - _u.x);
-		const Real phi = PI2 * _u.y;
-		const Real tan2Theta = -_alpha.x * _alpha.x * log;
-		const Real cosTheta = 1 / std::sqrt(1 + tan2Theta);
-		const Real sinTheta = std::sqrt(std::max((Real)0, 1 - cosTheta * cosTheta));
-		Vec3 h = maths::SphericalDirection(sinTheta, cosTheta, phi);
-		return !SameHemisphere(_wo, h) ? -h : h;
-	}
+Vec3 BeckmannDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const {
+	const Vec2 u = _sampler.Get2D();
+	const Real log = u.x == 1 ? 0 : std::log(1 - u.x);
+	const Real phi = PI2 * u.y;
+	const Real tan2Theta = -_alpha.x * _alpha.x * log;
+	const Real cosTheta = 1 / std::sqrt(1 + tan2Theta);
+	const Real sinTheta = std::sqrt(std::max((Real)0, 1 - cosTheta * cosTheta));
+	Vec3 h = maths::SphericalDirection(sinTheta, cosTheta, phi);
+	return !SameHemisphere(_wo, h) ? -h : h;
 }
 
 /*
@@ -58,9 +57,10 @@ Real TrowbridgeReitzDistribution::Lambda(const Vec3 &_w, const Vec2 &_alpha) con
 	return (-1 + std::sqrt(1.f + alpha2Tan2Theta)) / 2;
 }
 
-Vec3 TrowbridgeReitzDistribution::Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const {
-	Real cosTheta = 0, phi = (PI2)* _u.y;
-	const Real tanTheta2 = _alpha.x * _alpha.x * _u.x / (1.0f - _u.x);
+Vec3 TrowbridgeReitzDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const {
+	const Vec2 u = _sampler.Get2D();
+	Real cosTheta = 0, phi = (PI2)* u.y;
+	const Real tanTheta2 = _alpha.x * _alpha.x * u.x / (1.0f - u.x);
 	cosTheta = 1 / std::sqrt(1 + tanTheta2);
 	const Real sinTheta = std::sqrt(std::max((Real)0., (Real)1. - cosTheta * cosTheta));
 	Vec3 wh = maths::SphericalDirection(sinTheta, cosTheta, phi);
@@ -94,6 +94,6 @@ Vec3 TrowbridgeReitzDistribution::Sample_wh(const Vec2 &_u, const Vec3 &_wo, con
 //
 //}
 //
-//Vec3 GGXDistribution::Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const {
+//Vec3 GGXDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const {
 //
 //}

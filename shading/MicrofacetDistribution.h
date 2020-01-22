@@ -8,7 +8,7 @@ class MicrofacetDistribution {
 
 		virtual Real Lambda(const Vec3 &_w, const Vec2 &_alpha) const = 0;
 
-		virtual Vec3 Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const = 0;
+		virtual Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const = 0;
 
 		inline Real Pdf(const Vec3 &_wh, const Vec2 &_alpha) const {
 			return D(_wh, _alpha) * std::abs(_wh.y);
@@ -41,7 +41,7 @@ class BeckmannDistribution : public MicrofacetDistribution {
 
 		Real Lambda(const Vec3 &_w, const Vec2 &_alpha) const override;
 
-		Vec3 Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const override;
+		Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const override;
 };
 
 
@@ -54,7 +54,7 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
 
 		Real Lambda(const Vec3 &_w, const Vec2 &_alpha) const override;
 
-		Vec3 Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const override;
+		Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const override;
 };
 
 
@@ -68,5 +68,5 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
 //
 //		Real Lambda(const Vec3 &_w, const Vec2 &_alpha) const override;
 //
-//		Vec3 Sample_wh(const Vec2 &_u, const Vec3 &_wo, const Vec2 &_alpha) const override;
+//		Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const override;
 //};

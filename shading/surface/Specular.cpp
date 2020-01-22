@@ -9,13 +9,13 @@ Spectrum FresnelBSDF::f(const SurfaceScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum FresnelBSDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+Spectrum FresnelBSDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	const bool entering = _event.woL.y > 0;
 	const Real ior = (*iorSocket)->GetAsScalar(&_event);
 	const Real a = entering ? _event.eta : ior;
 	const Real b = entering ? ior : _event.eta;
 	const Real fr = Fresnel::FrDielectric(_event.woL.y, a, b);
-	if (_u.x < fr) {
+	if (_sampler.Get1D() < fr) {
 		_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
 		_event.wi = _event.ToWorld(_event.wiL);
 		const Real cosTheta = std::abs(_event.wiL.y);
@@ -54,7 +54,7 @@ Spectrum SpecularBRDF::f(const SurfaceScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum SpecularBRDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+Spectrum SpecularBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_event.pdf = 1;
 	_pdf = 1;
 	_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
@@ -74,7 +74,7 @@ Spectrum SpecularBTDF::f(const SurfaceScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const {
+Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_event.pdf = 1;
 	const Vec3 woL = _event.ToLocal(_event.wo);
 	const bool outside = woL.y > 0;

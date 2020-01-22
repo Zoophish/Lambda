@@ -2,6 +2,7 @@
 #include "../graph/ShaderGraph.h"
 #include "../SurfaceScatterEvent.h"
 #include <sampling/Sampling.h>
+#include <sampling/Sampler.h>
 
 #define SURFACE_EPSILON 1e-5
 
@@ -21,7 +22,7 @@ class BxDF {
 
 		virtual Spectrum f(const SurfaceScatterEvent &_event) const = 0;
 
-		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const;
+		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const;
 
 		virtual Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const;
 
@@ -55,7 +56,7 @@ class MixBSDF : public BxDF {
 
 		Spectrum f(const SurfaceScatterEvent &_event) const override;
 
-		Spectrum Sample_f(SurfaceScatterEvent &_event, const Vec2 &_u, Real &_pdf) const override;
+		Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 
 		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };

@@ -24,14 +24,13 @@ struct RenderTile {
 	unsigned x, y, w, h, spp;
 };
 
+typedef void (*TileRenderer)(const RenderTile *);
+
 struct RenderMosaic {
 	unsigned nX, nY;
 	std::unique_ptr<RenderTile[]> tiles;
 
-	RenderMosaic() {
-		nX = 0;
-		nY = 0;
-	}
+	RenderMosaic() {}
 
 	RenderMosaic(const RenderDirective &_directive);
 };
@@ -41,6 +40,8 @@ namespace TileRenderers {
 
 	void UniformSpp(const RenderTile *_tile);
 
-	//Will render until max spp reached, but stops rendering pixels that are suitably converged.
+	/*
+		Will render until max spp reached, but stops rendering pixels that are suitably converged.
+	*/
 	void MaxSpp(const RenderTile *_tile);
 }

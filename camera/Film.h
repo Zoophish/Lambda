@@ -5,6 +5,11 @@
 struct FilmPixel {
 	Spectrum spectrum = Spectrum(0);
 	unsigned nSamples = 1;
+
+	inline void ToRGB(Colour *_rgb) const {
+		spectrum.ToRGB((Real*)_rgb);
+		*_rgb /= nSamples;
+	}
 };
 
 typedef texture_t<FilmPixel> FilmData;
@@ -12,6 +17,8 @@ typedef texture_t<FilmPixel> FilmData;
 class Film {
 	public:
 		FilmData filmData;
+
+		Film() {}
 
 		Film(const unsigned _width, const unsigned _height);
 
