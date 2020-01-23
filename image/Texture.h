@@ -5,9 +5,10 @@
 */
 
 #define GAMMA_POW 1 / 2.2
+//1 for switch statement, 0 for function pointer.
+#define TEX_SWITCH_FNCPOINTER 1
 
 #pragma once
-#include <vector>
 #include <algorithm>
 #include <maths/maths.h>
 #include "Colour.h"
@@ -28,9 +29,9 @@ enum class EncoderMode {
 
 template<class Format>
 class texture_t {
-	protected:
+	private:
 		unsigned width, height;
-		std::vector<Format> pixels;
+		std::unique_ptr<Format[]> pixels;
 		size_t(*Order)(const unsigned, const unsigned, const unsigned, const unsigned) = TextureEncoding::ScanlineRowOrder;
 
 		inline Format GetPixelUVNearest(const float _u, const float _v) const {
@@ -68,7 +69,8 @@ class texture_t {
 		inline void Resize(const unsigned _width, const unsigned _height, const Format &_c = Format()) {
 			width = _width;
 			height = _height;
-			pixels.resize(width * height, _c);
+			pixels.reset(new Format[width * height]);
+			std::fill_n(&pixels[0], width * height, _c);
 		}
 
 		/*
@@ -122,10 +124,12 @@ class texture_t {
 */
 template<>
 class texture_t<Colour> {
-	protected:
+	private:
 		unsigned width, height;
-		std::vector<Colour> pixels;
+		std::unique_ptr<Colour[]> pixels;
 		size_t(*Order)(const unsigned, const unsigned, const unsigned, const unsigned) = TextureEncoding::ScanlineRowOrder;
+
+		void ParseData(float *_data, const int _channels);
 
 		inline Colour GetPixelUVNearest(const float _u, const float _v) const {
 			const unsigned int x = std::min((float)(width - 1), maths::Clamp(_u, 0.f, 1.f) * (float)width);
@@ -157,12 +161,13 @@ class texture_t<Colour> {
 		inline unsigned GetHeight() const { return height; }
 
 		/*
-			Resizes texture and clears all texels to _c.
+			Resizes texture and sets all texels to _c.
 		*/
 		inline void Resize(const unsigned _width, const unsigned _height, const Colour &_c = Colour()) {
 			width = _width;
 			height = _height;
-			pixels.resize(width * height, _c);
+			pixels.reset(new Colour[width * height]);
+			std::fill_n(&pixels[0], width * height, _c);
 		}
 
 		/*
@@ -209,11 +214,15 @@ class texture_t<Colour> {
 			}
 		}
 
-		static bool GetFileInfo(const char *_path, int *_width, int *_height);
+		static bool GetFileInfo(const char *_path, int *_width, int *_height, int *_channels);
+
+		static bool GetMemoryInfo(const void *_src, const int _size, int *_w, int *_h, int *_channels);
 
 		void SaveToImageFile(const char *_path, const bool _gammaCorrect = true, const bool _alpha = true) const;
 
 		void LoadImageFile(const char *_path, int _channels = 4);
+
+		void LoadFromMemory(const void *_src, const int _size, const int _channels = 4);
 };
 
 /*

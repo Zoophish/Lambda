@@ -34,12 +34,16 @@ static bool WriteData(const uint32_t *_p, const char *_path, const unsigned _w, 
 	if (format == "jpg") { stbi_write_jpg(_path, _w, _h, 4, &_p[0], 100); return true; }
 	if (format == "bmp") { stbi_write_bmp(_path, _w, _h, 4, &_p[0]); return true; }
 	if (format == "tga") { stbi_write_tga(_path, _w, _h, 4, &_p[0]); return true; }
-	std::cout << std::endl << "Did not save image: " << format << " is not a valid format.";
+	std::cout << std::endl << "Did not save texture: " << format << " is not a valid format.";
 	return false;
 }
 
-bool texture_t<Colour>::GetFileInfo(const char *_path, int *_width, int *_height) {
-	return stbi_info(_path, _width, _height, nullptr);
+bool texture_t<Colour>::GetFileInfo(const char *_path, int *_width, int *_height, int *_channels) {
+	return stbi_info(_path, _width, _height, _channels);
+}
+
+bool texture_t<Colour>::GetMemoryInfo(const void *_src, const int _size, int *_w, int *_h, int *_channels) {
+	return stbi_info_from_memory((const stbi_uc *)_src, _size, _w, _h, _channels);
 }
 
 void texture_t<Colour>::SaveToImageFile(const char *_path, const bool _gammaCorrect, const bool _alpha) const {
@@ -47,7 +51,7 @@ void texture_t<Colour>::SaveToImageFile(const char *_path, const bool _gammaCorr
 	std::unique_ptr<uint32_t[]> p(new uint32_t[width * height]);
 	for (unsigned y = 0; y < height; ++y)
 		for (unsigned x = 0; x < width; ++x) {
-			const Colour txl = GetPixelCoord(x, y);
+			const Colour &txl = GetPixelCoord(x, y);
 			float rgba[4];
 			rgba[0] = txl.r;
 			rgba[1] = txl.g;
@@ -59,25 +63,42 @@ void texture_t<Colour>::SaveToImageFile(const char *_path, const bool _gammaCorr
 	WriteData(p.get(), _path, width, height);
 }
 
+void texture_t<Colour>::ParseData(float *_data, const int _channels) {
+	for (unsigned y = 0; y < height; ++y) {
+		for (unsigned x = 0; x < width; ++x) {
+			const int r = width * y * _channels + x * _channels;
+			const int g = _channels > 1 ? r + 1 : 0;
+			const int b = _channels > 2 ? r + 2 : 0;
+			const int a = _channels > 3 ? r + 3 : 0;
+			SetPixelCoord(x, y, Colour(&_data[r], _channels > 3));
+		}
+	}
+}
+
 void texture_t<Colour>::LoadImageFile(const char *_path, int _channels) {
 	int file_width, file_height;
 	if (stbi_info(_path, &file_width, &file_height, nullptr)) {
 		Resize(file_width, file_height);
 		std::cout << std::endl << "Loading " << _path;
 		int w = width, h = height;
-		const float *data = stbi_loadf(_path, &w, &h, &_channels, 0);
-		if (data != nullptr) {
-			for (unsigned y = 0; y < height; ++y) {
-				for (unsigned x = 0; x < width; ++x) {
-					const int r = width * y * _channels + x * _channels;
-					const int g = _channels > 1 ? r + 1 : 0;
-					const int b = _channels > 2 ? r + 2 : 0;
-					const int a = _channels > 3 ? r + 3 : 0;
-					SetPixelCoord(x, y, Colour(&data[r], _channels > 3));
-				}
-			}
-			std::cout << std::endl << "Loaded image.";
+		float *data = stbi_loadf(_path, &w, &h, &_channels, 0);
+		if (data) {
+			ParseData(data, _channels);
+			std::cout << std::endl << "Loaded texture.";
 		}
 		else { std::cout << std::endl << "Could not load: " << _path; }
+		stbi_image_free(data);
 	}
+}
+
+void texture_t<Colour>::LoadFromMemory(const void *_src, const int _size, const int _channels) {
+	int w, h;
+	std::cout << std::endl << "Loading texture: " << _src;
+	float *data = stbi_loadf_from_memory((const stbi_uc *)_src, _size, &w, &h, nullptr, _channels);
+	if (data) {
+		ParseData(data, _channels);
+		std::cout << std::endl << "Loaded texture.";
+	}
+	else { std::cout << std::endl << "Could not load: " << _src; }
+	stbi_image_free(data);
 }

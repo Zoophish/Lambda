@@ -27,7 +27,7 @@ class Instance : public Object {
 		Instance(InstanceProxy *_proxy);
 
 		/*
-			Links the proxy and commits the transform.
+			Links to the proxy and commits the transform.
 				- Proxy must be comitted before instance is.
 		*/
 		void Commit(const RTCDevice &_device) override;

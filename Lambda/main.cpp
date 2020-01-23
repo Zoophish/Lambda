@@ -49,7 +49,7 @@ int main() {
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
 	AssetImporter ai2;
-	ai2.Import("D:\\Assets\\xFrogScene.obj");
+	ai2.Import("D:\\Assets\\testCube.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
@@ -141,7 +141,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 2;
+	renderDirective.spp = 1;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
@@ -157,7 +157,7 @@ int main() {
 	film.ToRGBTexture(&tex);
 
 	//Save to file.
-	tex.SaveToImageFile("out.png");
+	tex.SaveToImageFile("out.png", true, false);
 	system("pause");
 	return 0;
 }

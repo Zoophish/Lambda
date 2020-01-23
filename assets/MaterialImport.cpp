@@ -3,27 +3,109 @@
 #include <shading/graph/GraphInputs.h>
 #include <iostream>
 
+//Formats supported by stb_image.
+#define IMAGE_FORMATS { "png", "jpg", "jpeg", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" }
+
 namespace MaterialImport {
 
 	namespace sg = ShaderGraph;
 
 	namespace {
 
-		template<class Format>
-		void aiTextureToTexture(const aiTexture *_aiTexture, texture_t<Format> *_texture) {
-			static constexpr Real inv256 = 1. / 256.;
-			const unsigned w = _aiTexture->mWidth, h = _aiTexture->mHeight;
-			for (unsigned y = 0; y < h; ++y) {
-				for (unsigned x = 0; x < w; ++x) {
-					const Real rgba[4] = {
-						(Real)_aiTexture->pcData[y * w + x].r * inv256,
-						(Real)_aiTexture->pcData[y * w + x].g * inv256,
-						(Real)_aiTexture->pcData[y * w + x].b * inv256,
-						(Real)_aiTexture->pcData[y * w + x].a * inv256
-					};
-					_texture->SetPixelCoord(x, y, Format(&rgba[0]));
+		struct MatKey { const char *c; int i1, i2; };
+		using MaterialPropertyPair = std::pair<aiTextureType, MatKey>;
+		
+		/*
+			Used to match material texture properties to a vertex attribute.
+		*/
+		constexpr MaterialPropertyPair materialPropertyPairs[] = {
+			{ aiTextureType_DIFFUSE, { AI_MATKEY_COLOR_DIFFUSE } },
+			{ aiTextureType_EMISSIVE, { AI_MATKEY_COLOR_EMISSIVE } },
+			{ aiTextureType_OPACITY, { AI_MATKEY_OPACITY } },
+			{ aiTextureType_SHININESS, { AI_MATKEY_SHININESS } }
+		};
+
+		constexpr MatKey MatchaiTextureType(const aiTextureType _aiTextureType) {
+			constexpr unsigned s = sizeof(materialPropertyPairs) / sizeof(MaterialPropertyPair);
+			for (unsigned i = 0; i < s; ++i) {
+				if (materialPropertyPairs[i].first == _aiTextureType)
+					return materialPropertyPairs[i].second;
+			}
+			return MatKey(); //Assimp will fail to match an attribute to this
+		}
+
+		template<aiTextureType type> struct GetaiType { typedef ai_real type; };
+		template<> struct GetaiType<aiTextureType_DIFFUSE> { typedef typename aiColor3D type; };
+		template<> struct GetaiType<aiTextureType_SHININESS> { typedef typename float type; };
+		template<> struct GetaiType<aiTextureType_OPACITY> { typedef typename float type; };
+		template<> struct GetaiType<aiTextureType_EMISSIVE> { typedef typename aiColor3D type; };
+
+		inline Colour aiTypeToColour(const float _val) { return Colour(_val); }
+		inline Colour aiTypeToColour(const aiColor3D _val) { return Colour(_val.r, _val.g, _val.b); }
+
+
+		const char* GetFormat(const aiTexture *_aiTexture) {
+			static const char *const imageFormats[] = IMAGE_FORMATS;
+			static constexpr unsigned s = sizeof(imageFormats) / sizeof(char*);
+			for (unsigned i = 0; i < s; ++i) {
+				if (_aiTexture->CheckFormat(imageFormats[i]))
+					return imageFormats[i];
+			}
+			return nullptr;
+		}
+
+		inline bool IsCompressed(const aiTexture *_aiTexture) {
+			return _aiTexture->mHeight == 0 ? true : false;
+		}
+
+		inline bool IsPowerOf2(const int _n) {
+			return (_n & (_n - 1)) == 0;
+		}
+
+		inline void SetEncoder(Texture *_target, const int _w, const int _h) {
+			if (IsPowerOf2(_w) && IsPowerOf2(_h)) {
+				if (_w == _h) _target->SetEncoder(EncoderMode::ENCODE_HILBERT);
+				else _target->SetEncoder(EncoderMode::ENCODE_MORTON);
+			}
+		}
+
+		void LoadEmbeddedTexture(const aiTexture *_aiTexture, Texture *_texture, ImportMetrics *_metrics) {
+			if (!IsCompressed(_aiTexture)) {
+				static constexpr Real inv256 = 1. / 256.;
+				const unsigned w = _aiTexture->mWidth, h = _aiTexture->mHeight;
+				SetEncoder(_texture, w, h);
+				for (unsigned y = 0; y < h; ++y) {
+					for (unsigned x = 0; x < w; ++x) {
+						const Real rgba[4] = {
+							(Real)_aiTexture->pcData[y * w + x].r * inv256,
+							(Real)_aiTexture->pcData[y * w + x].g * inv256,
+							(Real)_aiTexture->pcData[y * w + x].b * inv256,
+							(Real)_aiTexture->pcData[y * w + x].a * inv256
+						};
+						_texture->SetPixelCoord(x, y, Colour(&rgba[0]));
+					}
 				}
 			}
+			else {
+				if (GetFormat(_aiTexture)) {
+					int w, h;
+					_texture->GetMemoryInfo(_aiTexture->pcData, _aiTexture->mWidth, &w, &h, nullptr);
+					SetEncoder(_texture, w, h);
+					_texture->LoadFromMemory(_aiTexture->pcData, _aiTexture->mWidth);
+				}
+				else {
+					_metrics->AppendError("Embedded texture of format " + (std::string)_aiTexture->achFormatHint + " not supported.");
+				}
+			}
+		}
+
+		void LoadTextureFile(const std::string &_path, Texture *_target, ImportMetrics *_metrics) {
+			int w, h;
+			if (Texture::GetFileInfo(_path.c_str(), &w, &h, nullptr)) {
+				SetEncoder(_target, w, h);
+				_target->LoadImageFile(_path.c_str());
+			}
+			else _metrics->AppendError("Could not open: " + (std::string)_path.c_str());
 		}
 
 		bool HasAlpha(const Texture *_tex) {
@@ -35,8 +117,11 @@ namespace MaterialImport {
 			return false;
 		}
 
-		inline bool IsPowerOf2(const int _n) {
-			return (_n & (_n - 1)) == 0;
+		void ParseTexture(const aiScene *_aiScene, const std::string &_path, Texture *_target, ImportMetrics *_metrics) {
+			if (const aiTexture *texture = _aiScene->GetEmbeddedTexture(_path.c_str()))
+				LoadEmbeddedTexture(texture, _target, _metrics);
+			else
+				LoadTextureFile(_path, _target, _metrics);
 		}
 
 		template<aiTextureType texType>
@@ -48,13 +133,7 @@ namespace MaterialImport {
 					const std::string fullPath = (std::string(path.C_Str()).find(':') != std::string::npos) ? path.C_Str() : _metrics->path + "\\" + path.C_Str();
 					if (!_resources->texturePool.Find(path.C_Str())) {
 						Texture *tex = new Texture;
-						int w, h;
-						Texture::GetFileInfo(fullPath.c_str(), &w, &h);
-						if (IsPowerOf2(w) && IsPowerOf2(h)) {
-							if (w == h) tex->SetEncoder(EncoderMode::ENCODE_HILBERT);
-							else tex->SetEncoder(EncoderMode::ENCODE_MORTON);
-						}
-						tex->LoadImageFile(fullPath.c_str());
+						ParseTexture(_aiScene, fullPath, tex, _metrics);
 						_resources->texturePool.Append(path.C_Str(), tex);
 						_metrics->AppendMetric(fullPath + " [" + std::to_string(tex->GetWidth()) + "x" + std::to_string(tex->GetHeight()) + "] pushed.");
 					}
@@ -63,6 +142,27 @@ namespace MaterialImport {
 			}
 			_metrics->AppendMetric(std::to_string(i) + " textures pushed from stacks.");
 			return i > 0;
+		}
+
+
+
+		template<aiTextureType texType>
+		Texture *GetTextureFromPool(const aiMaterial *_aiMaterial, ResourcePool<Texture> *_texPool) {
+			aiString path;
+			if (_aiMaterial->GetTexture(texType, 0, &path) == aiReturn_SUCCESS) {
+				return _texPool->Find(path.C_Str());
+			}
+			else {
+				GetaiType<texType>::type tmp;
+				constexpr MatKey matKey = MatchaiTextureType(texType);
+				if (_aiMaterial->Get(matKey.c, matKey.i1, matKey.i2, tmp) == aiReturn_SUCCESS) {
+					Texture *tex = new Texture(1, 1, aiTypeToColour(tmp));
+					aiString name;
+					_aiMaterial->Get(AI_MATKEY_NAME, name);
+					_texPool->Append((std::string)name.C_Str() + (std::string)matKey.c, tex);
+				}
+			}
+			return nullptr;
 		}
 
 		enum MaterialAttribute {
@@ -82,15 +182,6 @@ namespace MaterialImport {
 			SHADINGMODEL_EMISSIVE_ALPHA = MTL_ATTRIB_EMISSIVE | MTL_ATTRIB_ALPHA,
 			SHADINGMODEL_GLOSSY = MTL_ATTRIB_GLOSSY
 		};
-
-		template<aiTextureType texType>
-		inline Texture *GetTextureFromPool(const aiMaterial *_aiMaterial, const ResourcePool<Texture> *_texPool) {
-			aiString path;
-			if (_aiMaterial->GetTexture(texType, 0, &path) == aiReturn_SUCCESS) {
-				return _texPool->Find(path.C_Str());
-			}
-			return nullptr;
-		}
 
 		namespace MatMake {
 
@@ -161,6 +252,8 @@ namespace MaterialImport {
 				}
 				else goto SHADINGMODEL_MISSING;
 			}
+			default:
+				goto SHADINGMODEL_MISSING;
 			//case SHADINGMODEL_EMISSIVE :
 			//{
 			//	Texture *emissionTex = GetTextureFromPool<aiTextureType_EMISSIVE>(_aiMaterial, _texPool);
@@ -175,7 +268,7 @@ namespace MaterialImport {
 			{
 				Texture *debugTex = _texPool->Find("DEBUG_TEX");
 				if (!debugTex) {
-					debugTex = new Texture(1, 1, Colour(1, 1, 0));
+					debugTex = new Texture(1, 1, Colour(1, 0, 1));
 					_texPool->Append("DEBUG_TEX", debugTex);
 				}
 				_material->bxdf = MatMake::MakeMissing(_material, debugTex);
@@ -184,13 +277,23 @@ namespace MaterialImport {
 			}
 		}
 
+		template<aiTextureType type>
+		inline bool HasAttribute(const aiMaterial *_aiMat) {
+			aiString aiS;
+			if (_aiMat->GetTexture(type, 0, &aiS) == aiReturn_SUCCESS) return true;
+			const MatKey matKey = MatchaiTextureType(type);
+			GetaiType<type>::type typename tmp;
+			if (_aiMat->Get(matKey.c, matKey.i1, matKey.i2, tmp) == aiReturn_SUCCESS) return true;
+			return false;
+		}
+
 		inline int GetMaterialAttributes(const aiMaterial *_aiMaterial) {
 			int attributes = MTL_ATTRIB_NONE;
 			aiString aiS;
-			attributes += _aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiS) == aiReturn_SUCCESS ? MTL_ATTRIB_DIFFUSE : MTL_ATTRIB_NONE;
-			attributes += _aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiS) == aiReturn_SUCCESS ? MTL_ATTRIB_GLOSSY : MTL_ATTRIB_NONE;
-			attributes += _aiMaterial->GetTexture(aiTextureType_OPACITY, 0, &aiS) == aiReturn_SUCCESS ? MTL_ATTRIB_ALPHA : MTL_ATTRIB_NONE;
-			attributes += _aiMaterial->GetTexture(aiTextureType_EMISSIVE, 0, &aiS) == aiReturn_SUCCESS ? MTL_ATTRIB_EMISSIVE : MTL_ATTRIB_NONE;
+			attributes += HasAttribute<aiTextureType_DIFFUSE>(_aiMaterial) ? MTL_ATTRIB_DIFFUSE : MTL_ATTRIB_NONE;
+			attributes += HasAttribute<aiTextureType_SHININESS>(_aiMaterial) ? MTL_ATTRIB_GLOSSY : MTL_ATTRIB_NONE;
+			attributes += HasAttribute<aiTextureType_OPACITY>(_aiMaterial) ? MTL_ATTRIB_ALPHA : MTL_ATTRIB_NONE;
+			attributes += HasAttribute<aiTextureType_EMISSIVE>(_aiMaterial) ? MTL_ATTRIB_EMISSIVE : MTL_ATTRIB_NONE;
 			return attributes;
 		}
 
