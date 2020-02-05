@@ -16,6 +16,19 @@ namespace ShaderGraph {
 	}
 
 	/*
+		---------- Vec2 Input ----------
+	*/
+
+	Vec2Input::Vec2Input(const Vec2 &_vec2) : Node(0, 1, "Vector2 Input") {
+		vec2 = _vec2;
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_VEC2, &Vec2Input::GetVec2, "Vector2");
+	}
+
+	void Vec2Input::GetVec2(const SurfaceScatterEvent *_event, void *_out) const {
+		*reinterpret_cast<Vec2 *>(_out) = vec2;
+	}
+
+	/*
 		---------- RGB Input ----------
 	*/
 

@@ -60,7 +60,7 @@ Real TrowbridgeReitzDistribution::Lambda(const Vec3 &_w, const Vec2 &_alpha) con
 Vec3 TrowbridgeReitzDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const {
 	const Vec2 u = _sampler.Get2D();
 	Real cosTheta = 0, phi = (PI2)* u.y;
-	const Real tanTheta2 = _alpha.x * _alpha.x * u.x / (1.0f - u.x);
+	const Real tanTheta2 = _alpha.x * _alpha.x * u.x / (1 - u.x);
 	cosTheta = 1 / std::sqrt(1 + tanTheta2);
 	const Real sinTheta = std::sqrt(std::max((Real)0., (Real)1. - cosTheta * cosTheta));
 	Vec3 wh = maths::SphericalDirection(sinTheta, cosTheta, phi);
@@ -68,15 +68,10 @@ Vec3 TrowbridgeReitzDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, 
 	return wh;
 }
 
-/*
-	---------- GGX ---------
-*/
-
-//GGXDistribution::GGXDistribution(const Real _sigmaX, const Real _sigmaY) {
-//	_alpha.x = std::sqrt(2 * _sigmaX);
-//	_alpha.y = std::sqrt(2 * _sigmaY);
-//}
-
+///*
+//	---------- GGX ---------
+//*/
+//
 //GGXDistribution::GGXDistribution() {}
 //
 //Real GGXDistribution::D(const Vec3 &_wh, const Vec2 &_alpha) const {
@@ -91,9 +86,23 @@ Vec3 TrowbridgeReitzDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, 
 //}
 //
 //Real GGXDistribution::Lambda(const Vec3 &_w, const Vec2 &_alpha) const {
-//
+//	const Real xa = _alpha.x * _alpha.x * _w.x * _w.x;
+//	const Real ya = _alpha.y * _alpha.y * _w.z * _w.z;
+//	const Real wy2 = _w.y * _w.y;
+//	const Real frac = (1 + xa + ya) / wy2;
+//	return (-1 + std::sqrt(frac)) * .5;
 //}
 //
 //Vec3 GGXDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const {
-//
+//	const Vec2 u = _sampler.Get2D();
+//	const Real tanPhi = _alpha.x / _alpha.y * std::tan(PI2 * u.x);
+//	const Real phi = std::atan(tanPhi) + (u.x <= .25 ? 0 : (u.x < .75 ? PI : PI2));
+//	const Real tan2Phi = tanPhi * tanPhi;
+//	const Real sin2Phi = tan2Phi / (1 + tan2Phi);
+//	const Real cos2Phi = 1 - sin2Phi;
+//	const Real A = (cos2Phi / (_alpha.x * _alpha.x)) + (sin2Phi / (_alpha.y * _alpha.y));
+//	const Real tan2Theta = u.y / ((1 - u.y) * A);
+//	const Real sin2Theta = tan2Theta / (1 + tan2Theta);
+//	const Real cos2Theta = 1 - sin2Theta;
+//	return maths::SphericalDirection(std::sqrt(sin2Theta), std::sqrt(cos2Theta), phi);
 //}

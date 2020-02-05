@@ -58,7 +58,17 @@ class texture_t {
 		texture_t<Format>(const unsigned _width = 1, const unsigned _height = 1, const Format & _c = Format()) {
 			Resize(_width, _height, _c);
 		}
-	
+
+		static texture_t Copy(const texture_t &_texture) {
+			texture_t copy;
+			copy.width = _texture.width;
+			copy.height = _texture.height;
+			copy.Order = _texture.Order;
+			copy.pixels.reset(new Format[_texture.width * _texture.height]);
+			memcpy(&copy.pixels[0], &_texture.pixels[0], sizeof(Format) * _texture.width * _texture.height);
+			return copy;
+		}
+
 		inline unsigned GetWidth() const { return width; }
 
 		inline unsigned GetHeight() const { return height; }
@@ -154,6 +164,13 @@ class texture_t<Colour> {
 
 		texture_t(const unsigned _width = 1, const unsigned _height = 1, const Colour & _c = Colour()) {
 			Resize(_width, _height, _c);
+		}
+
+		static texture_t Copy(const texture_t &_texture) {
+			texture_t copy(_texture.width, _texture.height);
+			copy.Order = _texture.Order;
+			memcpy(copy.pixels.get(), _texture.pixels.get(), sizeof(Colour) * _texture.width * _texture.height);
+			return copy;
 		}
 
 		inline unsigned GetWidth() const { return width; }

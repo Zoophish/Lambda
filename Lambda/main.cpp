@@ -1,11 +1,8 @@
 #include <assets/AssetImporter.h>
 #include <shading/graph/GraphInputs.h>
-#include <shading/graph/GraphBXDF.h>
-#include <shading/surface/OrenNayar.h>
-#include <shading/surface/Specular.h>
-#include <shading/surface/Microfacet.h>
-#include <shading/surface/Ghost.h>
-#include <shading/media/HomogenousMedium.h>
+#include <shading/graph/GraphBxDF.h>
+#include <shading/Fresnel.h>
+#include <shading/MicrofacetDistribution.h>
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/PathIntegrator.h>
 #include <integrators/UtilityIntegrators.h>
@@ -18,6 +15,7 @@
 #include <lighting/Portal.h>
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
+#include <image/processing/PostProcessing.h>
 
 int main() {
 	ResourceManager resources;
@@ -38,18 +36,20 @@ int main() {
 	sg::RGBInput *greenNode = graphArena.New<sg::RGBInput>(Colour(.1, 1, .1));
 	sg::ImageTextureInput *gridNode = graphArena.New<sg::ImageTextureInput>(&grid);
 	sg::ImageTextureInput *checkNode = graphArena.New<sg::ImageTextureInput>(&checker);
-	Texture scratches(1,1, Colour(.5,.5,.5)); //scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
-	sg::ImageTextureInput *sigmaNode = graphArena.New<sg::ImageTextureInput>(&scratches);
+	Texture scratches(1,1, Colour(.5,.5,.5));// scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
+	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.0001);
+	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001));
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
 	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&greenNode->outputSockets[0], &iorNode->outputSockets[0]);
-	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
-	  
-	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[1], &d, &fres);
+	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&greenNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::SpecularBRDFNode *specMat = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
+	
+	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&greenNode->outputSockets[0], &sigmaNode->outputSockets[0], &d, &fres);
 
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
 	AssetImporter ai2;
-	ai2.Import("D:\\Assets\\testCube.obj");
+	ai2.Import("D:\\Assets\\xFrogScene.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
@@ -64,20 +64,20 @@ int main() {
 	ai.PushToResourceManager(&resources);
 	TriangleMesh lucy;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
-	lucy.bxdf = fresMat;
+	lucy.bxdf = microfacetBRDF;
 	scene.AddObject(&lucy);
 
 
-	ai.Import("../content/TopLight.obj");
-	ai.PushToResourceManager(&resources);
-	TriangleMesh lightMesh;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	lightMesh.smoothNormals = false;
-	MeshLight light(&lightMesh);
-	sg::ScalarInput temp1(3500);
-	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
-	light.emission = &blckInpt1.outputSockets[0];
-	light.intensity = 4000;
+	//ai.Import("../content/TopLight.obj");
+	//ai.PushToResourceManager(&resources);
+	//TriangleMesh lightMesh;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	//lightMesh.smoothNormals = false;
+	//MeshLight light(&lightMesh);
+	//sg::ScalarInput temp1(3500);
+	//sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	//light.emission = &blckInpt1.outputSockets[0];
+	//light.intensity = 4000;
 	//scene.AddLight(&light);
 	//scene.AddObject(&lightMesh);
 	
@@ -132,7 +132,7 @@ int main() {
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 	NormalPass normalPass(&sampler);
-	Film film(1920, 1080);
+	Film film(1280, 720);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -141,7 +141,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 1;
+	renderDirective.spp = 16;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
@@ -155,6 +155,7 @@ int main() {
 	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(0, 0, 0));
 	//Convert film to an RGB image;
 	film.ToRGBTexture(&tex);
+
 
 	//Save to file.
 	tex.SaveToImageFile("out.png", true, false);

@@ -15,7 +15,7 @@ Spectrum MicrofacetBRDF::f(const SurfaceScatterEvent &_event) const {
 	wh = wh.Normalised();
 	const Vec3 wiL(_event.wiL.x, maths::Clamp(_event.wiL.y, (Real)0, (Real)1), _event.wiL.z);
 	const Spectrum F = fresnel->Evaluate(maths::Dot(wiL, wh), etaT);
-	const Vec2 alpha = MicrofacetDistribution::RoughnessToAlpha((*roughnessSocket)->GetAsScalar(&_event));
+	const Vec2 alpha = RoughnessToAlpha(&_event);
 	const Real D = distribution->D(wh, alpha);
 	const Real G = distribution->G(_event.woL, wiL, alpha);
 	const Spectrum albedoSpec = (*albedoSocket)->GetAsSpectrum(&_event);
@@ -24,7 +24,7 @@ Spectrum MicrofacetBRDF::f(const SurfaceScatterEvent &_event) const {
 
 Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	if (_event.woL.y == 0) return Spectrum(0);
-	const Vec2 alpha = MicrofacetDistribution::RoughnessToAlpha((*roughnessSocket)->GetAsScalar(&_event));
+	const Vec2 alpha = RoughnessToAlpha(&_event);
 	const Vec3 wh = distribution->Sample_wh(_sampler, _event.woL, alpha).Normalised();
 	_event.wiL = Reflect(-_event.woL, wh);
 	if (!SameHemisphere(_event.woL, _event.wiL)) {
@@ -41,6 +41,28 @@ Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler
 Real MicrofacetBRDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
 	if (!SameHemisphere(_wo, _wi)) return 0;
 	const Vec3 wh = (_wo + _wi).Normalised();
-	const Vec2 alpha = MicrofacetDistribution::RoughnessToAlpha((*roughnessSocket)->GetAsScalar(&_event));
+	const Vec2 alpha = RoughnessToAlpha(&_event);
 	return distribution->Pdf(wh, alpha) / (4 * maths::Dot(_wo, wh));
+}
+
+static inline Real ToAlpha(Real _roughness) {
+	_roughness = std::max(_roughness, (Real)1e-3);
+	Real x = std::log(_roughness);
+	x = (Real)1.62142 + (Real)0.819955 * x + (Real)0.1734 * x * x + (Real)0.0171201 * x * x * x + (Real)0.000640711 * x * x * x * x;
+	return x;
+}
+
+inline Vec2 MicrofacetBRDF::RoughnessToAlpha(const SurfaceScatterEvent *_event) const {
+	switch ((*roughnessSocket)->socketType) {
+		case ShaderGraph::SocketType::TYPE_SCALAR:	//Isotropic distribution
+		{
+			const Real roughness = ToAlpha((*roughnessSocket)->GetAsScalar(_event));
+			return Vec2(roughness, roughness);
+		}
+		case ShaderGraph::SocketType::TYPE_VEC2:	//Anisotropic distribution
+		{
+			const Vec2 roughness = (*roughnessSocket)->GetAsVec2(_event);
+			return Vec2(ToAlpha(roughness.x), ToAlpha(roughness.y));
+		}
+	}
 }

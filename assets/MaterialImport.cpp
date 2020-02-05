@@ -144,8 +144,6 @@ namespace MaterialImport {
 			return i > 0;
 		}
 
-
-
 		template<aiTextureType texType>
 		Texture *GetTextureFromPool(const aiMaterial *_aiMaterial, ResourcePool<Texture> *_texPool) {
 			aiString path;
@@ -160,6 +158,7 @@ namespace MaterialImport {
 					aiString name;
 					_aiMaterial->Get(AI_MATKEY_NAME, name);
 					_texPool->Append((std::string)name.C_Str() + (std::string)matKey.c, tex);
+					return tex;
 				}
 			}
 			return nullptr;
@@ -212,8 +211,9 @@ namespace MaterialImport {
 				return _material->graphArena.New<sg::MixBxDFNode>(&ghostBTDF->outputSockets[0], &mixBxDF->outputSockets[0], &alpha->outputSockets[0]);
 			}
 
-			inline sg::Socket *MakeEmission(Material *_material, Texture *_texE) {
+			inline sg::Socket *MakeEmission(Material *_material, Texture *_texE, const Real _intensity) {
 				sg::ImageTextureInput *emissionTex = _material->graphArena.New<sg::ImageTextureInput>(_texE);
+				//_material->light.radianceSocket...
 				return &emissionTex->outputSockets[0];
 			}
 
@@ -282,21 +282,43 @@ namespace MaterialImport {
 			aiString aiS;
 			if (_aiMat->GetTexture(type, 0, &aiS) == aiReturn_SUCCESS) return true;
 			const MatKey matKey = MatchaiTextureType(type);
-			GetaiType<type>::type typename tmp;
+			GetaiType<type>::type tmp;
 			if (_aiMat->Get(matKey.c, matKey.i1, matKey.i2, tmp) == aiReturn_SUCCESS) return true;
 			return false;
 		}
 
-		inline int GetMaterialAttributes(const aiMaterial *_aiMaterial) {
+		template<>
+		inline bool HasAttribute<aiTextureType_OPACITY>(const aiMaterial *_aiMat) {
+			aiString aiS;
+			if (_aiMat->GetTexture(aiTextureType_OPACITY, 0, &aiS) == aiReturn_SUCCESS) return true;
+			float tmp;
+			if (_aiMat->Get(AI_MATKEY_OPACITY, tmp) == aiReturn_SUCCESS) return tmp != 1.f;
+			return false;
+		}
+
+		template<>
+		inline bool HasAttribute<aiTextureType_EMISSIVE>(const aiMaterial *_aiMat) {
+			aiString aiS;
+			if (_aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &aiS) == aiReturn_SUCCESS) return true;
+			aiColor3D tmp = { 0,0,0 };
+			if (_aiMat->Get(AI_MATKEY_COLOR_EMISSIVE, tmp) == aiReturn_SUCCESS) return !tmp.IsBlack();
+			return false;
+		}
+
+		int GetMaterialAttributes(const aiMaterial *_aiMaterial) {
 			int attributes = MTL_ATTRIB_NONE;
 			aiString aiS;
 			attributes += HasAttribute<aiTextureType_DIFFUSE>(_aiMaterial) ? MTL_ATTRIB_DIFFUSE : MTL_ATTRIB_NONE;
-			attributes += HasAttribute<aiTextureType_SHININESS>(_aiMaterial) ? MTL_ATTRIB_GLOSSY : MTL_ATTRIB_NONE;
 			attributes += HasAttribute<aiTextureType_OPACITY>(_aiMaterial) ? MTL_ATTRIB_ALPHA : MTL_ATTRIB_NONE;
 			attributes += HasAttribute<aiTextureType_EMISSIVE>(_aiMaterial) ? MTL_ATTRIB_EMISSIVE : MTL_ATTRIB_NONE;
+			aiShadingMode shadeMode;
+			if (_aiMaterial->Get(AI_MATKEY_SHADING_MODEL, shadeMode)) {
+				if (shadeMode & aiShadingMode_CookTorrance) {
+					attributes += HasAttribute<aiTextureType_SHININESS>(_aiMaterial) ? MTL_ATTRIB_GLOSSY : MTL_ATTRIB_NONE;
+				}
+			}
 			return attributes;
 		}
-
 	}
 
 	bool PushTextures(const aiScene *_aiScene, ResourceManager *_resourceManager, ImportMetrics *_metrics) {
@@ -345,5 +367,4 @@ namespace MaterialImport {
 		}
 		return nullptr;
 	}
-
 }

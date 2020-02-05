@@ -16,6 +16,17 @@ namespace ShaderGraph {
 
 
 
+	class Vec2Input : public Node {
+		public:
+			Vec2 vec2;
+
+			Vec2Input(const Vec2 &_vec);
+
+			void GetVec2(const SurfaceScatterEvent *_event, void *_out) const;
+	};
+
+
+
 	class RGBInput : public Node {
 		public:
 			Colour rgb;

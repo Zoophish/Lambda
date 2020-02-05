@@ -89,6 +89,7 @@ void texture_t<Colour>::LoadImageFile(const char *_path, int _channels) {
 		else { std::cout << std::endl << "Could not load: " << _path; }
 		stbi_image_free(data);
 	}
+	else std::cout << std::endl << "Image file not found: " << _path;
 }
 
 void texture_t<Colour>::LoadFromMemory(const void *_src, const int _size, const int _channels) {

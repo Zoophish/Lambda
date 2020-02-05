@@ -12,29 +12,28 @@ Spectrum FresnelBSDF::f(const SurfaceScatterEvent &_event) const {
 Spectrum FresnelBSDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	const bool entering = _event.woL.y > 0;
 	const Real ior = (*iorSocket)->GetAsScalar(&_event);
-	const Real a = entering ? _event.eta : ior;
-	const Real b = entering ? ior : _event.eta;
-	const Real fr = Fresnel::FrDielectric(_event.woL.y, a, b);
+	const Real etaI = entering ? _event.eta : ior;
+	const Real etaT = entering ? ior : _event.eta;
+	const Real fr = Fresnel::FrDielectric(_event.woL.y, etaI, etaT);
 	if (_sampler.Get1D() < fr) {
 		_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
 		_event.wi = _event.ToWorld(_event.wiL);
 		const Real cosTheta = std::abs(_event.wiL.y);
 		_event.pdf = fr;
 		_pdf = _event.pdf;
-		_event.hit->point += _event.hit->normalG * SURFACE_EPSILON;
-		return (*albedoSocket)->GetAsSpectrum(&_event) * fr / cosTheta;
+		_event.hit->point += _event.hit->normalG * (entering ? SURFACE_EPSILON : -SURFACE_EPSILON);
+		return (*albedoSocket)->GetAsSpectrum(&_event) * fr / cosTheta; //Remove fr term and make pdf = 1?
 	}
 	else {
-		const Real etaI = a;
-		const Real etaT = b;
 		_event.pdf = (Real)1 - fr;
 		_pdf = _event.pdf;
 		const bool refract = Refract(_event.woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT, &_event.wiL);
-		const Real cosTheta = std::abs(_event.wiL.y);
-		_event.wi = _event.ToWorld(_event.wiL);
 		Spectrum ft = (*albedoSocket)->GetAsSpectrum(&_event) * _event.pdf;
 		if (refract) ft *= (etaI * etaI) / (etaT * etaT);
-		_event.hit->point += _event.hit->normalG * (entering ? -SURFACE_EPSILON : SURFACE_EPSILON);
+		const Real cosTheta = std::abs(_event.wiL.y);
+		_event.wi = _event.ToWorld(_event.wiL);
+		const bool goIn = entering ? (refract ? true : false) : (refract ? false : true);
+		_event.hit->point += _event.hit->normalG * (goIn ? -SURFACE_EPSILON * 1.2 : SURFACE_EPSILON * 1.2);
 		return ft / cosTheta;
 	}
 }
@@ -58,9 +57,9 @@ Spectrum SpecularBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, 
 	_event.pdf = 1;
 	_pdf = 1;
 	_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
-	const Real cosTheta = std::abs(_event.wiL.y);
 	_event.wi = _event.ToWorld(_event.wiL);
-	return (*albedoSocket)->GetAsSpectrum(&_event) / std::abs(cosTheta);
+	_event.hit->point += _event.hit->normalG * SURFACE_EPSILON;
+	return (*albedoSocket)->GetAsSpectrum(&_event) / std::abs(_event.wiL.y);
 }
 
 
@@ -81,11 +80,11 @@ Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, 
 	_event.hit->normalS *= (outside ? 1 : -1);
 	const Real etaI = outside ? _event.eta : fresnel.etaT;
 	const Real etaT = outside ? fresnel.etaT : _event.eta;
-	Refract(_event.wo, Vec3(0, 1, 0) * (outside ? 1 : -1), etaI / etaT, &_event.wi);
+	Refract(_event.wo, Vec3(0, 1, 0) * (outside ? 1 : -1), etaI / etaT, &_event.wiL);
 	Spectrum ft = (*albedoSocket)->GetAsSpectrum(&_event) * (Spectrum(1) - fresnel.Evaluate(std::abs(_event.wi.y), etaT));
 	ft *= (etaI * etaI) / (etaT * etaT);
 	const Real inv = (Real)1 / std::abs(_event.wiL.y);
-	_event.wi = _event.ToWorld(_event.wi);
+	_event.wi = _event.ToWorld(_event.wiL);
 	_event.hit->point += _event.hit->normalS * .0004;
 	return ft * inv;
 }

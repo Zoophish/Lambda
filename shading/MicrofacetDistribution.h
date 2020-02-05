@@ -21,14 +21,6 @@ class MicrofacetDistribution {
 		inline Real G(const Vec3 &_wo, const Vec3 &_wi, const Vec2 &_alpha) const {
 			return (Real)1 / ((Real)1 + Lambda(_wo, _alpha) + Lambda(_wi, _alpha));
 		}
-
-		static inline Vec2 RoughnessToAlpha(Real _roughness) {
-			_roughness = std::max(_roughness, (Real)1e-3);
-			Real x = std::log(_roughness);
-			x = 1.62142f + 0.819955f * x + 0.1734f * x * x +
-				0.0171201f * x * x * x + 0.000640711f * x * x * x * x;
-			return Vec2(x, x);
-		}
 };
 
 
@@ -61,7 +53,6 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
 
 //class GGXDistribution : public MicrofacetDistribution {
 //	public:
-//		//GGXDistribution(const Real _sigmaX, const Real _sigmaY);
 //		GGXDistribution();
 //
 //		Real D(const Vec3 &_wh, const Vec2 &_alpha) const override;
