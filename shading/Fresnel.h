@@ -1,5 +1,8 @@
 #pragma once
+#include <Lambda.h>
 #include <core/Spectrum.h>
+
+LAMBDA_BEGIN
 
 class Fresnel {
 public:
@@ -33,3 +36,5 @@ public:
 
 	Spectrum Evaluate(const Real _cosThetaI, const Real _etaT) const override;
 };
+
+LAMBDA_END

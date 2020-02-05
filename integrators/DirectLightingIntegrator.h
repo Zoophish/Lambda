@@ -1,6 +1,8 @@
 #pragma once
 #include "Integrator.h"
 
+LAMBDA_BEGIN
+
 class DirectLightingIntegrator : public Integrator {
 	public:
 		DirectLightingIntegrator(Sampler *_sampler, const unsigned _maxDepth = 4);
@@ -12,3 +14,5 @@ class DirectLightingIntegrator : public Integrator {
 	protected:
 		const unsigned maxDepth;
 };
+
+LAMBDA_END

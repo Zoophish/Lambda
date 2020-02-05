@@ -4,6 +4,8 @@
 #include <camera/Film.h>
 #include <camera/Camera.h>
 
+LAMBDA_BEGIN
+
 struct RenderDirective {
 	Film *film;
 	Scene *scene;
@@ -45,3 +47,5 @@ namespace TileRenderers {
 	*/
 	void MaxSpp(const RenderTile *_tile);
 }
+
+LAMBDA_END

@@ -6,7 +6,10 @@
 		http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/Sampling_Random_Variables.html
 */
 
+#include <Lambda.h>
 #include <maths/maths.h>
+
+LAMBDA_BEGIN
 
 namespace Distribution {
 	
@@ -72,3 +75,5 @@ namespace Distribution {
 			inline Real I(const Real _x0, const Real _x1, const Real _y0, const Real _y1) const;
 	};
 }
+
+LAMBDA_END

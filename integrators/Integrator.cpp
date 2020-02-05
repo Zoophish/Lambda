@@ -1,5 +1,7 @@
 #include "Integrator.h"
 
+LAMBDA_BEGIN
+
 Spectrum Integrator::SampleOneLight(SurfaceScatterEvent &_event, const Scene &_scene) const {
 	if (_event.hit->object->bxdf) {
 		Real lightPdf = 1;
@@ -65,3 +67,5 @@ bool Integrator::IntersectTr(const Scene &_scene, Ray &_ray, RayHit &_hit, Spect
 		_ray.o = _hit.point + _ray.d * .0001;
 	}
 }
+
+LAMBDA_END

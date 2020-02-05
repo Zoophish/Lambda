@@ -1,5 +1,7 @@
 #include "Instance.h"
 
+LAMBDA_BEGIN
+
 InstanceProxy::InstanceProxy(Object *_object) {
 	iObject = _object;
 }
@@ -19,3 +21,5 @@ void Instance::Commit(const RTCDevice &_device) {
 void Instance::ProcessHit(RayHit &_hit, const RTCRayHit &_h) const {
 	proxy->iObject->ProcessHit(_hit, _h);
 }
+
+LAMBDA_END

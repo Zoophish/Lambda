@@ -5,6 +5,8 @@
 #include <sampling/Sampling.h>
 #include <maths/maths.h>
 
+LAMBDA_BEGIN
+
 class Aperture {
 	public:
 		Sampler *sampler;
@@ -56,3 +58,5 @@ class MaskedAperture : public Aperture {
 		*/
 		void InitDistribution();
 };
+
+LAMBDA_END

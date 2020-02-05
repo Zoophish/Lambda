@@ -2,6 +2,8 @@
 #include "BxDF.h"
 #include "../Fresnel.h"
 
+LAMBDA_BEGIN
+
 class FresnelBSDF : public BxDF {
 	public:
 		ShaderGraph::Socket **albedoSocket, **iorSocket;
@@ -44,3 +46,5 @@ class SpecularBTDF : public BxDF {
 
 		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };
+
+LAMBDA_END

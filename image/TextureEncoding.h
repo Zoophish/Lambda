@@ -8,7 +8,10 @@ Textures may be arranged differently in memory for various benefits.
 Newer processors have Binary Manipulation Instruction sets (BMI) that can be used to hardware accellerate Morton encoding/decoding.
 */
 #pragma once
-#define USE_BMI 1
+#include <Lambda.h>
+#define USE_BMI
+
+LAMBDA_BEGIN
 
 namespace TextureEncoding {
 
@@ -33,3 +36,5 @@ namespace TextureEncoding {
 	size_t ScanlineColOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y);
 
 }
+
+LAMBDA_END

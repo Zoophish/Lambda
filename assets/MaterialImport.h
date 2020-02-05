@@ -1,7 +1,7 @@
 #pragma once
 #include "ImportUtilities.h"
-#include <image/Texture.h>
-#include <shading/Material.h>
+
+LAMBDA_BEGIN
 
 namespace MaterialImport {
 
@@ -22,3 +22,5 @@ namespace MaterialImport {
 	*/
 	Material *GetMaterial(const aiScene *_aiScene, const ResourceManager *_resources, const std::string &_name);
 }
+
+LAMBDA_END

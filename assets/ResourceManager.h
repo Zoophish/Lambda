@@ -5,6 +5,8 @@
 #include <shading/Material.h>
 #include <core/SceneGraph.h>
 
+LAMBDA_BEGIN
+
 template<class T>
 class ResourcePool {
 	public:
@@ -63,3 +65,5 @@ class ResourceManager {
 
 		ResourceManager() {}
 };
+
+LAMBDA_END

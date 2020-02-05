@@ -3,6 +3,8 @@
 #include "../Fresnel.h"
 #include "../MicrofacetDistribution.h"
 
+LAMBDA_BEGIN
+
 class MicrofacetBRDF : public BxDF {
 	public:
 		Real etaT = 0.00001;
@@ -24,3 +26,5 @@ class MicrofacetBRDF : public BxDF {
 };
 
 //class MicrofacetBSDF {};
+
+LAMBDA_END

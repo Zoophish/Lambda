@@ -1,6 +1,8 @@
 #include <iostream>
 #include "Film.h"
 
+LAMBDA_BEGIN
+
 Film::Film(const unsigned _width, const unsigned _height) {
 	filmData.Resize(_width, _height);
 }
@@ -23,3 +25,5 @@ void Film::ToRGBTexture(Texture *_output) const {
 	}
 	else std::cout << std::endl << "Output texture size does not match film size.";
 }
+
+LAMBDA_END

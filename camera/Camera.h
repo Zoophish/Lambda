@@ -4,6 +4,8 @@
 #include <core/Ray.h>
 #include "Aperture.h"
 
+LAMBDA_BEGIN
+
 class Camera {
 	public:
 		Real aperture, shutterSpeed;
@@ -77,3 +79,5 @@ class SphericalCamera : public Camera {
 		*/
 		Ray GenerateRay(const Real _u, const Real _v) const override;
 };
+
+LAMBDA_END

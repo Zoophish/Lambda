@@ -6,6 +6,8 @@
 #include <core/Scene.h>
 #include "Light.h"
 
+LAMBDA_BEGIN
+
 class MeshLight : public Light {
 	public:
 		ShaderGraph::Socket *emission;
@@ -29,3 +31,5 @@ class MeshLight : public Light {
 
 		void InitDistribution();
 };
+
+LAMBDA_END

@@ -1,5 +1,7 @@
 #include "AssetImporter.h"
 
+LAMBDA_BEGIN
+
 AssetImporter::AssetImporter() {
 	scene = nullptr;
 }
@@ -49,3 +51,5 @@ void AssetImporter::Release() {
 	scene = nullptr;
 	path.clear();
 }
+
+LAMBDA_END

@@ -3,6 +3,8 @@
 #include <image/Texture.h>
 #include <shading/SurfaceScatterEvent.h>
 
+LAMBDA_BEGIN
+
 namespace ShaderGraph {
 
 	class ScalarInput : public Node {
@@ -103,3 +105,5 @@ namespace ShaderGraph {
 			void GetSpectrum(const SurfaceScatterEvent *_event, void *_out) const;
 	};
 }
+
+LAMBDA_END

@@ -1,6 +1,9 @@
 #pragma once
 #include <core/Spectrum.h>
 #include <sampling/Sampler.h>
+
+LAMBDA_BEGIN
+
 class Ray;
 struct RayHit;
 struct SurfaceScatterEvent;
@@ -30,5 +33,9 @@ class Light {
 		virtual Real Irradiance() const = 0;
 		virtual Real Area() const = 0;
 		
-		Real Power() const { return Irradiance() * Area(); }
+		Real Power() const {
+			return Irradiance() * Area();
+		}
 };
+
+LAMBDA_END

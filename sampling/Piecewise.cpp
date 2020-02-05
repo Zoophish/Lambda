@@ -1,5 +1,7 @@
 #include "Piecewise.h"
 
+LAMBDA_BEGIN
+
 namespace Distribution {
 
 	Piecewise1D::Piecewise1D() {}
@@ -136,3 +138,5 @@ namespace Distribution {
 			- summedAreaTable[yMax * nu + xMin] - summedAreaTable[yMax * nu + xMax];
 	}
 }
+
+LAMBDA_END

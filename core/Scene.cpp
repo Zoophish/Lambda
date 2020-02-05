@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+LAMBDA_BEGIN
+
 Scene::Scene(const RTCSceneFlags _sceneFlags, const char *_deviceConfig) {
 	device = rtcNewDevice(_deviceConfig);
 	scene = rtcNewScene(device);
@@ -75,3 +77,5 @@ void Scene::UpdateLightDistribution() {
 	}
 	lightDistribution = Distribution::Piecewise1D(&importances[0], lights.size());
 }
+
+LAMBDA_END

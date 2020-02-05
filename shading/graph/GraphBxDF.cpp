@@ -1,5 +1,7 @@
 #include "GraphBxDF.h"
 
+LAMBDA_BEGIN
+
 namespace ShaderGraph {
 
 	MixBxDFNode::MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio)
@@ -97,3 +99,5 @@ namespace ShaderGraph {
 	}
 
 }
+
+LAMBDA_END

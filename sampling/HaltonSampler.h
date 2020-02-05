@@ -2,6 +2,8 @@
 #include "Sampler.h"
 #include "SampleShifter.h"
 
+LAMBDA_BEGIN
+
 class HaltonSampler : public Sampler {
 	public:
 		HaltonSampler(const unsigned _sampleIndex = 0);
@@ -39,3 +41,5 @@ class HaltonSampler : public Sampler {
 	private:
 		static inline Real Halton(const int index, const int b);
 };
+
+LAMBDA_END

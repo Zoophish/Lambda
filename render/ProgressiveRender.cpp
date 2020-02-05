@@ -1,6 +1,8 @@
 #include <future>
 #include "ProgressiveRender.h"
 
+LAMBDA_BEGIN
+
 ProgressiveRender::ProgressiveRender(const RenderDirective &_renderDirective, TileRenderer _tileRenderer) {
 	outputTexture = Texture(_renderDirective.film->filmData.GetWidth(), _renderDirective.film->filmData.GetHeight());
 	SetRenderDirective(_renderDirective);
@@ -80,3 +82,5 @@ void ProgressiveRender::UpdateOutputTexture(const unsigned _level) {
 	}
 	updateCallback();
 }
+
+LAMBDA_END

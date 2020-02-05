@@ -8,7 +8,10 @@
 */
 
 #pragma once
+#include <Lambda.h>
 #include <maths/maths.h>
+
+LAMBDA_BEGIN
 
 namespace CIEData {
 
@@ -42,3 +45,5 @@ namespace BergeData {
 	extern const Real RGBIllum2SpectGreen[nRGB2SpectSamples];
 	extern const Real RGBIllum2SpectBlue[nRGB2SpectSamples];
 }
+
+LAMBDA_END

@@ -13,6 +13,8 @@
 
 #define DEFAULT_IMPORT_FLAGS aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_GenNormals | aiProcess_ImproveCacheLocality
 
+LAMBDA_BEGIN
+
 enum ImportOptions : uint8_t {
 	IMP_ALL = 15,
 	IMP_MESHES = 1,
@@ -46,3 +48,5 @@ class AssetImporter {
 		Assimp::Importer importer;
 		std::string path;
 };
+
+LAMBDA_END

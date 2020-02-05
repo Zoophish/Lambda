@@ -1,5 +1,7 @@
 #include "PathIntegrator.h"
 
+LAMBDA_BEGIN
+
 PathIntegrator::PathIntegrator(Sampler *_sampler, const unsigned _maxBounces, const unsigned _minBounces) {
 	maxBounces = _maxBounces;
 	minBounces = _minBounces;
@@ -86,3 +88,5 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 	}
 	return L;
 }
+
+LAMBDA_END

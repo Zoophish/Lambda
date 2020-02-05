@@ -1,6 +1,8 @@
 #include <vector>
 #include "../Texture.h"
 
+LAMBDA_BEGIN
+
 namespace PostProcessing {
 
 	class PostProcess {
@@ -31,3 +33,5 @@ namespace PostProcessing {
 	};
 
 }
+
+LAMBDA_END

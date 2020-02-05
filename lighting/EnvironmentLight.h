@@ -6,6 +6,8 @@
 #include <core/Ray.h>
 #include <core/Scene.h>
 
+LAMBDA_BEGIN
+
 class EnvironmentLight : public Light {
 	public:
 		Vec2 offset;
@@ -35,3 +37,5 @@ class EnvironmentLight : public Light {
 		TextureAdapter radianceMap;
 		std::unique_ptr<Distribution::Piecewise2D> distribution;
 };
+
+LAMBDA_END

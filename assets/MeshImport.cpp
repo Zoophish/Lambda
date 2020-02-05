@@ -1,5 +1,7 @@
 #include "MeshImport.h"
 
+LAMBDA_BEGIN
+
 namespace MeshImport {
 
 	bool LoadUVBuffer(const aiMesh *_aiMesh, TriangleMesh *_tMesh, const unsigned _channel) {
@@ -97,3 +99,5 @@ namespace MeshImport {
 	}
 
 }
+
+LAMBDA_END

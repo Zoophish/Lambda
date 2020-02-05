@@ -5,6 +5,8 @@ Transfers Assimp aiMesh data into TriangleMesh.
 #include "ImportUtilities.h"
 #include <core/TriangleMesh.h>
 
+LAMBDA_BEGIN
+
 namespace MeshImport {
 
 	using namespace ImportUtilities;
@@ -37,3 +39,5 @@ namespace MeshImport {
 	bool PushMeshes(const aiScene *_scene, ResourceManager *_resourceManager, ImportMetrics *_metrics);
 
 }
+
+LAMBDA_END

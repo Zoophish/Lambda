@@ -2,6 +2,8 @@
 #include "ImportUtilities.h"
 #include <core/SceneGraph.h>
 
+LAMBDA_BEGIN
+
 namespace GraphImport {
 
 	using namespace ImportUtilities;
@@ -12,3 +14,5 @@ namespace GraphImport {
 	bool PushGraph(const aiScene *_aiScene, ResourceManager *_resources, ImportMetrics *_metrics);
 
 }
+
+LAMBDA_END

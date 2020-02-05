@@ -5,6 +5,8 @@
 #include "../surface/Ghost.h"
 #include "../surface/Specular.h"
 
+LAMBDA_BEGIN
+
 namespace ShaderGraph {
 
 	#define _DECLTYPE std::remove_reference<decltype(*this)>::type
@@ -70,3 +72,5 @@ namespace ShaderGraph {
 	};
 	
 }
+
+LAMBDA_END

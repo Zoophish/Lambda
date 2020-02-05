@@ -4,6 +4,8 @@
 #include <shading/surface/BxDF.h>
 #include <shading/media/Media.h>
 
+LAMBDA_BEGIN
+
 class Integrator {
 	public:
 		Sampler *sampler;
@@ -24,3 +26,5 @@ class Integrator {
 			return (f * f) / (f * f + g * g);
 		}
 };
+
+LAMBDA_END

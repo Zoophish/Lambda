@@ -7,6 +7,9 @@ Structure that provides access to necessary information needed for shading.
 #include <iostream>
 #include <maths/maths.h>
 #include <core/Ray.h>
+
+LAMBDA_BEGIN
+
 class BxDF;
 class Scene;
 
@@ -86,3 +89,5 @@ inline Real Tan2Theta(const Vec3 &_w) {
 inline Real TanTheta(const Vec3 &_w) {
 	return SinTheta(_w) / CosTheta(_w);
 }
+
+LAMBDA_END

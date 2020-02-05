@@ -2,6 +2,8 @@
 #include <image/Texture.h>
 #include <core/Spectrum.h>
 
+LAMBDA_BEGIN
+
 struct FilmPixel {
 	Spectrum spectrum = Spectrum(0);
 	unsigned nSamples = 1;
@@ -33,3 +35,5 @@ class Film {
 		*/
 		void ToRGBTexture(Texture *_output) const;
 };
+
+LAMBDA_END

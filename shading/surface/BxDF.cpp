@@ -1,5 +1,7 @@
 #include "BxDF.h"
 
+LAMBDA_BEGIN
+
 BxDF::BxDF(const BxDFType _type) : type(_type) {}
 
 Spectrum BxDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
@@ -65,3 +67,5 @@ Real MixBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_
 	const Real ratio = (*ratioSocket)->GetAsScalar(&_event);
 	return (*aSocket)->GetAsBxDF(&_event)->Pdf(_wo, _wi, _event) * ((Real)1 - ratio) + (*bSocket)->GetAsBxDF(&_event)->Pdf(_wo, _wi, _event) * ratio;
 }
+
+LAMBDA_END

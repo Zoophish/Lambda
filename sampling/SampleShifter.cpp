@@ -1,5 +1,7 @@
 #include "SampleShifter.h"
 
+LAMBDA_BEGIN
+
 Real SampleShifter::Shift(const Real _point, const unsigned _dimensionIndex) const {
 	Real tmp = _point;
 	const int dim = _dimensionIndex - maskDimensionStart;
@@ -27,3 +29,5 @@ inline uint32_t SampleShifter::Hash(uint32_t a) {
 	a = (a ^ 0xb55a4f09) ^ (a >> 16);
 	return a;
 }
+
+LAMBDA_END

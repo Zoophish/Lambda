@@ -7,6 +7,8 @@ TODO: Benchmark virtual implementation vs void*.
 #include <core/Spectrum.h>
 #include <image/Texture.h>
 
+LAMBDA_BEGIN
+
 enum class TextureType {
 	RGB,
 	SPECTRAL,
@@ -66,3 +68,5 @@ class TextureAdapter {
 		void *texture;
 		TextureType textureType;
 };
+
+LAMBDA_END

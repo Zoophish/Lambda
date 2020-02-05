@@ -1,6 +1,8 @@
 #include "ImportUtilities.h"
 #include <iostream>
 
+LAMBDA_BEGIN
+
 namespace ImportUtilities {
 
 	ImportMetrics::ImportMetrics(const std::string &_name, const std::string &_path) {
@@ -46,3 +48,5 @@ namespace ImportUtilities {
 	}
 
 }
+
+LAMBDA_END

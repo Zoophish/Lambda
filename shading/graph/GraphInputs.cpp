@@ -1,5 +1,7 @@
 #include "GraphInputs.h"
 
+LAMBDA_BEGIN
+
 namespace ShaderGraph {
 
 	/*
@@ -162,3 +164,5 @@ namespace ShaderGraph {
 		*reinterpret_cast<Spectrum *>(_out) = tex->GetPixelUV(uvs.x, uvs.y);
 	}
 }
+
+LAMBDA_END

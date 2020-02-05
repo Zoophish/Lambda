@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include "Texture.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -37,6 +38,8 @@ static bool WriteData(const uint32_t *_p, const char *_path, const unsigned _w, 
 	std::cout << std::endl << "Did not save texture: " << format << " is not a valid format.";
 	return false;
 }
+
+LAMBDA_BEGIN
 
 bool texture_t<Colour>::GetFileInfo(const char *_path, int *_width, int *_height, int *_channels) {
 	return stbi_info(_path, _width, _height, _channels);
@@ -103,3 +106,5 @@ void texture_t<Colour>::LoadFromMemory(const void *_src, const int _size, const 
 	else { std::cout << std::endl << "Could not load: " << _src; }
 	stbi_image_free(data);
 }
+
+LAMBDA_END

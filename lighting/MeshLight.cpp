@@ -1,5 +1,7 @@
 #include "MeshLight.h"
 
+LAMBDA_BEGIN
+
 MeshLight::MeshLight(TriangleMesh *_mesh) {
 	mesh = _mesh;
 	_mesh->light = this;
@@ -57,3 +59,5 @@ void MeshLight::InitDistribution() {
 	}
 	triDistribution = Distribution::Piecewise1D(&triAreas[0], ts);
 }
+
+LAMBDA_END

@@ -14,6 +14,8 @@
 #include "Colour.h"
 #include "TextureEncoding.h"
 
+LAMBDA_BEGIN
+
 enum class InterpolationMode {
 	INTERP_NEAREST,
 	INTERP_BILINEAR,
@@ -248,3 +250,5 @@ class texture_t<Colour> {
 
 typedef texture_t<Colour> Texture;
 typedef texture_t<float> TextureR32;
+
+LAMBDA_END

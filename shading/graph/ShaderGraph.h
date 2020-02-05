@@ -2,9 +2,11 @@
 #include <string>
 #include <memory>
 #include <utility/Delegate.h>
-#include <image/Texture.h>
 #include <core/Spectrum.h>
 #include "../SurfaceScatterEvent.h"
+#include <image/Texture.h>
+
+LAMBDA_BEGIN
 
 namespace ShaderGraph {
 
@@ -128,3 +130,5 @@ namespace ShaderGraph {
 		_socketRef.socket = nullptr;
 	}
 }
+
+LAMBDA_END

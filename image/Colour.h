@@ -2,11 +2,17 @@
 //----	Generic colour class with 32-bit float precision as well as other colour formats for use in textures.	----
 
 //Uses the SSE operator implementations.
+#pragma once
+
 #define COLOUR_USE_SSE
 
 #ifdef COLOUR_USE_SSE
 #include <nmmintrin.h>
 #endif
+
+#include <Lambda.h>
+
+LAMBDA_BEGIN
 
 struct alignas(16) Colour {
 	float r, g, b, a;
@@ -141,3 +147,5 @@ struct alignas(16) Colour {
 		}
 	#endif
 };
+
+LAMBDA_END

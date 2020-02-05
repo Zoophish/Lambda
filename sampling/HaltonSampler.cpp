@@ -1,5 +1,7 @@
 #include "HaltonSampler.h"
 
+LAMBDA_BEGIN
+
 const unsigned HaltonSampler::primes[maxDimension] = { 2,3,5,7,11,13,17 };
 
 HaltonSampler::HaltonSampler(const unsigned _sampleIndex) {
@@ -59,3 +61,5 @@ inline Real HaltonSampler::Halton(const int index, const int b) {
 	}
 	return result;
 }
+
+LAMBDA_END

@@ -17,6 +17,8 @@
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
 
+using namespace lambda;
+
 int main() {
 	ResourceManager resources;
 	Scene scene;

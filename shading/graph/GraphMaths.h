@@ -1,6 +1,8 @@
 #pragma once
 #include "ShaderGraph.h"
 
+LAMBDA_BEGIN
+
 namespace ShaderGraph {
 
 	//class Maths : public Node {
@@ -30,3 +32,5 @@ namespace ShaderGraph {
 	//};
 
 }
+
+LAMBDA_END

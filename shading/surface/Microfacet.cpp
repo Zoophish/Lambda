@@ -1,5 +1,7 @@
 #include "Microfacet.h"
 
+LAMBDA_BEGIN
+
 MicrofacetBRDF::MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_roughnesSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_GLOSSY)) {
 	albedoSocket = _albedoSocket;
 	roughnessSocket = _roughnesSocket;
@@ -66,3 +68,5 @@ inline Vec2 MicrofacetBRDF::RoughnessToAlpha(const SurfaceScatterEvent *_event) 
 		}
 	}
 }
+
+LAMBDA_END

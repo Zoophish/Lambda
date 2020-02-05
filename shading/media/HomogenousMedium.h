@@ -1,6 +1,8 @@
 #pragma once
 #include "Media.h"
 
+LAMBDA_BEGIN
+
 class HomogenousMedium : public Medium {
 	public:
 		Spectrum sigmaA, sigmaS, sigmaT;
@@ -39,3 +41,5 @@ class HomogenousMedium : public Medium {
 			return Media::PhaseHG(maths::Dot(_wo, _wi), g);
 		}
 };
+
+LAMBDA_END

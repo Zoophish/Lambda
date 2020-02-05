@@ -3,6 +3,8 @@
 #include <core/Scene.h>
 #include "../SurfaceScatterEvent.h"
 
+LAMBDA_BEGIN
+
 class Medium {
 	public:
 		virtual Spectrum Tr(const Ray &_ray, const Real _tFar, Sampler &_sampler) const = 0;
@@ -25,3 +27,5 @@ class MediaBoundary {
 			return maths::Dot(_w, _n) > 0 ? interior : exterior;
 		}
 };
+
+LAMBDA_END

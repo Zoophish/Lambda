@@ -1,5 +1,8 @@
 #pragma once
 #include <utility/Memory.h>
+
+LAMBDA_BEGIN
+
 class MediaBoundary;
 class Light;
 class BxDF;
@@ -10,3 +13,5 @@ struct Material {
 	Light *light;
 	MemoryArena graphArena;
  };
+
+LAMBDA_END

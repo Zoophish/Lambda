@@ -1,5 +1,8 @@
 #pragma once
 #include "Render.h"
+
+LAMBDA_BEGIN
+
 /*
 	Progressively renders to outputImage texture.
 		- Updates outputImage every sample.
@@ -64,3 +67,5 @@ class ProgressiveRender {
 
 		void Waiter();
 };
+
+LAMBDA_END

@@ -1,6 +1,8 @@
 #pragma once
 #include "BxDF.h"
 
+LAMBDA_BEGIN
+
 class OrenNayarBRDF : public BxDF {
 	public:
 		ShaderGraph::Socket **albedoSocket, **sigmaSocket;
@@ -11,3 +13,5 @@ class OrenNayarBRDF : public BxDF {
 
 		Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 };
+
+LAMBDA_END

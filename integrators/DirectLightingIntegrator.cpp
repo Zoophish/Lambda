@@ -1,5 +1,7 @@
 #include "DirectLightingIntegrator.h"
 
+LAMBDA_BEGIN
+
 DirectLightingIntegrator::DirectLightingIntegrator(Sampler *_sampler, const unsigned _maxDepth) : maxDepth(_maxDepth) {
 	sampler = _sampler;
 }
@@ -25,3 +27,5 @@ Spectrum DirectLightingIntegrator::Li(const Ray &_ray, const Scene &_scene) cons
 	}
 	return _scene.envLight->Le(_ray);
 }
+
+LAMBDA_END

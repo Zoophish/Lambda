@@ -1,5 +1,7 @@
 #include "Fresnel.h"
 
+LAMBDA_BEGIN
+
 Real Fresnel::FrDielectric(Real _cosThetaI, Real _etaI, Real _etaT) {
 	_cosThetaI = maths::Clamp(_cosThetaI, (Real)-1, (Real)1);
 	if (_cosThetaI < 0.) {
@@ -64,3 +66,5 @@ FresnelConductor::FresnelConductor(const Spectrum &_etaI, const Spectrum &_k) {
 Spectrum FresnelConductor::Evaluate(const Real _cosThetaI, const Real _etaT) const {
 	return FrConductor(_cosThetaI, etaI, _etaT, k);
 }
+
+LAMBDA_END

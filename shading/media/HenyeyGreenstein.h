@@ -1,6 +1,8 @@
 #pragma once
 #include "PhaseFunction.h"
 
+LAMBDA_BEGIN
+
 namespace Media {
 
 	static inline Real PhaseHG(const Real _cosTheta, const Real _g) {
@@ -37,3 +39,5 @@ class HenyeyGreenstein : public PhaseFunction {
 	protected:
 		Real g;
 };
+
+LAMBDA_END

@@ -1,6 +1,8 @@
 #pragma once
 #include "Integrator.h"
 
+LAMBDA_BEGIN
+
 class PathIntegrator : public Integrator {
 	public:
 		unsigned maxBounces, minBounces;
@@ -11,3 +13,5 @@ class PathIntegrator : public Integrator {
 
 		Spectrum Li(const Ray &_r, const Scene &_scene) const override;
 };
+
+LAMBDA_END

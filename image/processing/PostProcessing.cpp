@@ -1,5 +1,7 @@
 #include "PostProcessing.h"
 
+LAMBDA_BEGIN
+
 namespace PostProcessing {
 
 	void PostProcessStack::Process(Texture *_texture) const {
@@ -43,3 +45,5 @@ namespace PostProcessing {
 	}
 
 }
+
+LAMBDA_END

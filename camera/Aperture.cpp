@@ -1,5 +1,7 @@
 #include "Aperture.h"
 
+LAMBDA_BEGIN
+
 BladeAperture::BladeAperture(const unsigned _blades, const Real _size) {
 	blades = _blades;
 	size = _size;
@@ -46,3 +48,5 @@ void MaskedAperture::InitDistribution() {
 	}
 	maskDistribution = Distribution::Piecewise2D(img.get(), w, h);
 }
+
+LAMBDA_END

@@ -1,5 +1,7 @@
 #include "GraphImport.h"
 
+LAMBDA_BEGIN
+
 namespace GraphImport {
 
 	/*
@@ -51,3 +53,5 @@ namespace GraphImport {
 	}
 
 }
+
+LAMBDA_END

@@ -1,5 +1,9 @@
 #pragma once
+#include <Lambda.h>
 #include <maths/maths.h>
+
+LAMBDA_BEGIN
+
 class SampleShifter;
 
 class Sampler {
@@ -19,3 +23,5 @@ class Sampler {
 	protected:
 		unsigned sampleIndex, dimensionIndex;
 };
+
+LAMBDA_END

@@ -9,6 +9,8 @@ For the first maskDimensions of a sample set, a mask texture's (e.g. blue noise)
 #include <maths/maths.h>
 #include <image/Texture.h>
 
+LAMBDA_BEGIN
+
 class SampleShifter {
 	public:
 		unsigned maxDimension = 1024;
@@ -47,3 +49,5 @@ class SampleShifter {
 
 		static inline uint32_t Hash(uint32_t a);
 };
+
+LAMBDA_END

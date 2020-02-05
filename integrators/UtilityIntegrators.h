@@ -1,6 +1,8 @@
 #pragma once
 #include "Integrator.h"
 
+LAMBDA_BEGIN
+
 class UtilityIntegrator : public Integrator {
 	public:
 		virtual Colour P(const Ray &_ray, const Scene &_scene) const = 0;
@@ -34,3 +36,5 @@ class NormalPass : public UtilityIntegrator {
 
 		Colour P(const Ray &_ray, const Scene &_scene) const override;
 };
+
+LAMBDA_END

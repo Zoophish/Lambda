@@ -1,5 +1,7 @@
 #include "MicrofacetDistribution.h"
 
+LAMBDA_BEGIN
+
 /*
 	---------- Beckmann ----------
 */
@@ -106,3 +108,5 @@ Vec3 TrowbridgeReitzDistribution::Sample_wh(Sampler &_sampler, const Vec3 &_wo, 
 //	const Real cos2Theta = 1 - sin2Theta;
 //	return maths::SphericalDirection(std::sqrt(sin2Theta), std::sqrt(cos2Theta), phi);
 //}
+
+LAMBDA_END

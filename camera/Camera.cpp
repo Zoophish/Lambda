@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+LAMBDA_BEGIN
+
 //----------------CAMERA----------------
 
 Camera::Camera(const Vec3 &_origin, const Real _x, const Real _y) {
@@ -62,3 +64,5 @@ Ray SphericalCamera::GenerateRay(const Real _u, const Real _v) const {
 	const Vec3 d = maths::SphericalDirection(std::sin(theta), std::cos(theta), phi).Normalised();
 	return Ray(origin, xHat * d.x + yHat * d.y + zHat * d.z);
 }
+
+LAMBDA_END

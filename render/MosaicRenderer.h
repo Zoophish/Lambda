@@ -2,6 +2,8 @@
 #include <future>
 #include "Render.h"
 
+LAMBDA_BEGIN
+
 class MosaicRenderer {
 	public:
 		RenderMosaic mosaic;
@@ -44,3 +46,5 @@ class AsyncMosaicRenderer : public MosaicRenderer {
 	private:
 		mutable std::vector<std::future<void>> futures;
 };
+
+LAMBDA_END

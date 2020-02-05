@@ -4,6 +4,9 @@
 #pragma once
 #include <core/Transformable.h>
 #include "Ray.h"
+
+LAMBDA_BEGIN
+
 class MediaBoundary;
 class Light;
 class BxDF;
@@ -40,3 +43,5 @@ class Object : public Transformable {
 		*/
 		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
 };
+
+LAMBDA_END

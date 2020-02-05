@@ -1,5 +1,7 @@
 #include "Portal.h"
 
+LAMBDA_BEGIN
+
 MeshPortal::MeshPortal(EnvironmentLight *_parentLight, TriangleMesh *_mesh) {
 	parentLight = _parentLight;
 	mesh = _mesh;
@@ -61,3 +63,5 @@ void MeshPortal::InitDistribution() {
 	}
 	triDistribution = Distribution::Piecewise1D(&triAreas[0], ts);
 }
+
+LAMBDA_END

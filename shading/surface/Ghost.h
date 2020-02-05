@@ -1,6 +1,8 @@
 #pragma once
 #include "BxDF.h"
 
+LAMBDA_BEGIN
+
 class GhostBTDF : public BxDF {
 	public:
 	ShaderGraph::Socket **alphaSocket;
@@ -13,3 +15,5 @@ class GhostBTDF : public BxDF {
 
 	Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
 };
+
+LAMBDA_END

@@ -16,6 +16,8 @@
 #include <lighting/Light.h>
 #include <sampling/Piecewise.h>
 
+LAMBDA_BEGIN
+
 class Scene {
 	protected:
 		RTCScene scene;
@@ -101,3 +103,5 @@ class Scene {
 		*/
 		void UpdateLightDistribution();
 };
+
+LAMBDA_END

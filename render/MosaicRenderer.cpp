@@ -1,6 +1,8 @@
 #include <omp.h>
 #include "MosaicRenderer.h"
 
+LAMBDA_BEGIN
+
 void OMPMosaicRenderer::Render() const {
 	const unsigned s = mosaic.nX * mosaic.nY;
 	int p = 0;
@@ -33,3 +35,5 @@ void AsyncMosaicRenderer::Render() const {
 		}
 	}
 }
+
+LAMBDA_END

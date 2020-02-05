@@ -1,5 +1,7 @@
 #include "EnvironmentLight.h"
 
+LAMBDA_BEGIN
+
 EnvironmentLight::EnvironmentLight() {}
 
 EnvironmentLight::EnvironmentLight(Texture *_texture, const Real _intesity) {
@@ -65,3 +67,5 @@ Real EnvironmentLight::Area() const {
 Real EnvironmentLight::Irradiance() const {
 	return intensity;
 }
+
+LAMBDA_END

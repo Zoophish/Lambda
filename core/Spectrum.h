@@ -6,6 +6,8 @@
 #include <omp.h>
 #include "SPD_Data.h"
 
+LAMBDA_BEGIN
+
 static const unsigned sampledLambdaStart = 400;
 static const unsigned sampledLambdaEnd = 700;
 static const unsigned nSpectralSamples = 32;
@@ -370,3 +372,5 @@ class alignas(16) RGBSpectrum : public CoefficientSpectrum<3> {
 			return FromXYZ(xyz);
 		}
 };
+
+LAMBDA_END

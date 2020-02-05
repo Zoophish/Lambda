@@ -1,5 +1,7 @@
 #include "Specular.h"
 
+LAMBDA_BEGIN
+
 FresnelBSDF::FresnelBSDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_iorSocket) : BxDF((BxDFType)(BxDF_TRANSMISSION | BxDF_SPECULAR)) {
 	albedoSocket = _albedoSocket;
 	iorSocket = _iorSocket;
@@ -92,3 +94,5 @@ Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, 
 Real SpecularBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
 	return 0;
 }
+
+LAMBDA_END

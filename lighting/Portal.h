@@ -4,6 +4,8 @@
 #include <sampling/Piecewise.h>
 #include "EnvironmentLight.h"
 
+LAMBDA_BEGIN
+
 /*
 	Similar to MeshLight, however, the environment light's emission is sampled instead.
 	Does not importance sample more luminant areas of IBL map, rather ensures shadow rays pass through portal's area.
@@ -41,3 +43,5 @@ class RectPortal : public Light {
 	public:
 		EnvironmentLight *parentLight;
 };
+
+LAMBDA_END

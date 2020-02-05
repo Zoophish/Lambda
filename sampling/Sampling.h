@@ -1,5 +1,8 @@
 #pragma once
+#include <Lambda.h>
 #include <maths/maths.h>
+
+LAMBDA_BEGIN
 
 namespace Sampling {
 
@@ -16,3 +19,5 @@ namespace Sampling {
 	}
 
 }
+
+LAMBDA_END

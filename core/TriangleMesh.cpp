@@ -1,5 +1,7 @@
 #include "TriangleMesh.h"
 
+LAMBDA_BEGIN
+
 TriangleMesh::TriangleMesh() {
 	smoothNormals = false;
 	hasUVs = false;
@@ -56,3 +58,5 @@ void TriangleMesh::ProcessHit(RayHit &_hit, const RTCRayHit &_h) const {
 		_hit.bitangent = maths::Cross(_hit.tangent, _hit.normalG);
 	}
 }
+
+LAMBDA_END

@@ -2,6 +2,8 @@
 #include "graph/ShaderGraph.h"
 #include "surface/BxDF.h"
 
+LAMBDA_BEGIN
+
 class MicrofacetDistribution {
 	public:
 		virtual Real D(const Vec3 &_w, const Vec2 &_alpha) const = 0;
@@ -61,3 +63,5 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
 //
 //		Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const override;
 //};
+
+LAMBDA_END

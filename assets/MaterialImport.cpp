@@ -1,10 +1,16 @@
+#pragma once
 #include "MaterialImport.h"
+#include <image/Texture.h>
+#include <image/Colour.h>
+#include <shading/Material.h>
 #include <shading/graph/GraphBxDF.h>
 #include <shading/graph/GraphInputs.h>
 #include <iostream>
 
 //Formats supported by stb_image.
 #define IMAGE_FORMATS { "png", "jpg", "jpeg", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" }
+
+LAMBDA_BEGIN
 
 namespace MaterialImport {
 
@@ -368,3 +374,5 @@ namespace MaterialImport {
 		return nullptr;
 	}
 }
+
+LAMBDA_END

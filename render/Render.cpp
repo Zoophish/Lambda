@@ -1,5 +1,7 @@
 #include "Render.h"
 
+LAMBDA_BEGIN
+
 RenderMosaic::RenderMosaic(const RenderDirective &_directive) {
 	const unsigned w = _directive.film->filmData.GetWidth();
 	const unsigned h = _directive.film->filmData.GetHeight();
@@ -91,3 +93,5 @@ void TileRenderers::MaxSpp(const RenderTile *_tile) {
 	}
 	if (completions < s) std::cout << std::endl << "Undersampled: " << s - completions << " pixels.";
 }
+
+LAMBDA_END

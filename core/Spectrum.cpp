@@ -1,5 +1,7 @@
 #include "Spectrum.h"
 
+LAMBDA_BEGIN
+
 SampledSpectrum SampledSpectrum::X;
 SampledSpectrum SampledSpectrum::Y;
 SampledSpectrum SampledSpectrum::Z;
@@ -197,3 +199,5 @@ Real InterpolateSpectrumSamples(const Real *_lambda, const Real *_vals, const un
 	Real t = (_l - _lambda[offset]) / (_lambda[offset + 1] - _lambda[offset]);
 	return maths::Lerp(_vals[offset], _vals[offset + 1], t);
 }
+
+LAMBDA_END

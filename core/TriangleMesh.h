@@ -11,6 +11,8 @@
 #include <vector>
 #include "Object.h"
 
+LAMBDA_BEGIN
+
 struct Triangle { unsigned v0, v1, v2; };
 
 class TriangleMesh : public Object {
@@ -49,3 +51,5 @@ class TriangleMesh : public Object {
 	protected:
 		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override;
 };
+
+LAMBDA_END

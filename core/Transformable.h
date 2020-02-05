@@ -2,7 +2,10 @@
 //3x3 column-major transformation matrix plus a 3D translation vector; xfm = 3x4 column major.
 
 #pragma once
+#include <Lambda.h>
 #include <maths/maths.h>
+
+LAMBDA_BEGIN
 
 class Transformable {
 	public:
@@ -42,3 +45,5 @@ class Transformable {
 		std::vector<Transformable*> children;
 		Transformable *parent;
 };
+
+LAMBDA_END

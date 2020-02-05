@@ -5,8 +5,12 @@
 */
 
 #pragma once
+#include <Lambda.h>
 #include <maths/maths.h>
 #include <embree3/rtcore.h>
+
+LAMBDA_BEGIN
+
 class Object;
 
 class Ray {
@@ -38,7 +42,9 @@ class Ray {
 			return ray;
 		}
 
-		inline Vec3 operator()(const Real _t) const { return o + d * _t; }
+		inline Vec3 operator()(const Real _t) const {
+			return o + d * _t;
+		}
 };
 
 struct RayHit {
@@ -48,3 +54,5 @@ struct RayHit {
 	Real tFar;
 	unsigned primId;
 };
+
+LAMBDA_END

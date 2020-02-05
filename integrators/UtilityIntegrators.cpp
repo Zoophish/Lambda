@@ -1,5 +1,7 @@
 #include "UtilityIntegrators.h"
 
+LAMBDA_BEGIN
+
 Spectrum UtilityIntegrator::Li(const Ray &_ray, const Scene &_scene) const {
 	const Colour c = P(_ray, _scene);
 	const Real cr[3] = { c.r, c.g, c.b };
@@ -47,3 +49,5 @@ Colour NormalPass::P(const Ray &_ray, const Scene &_scene) const {
 	}
 	return Colour(0, 0, 0);
 }
+
+LAMBDA_END

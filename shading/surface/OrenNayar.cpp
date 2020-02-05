@@ -1,5 +1,7 @@
 #include "OrenNayar.h"
 
+LAMBDA_BEGIN
+
 OrenNayarBRDF::OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
 	albedoSocket = _albedo;
 	sigmaSocket = _sigma;
@@ -30,3 +32,5 @@ Spectrum OrenNayarBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler,
 	_event.hit->point += _event.hit->normalG * SURFACE_EPSILON * (isInside ? -1 : 1);
 	return f(_event);
 }
+
+LAMBDA_END

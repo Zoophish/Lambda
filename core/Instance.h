@@ -1,6 +1,8 @@
 #pragma once
 #include "TriangleMesh.h"
 
+LAMBDA_BEGIN
+
 class InstanceProxy {
 	public:
 		InstanceProxy(Object *_object);
@@ -40,3 +42,5 @@ class Instance : public Object {
 		*/
 		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override;
 };
+
+LAMBDA_END

@@ -71,6 +71,8 @@ namespace {
 
 }
 
+LAMBDA_BEGIN
+
 size_t TextureEncoding::MortonOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 	#ifdef USE_BMI
 	return _pdep_u64(_y, y2_mask) | _pdep_u64(_x, x2_mask);
@@ -90,3 +92,5 @@ size_t TextureEncoding::ScanlineRowOrder(const unsigned _w, const unsigned _h, c
 size_t TextureEncoding::ScanlineColOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y) {
 	return _x * _h + _y;
 }
+
+LAMBDA_END

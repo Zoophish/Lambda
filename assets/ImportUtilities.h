@@ -5,6 +5,8 @@
 #include <assimp/scene.h>
 #include "ResourceManager.h"
 
+LAMBDA_BEGIN
+
 namespace ImportUtilities {
 
 	struct ImportMetrics {
@@ -40,3 +42,5 @@ namespace ImportUtilities {
 		return aff;
 	}
 }
+
+LAMBDA_END

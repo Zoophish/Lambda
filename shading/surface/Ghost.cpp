@@ -1,5 +1,7 @@
 #include "Ghost.h"
 
+LAMBDA_BEGIN
+
 GhostBTDF::GhostBTDF(ShaderGraph::Socket **_alphaSocket) : BxDF(BxDF_TRANSMISSION) {
 	alphaSocket = _alphaSocket;
 }
@@ -28,3 +30,5 @@ Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Rea
 Real GhostBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
 	return 0;
 }
+
+LAMBDA_END
