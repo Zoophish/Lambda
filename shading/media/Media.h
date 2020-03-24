@@ -1,7 +1,7 @@
 #pragma once
 #include "HenyeyGreenstein.h"
 #include <core/Scene.h>
-#include "../SurfaceScatterEvent.h"
+#include "../ScatterEvent.h"
 
 LAMBDA_BEGIN
 
@@ -11,7 +11,7 @@ class Medium {
 
 		virtual Spectrum Tr(const Ray &_ray, const Real _tFar, Sampler &_sampler) const = 0;
 
-		virtual Spectrum Sample(const Ray &_ray, Sampler &_sampler, SurfaceScatterEvent &_event) const = 0;
+		virtual Spectrum Sample(const Ray &_ray, Sampler &_sampler, ScatterEvent &_event) const = 0;
 };
 
 class MediaBoundary {

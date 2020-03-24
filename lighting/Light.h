@@ -6,7 +6,7 @@ LAMBDA_BEGIN
 
 class Ray;
 struct RayHit;
-struct SurfaceScatterEvent;
+struct ScatterEvent;
 
 class Light {
 	public:
@@ -16,12 +16,12 @@ class Light {
 		/*
 			Samples an incident direction light may arrive on.
 		*/
-		virtual Spectrum Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const = 0;
+		virtual Spectrum Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const = 0;
 		
 		/*
 			Pdf of given _event. _sampler is included incase volumes are present.
 		*/
-		virtual Real PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) const = 0;
+		virtual Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const = 0;
 
 		/*
 			Returns radiance incoming along a ray that has escaped scene.
@@ -34,7 +34,7 @@ class Light {
 			Returns emitted radiance at point on surface in outgoing direction wo.
 			Only valid for ray-tracable area lights.
 		*/
-		virtual Spectrum L(const SurfaceScatterEvent &_event) const {
+		virtual Spectrum L(const ScatterEvent &_event) const {
 			return Spectrum(0);
 		}
 

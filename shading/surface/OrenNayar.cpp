@@ -7,7 +7,7 @@ OrenNayarBRDF::OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket 
 	sigmaSocket = _sigma;
 }
 
-Spectrum OrenNayarBRDF::f(const SurfaceScatterEvent &_event) const {
+Spectrum OrenNayarBRDF::f(const ScatterEvent &_event) const {
 	const Real thetaI = std::acos(maths::Clamp(_event.wiL.y, (Real)-1, (Real)1));
 	const Real thetaO = std::acos(maths::Clamp(_event.woL.y, (Real)-1, (Real)1));
 	const Real alpha = std::max(thetaI, thetaO);
@@ -22,7 +22,7 @@ Spectrum OrenNayarBRDF::f(const SurfaceScatterEvent &_event) const {
 	return albedoSpec * INV_PI * (A + B * std::max((Real)0, std::cos(phiI - phiO) * maths::Clamp(std::sin(alpha), (Real)-1, (Real)1) * maths::Clamp(std::tan(beta), (Real)-1, (Real)1)));
 }
 
-Spectrum OrenNayarBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+Spectrum OrenNayarBRDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_event.wiL = Sampling::SampleCosineHemisphere(_sampler.Get2D());
 	const bool isInside = _event.woL.y < 0;
 	if (isInside) _event.wiL.y *= -1;

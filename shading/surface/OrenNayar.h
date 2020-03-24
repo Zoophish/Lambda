@@ -9,9 +9,9 @@ class OrenNayarBRDF : public BxDF {
 
 		OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma);
 
-		Spectrum f(const SurfaceScatterEvent &_event) const override;
+		Spectrum f(const ScatterEvent &_event) const override;
 
-		Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
+		Spectrum Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 };
 
 LAMBDA_END

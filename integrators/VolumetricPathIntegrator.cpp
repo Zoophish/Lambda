@@ -13,19 +13,20 @@ Integrator *VolumetricPathIntegrator::clone() const {
 }
 
 static Medium *InMedium(const Vec3 &_p, const Scene &_scene) {
-	//Embree rtcCollide... this could be slow so maybe a bool option to turn this off?
+	//Embree rtcCollide... what medium is the camera in?
 	return nullptr;
 }
 
 Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	Spectrum L(0), beta(1);
 	RayHit hit;
-	SurfaceScatterEvent event;
+	ScatterEvent event;
 	event.hit = &hit;
 	event.scene = &_scene;
 	event.wo = -r.d;
 	bool scatterIntersect = false;
 	bool newIntersect = true;
+	bool hadMed = false;
 	event.medium = InMedium(r.o, _scene);
 	for (int bounces = 0; bounces < maxBounces; ++bounces) {
 		if (bounces == 0 && newIntersect ? _scene.Intersect(r, hit) : scatterIntersect) {
@@ -33,17 +34,13 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 			if (bounces == 0) {	//Direct lighting on bounce 0 done here
 				if (hit.object->light) {
 					if (event.medium) {
-						beta *= event.medium->Tr(r, hit.tFar, *sampler);
-						L += hit.object->light->L(event) * beta;
+						L += hit.object->light->L(event) * event.medium->Tr(r, hit.tFar, *sampler);
 					}
 					else L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product
 				}
 			}
 
-			if (event.medium) {
-				event.medium->Sample(r, *sampler, event);
-				if (!event.mediumInteraction) beta *= event.medium->Tr(r, hit.tFar, *sampler);
-			}
+			if (event.medium) beta *= event.medium->Sample(r, *sampler, event);	//Apply beam transmittance attenuation current ray to beta
 			else event.mediumInteraction = false;
 
 			if (!event.mediumInteraction) {
@@ -97,11 +94,12 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					r.o = hit.point + hit.normalG * (maths::Dot(event.hit->normalG, r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
 					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex, but...
 					newIntersect = false;
-					bounces--;	//don't consider it a bounce
+					bounces--;	//don't consider it a bounce (no scatter event)
 					continue;
 				}
 			}
 			else if(event.medium) {
+				hadMed = true;
 				event.wo = -r.d;
 				Real lightDistPdf = 1;
 				const Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightDistPdf)];
@@ -119,23 +117,26 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				scatteringPDF = event.medium->phase->Sample_p(event.wo, &event.wi, *sampler);
 				p = scatteringPDF;
 				lightPDF = l->PDF_Li(event, *sampler);
+
 				r.o = hit.point;
 				r.d = event.wi;
 
 				Spectrum Tr(1);
-				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, event.medium, &Tr);	//Direct lighting from phase scatter
+				RayHit lHit;
+				Medium *med = event.medium;
+				scatterIntersect = _scene.IntersectTr(r, lHit, *sampler, med, &Tr);	//Direct lighting from phase scatter
 
 				if (scatteringPDF > 0) {	//Add phase-scattering light contribution
 					if (lightPDF > 0) {
 						Li = Spectrum(0);
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
 						if (scatterIntersect) {
-							if (hit.object->light == l) Li = hit.object->light->L(event) * Tr;
+							if (lHit.object->light == l) Li = lHit.object->light->L(event);
 						}
 						else {
-							Li = l->Le(r) * Tr;
+							Li = l->Le(r);
 						}
-						if (!Li.IsBlack()) Ld += Li * p * weight / scatteringPDF;
+						if (!Li.IsBlack()) Ld += Li * Tr * p * weight / scatteringPDF;
 					}
 				}
  				else break;

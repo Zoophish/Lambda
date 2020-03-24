@@ -23,7 +23,7 @@ namespace ShaderGraph {
 	//			outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, this->Get, "Output");
 	//		}
 	//		
-	//		void Get(const SurfaceScatterEvent *_event, void *_out) const {
+	//		void Get(const ScatterEvent *_event, void *_out) const {
 	//			switch (operatorType) {
 	//			case OperatorType::ADD:
 	//		

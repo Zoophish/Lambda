@@ -7,7 +7,7 @@ A high performance physically-based renderer written in C++ as a project in my s
 - Geometry instancing
 - PBRT-style spectral rendering
 - Fresnel, specular & mix BSDFs
-- Microfacet BSDFs: Beckmann-Spizzichino, Towbridge-Reitz, GGX
+- Microfacet BSDFs: Beckmann-Spizzichino, Towbridge-Reitz/GGX
 - Path integrator with multiple importance sampling
 - Utlilty integrators: direct lighting, normals, depth
 - Mesh lights, infinite/environment lights, mesh portals

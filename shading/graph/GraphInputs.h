@@ -1,7 +1,7 @@
 #pragma once
 #include "ShaderGraph.h"
 #include <image/Texture.h>
-#include <shading/SurfaceScatterEvent.h>
+#include <shading/ScatterEvent.h>
 
 LAMBDA_BEGIN
 
@@ -13,7 +13,7 @@ namespace ShaderGraph {
 
 			ScalarInput(const Real _value);
 
-			void GetScalar(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetScalar(const ScatterEvent *_event, void *_out) const;
 	};
 
 
@@ -24,7 +24,7 @@ namespace ShaderGraph {
 
 			Vec2Input(const Vec2 &_vec);
 
-			void GetVec2(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetVec2(const ScatterEvent *_event, void *_out) const;
 	};
 
 
@@ -36,7 +36,7 @@ namespace ShaderGraph {
 			RGBInput(const Colour &_rgb);
 			RGBInput(const Real *_rgb);
 
-			void GetColour(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetColour(const ScatterEvent *_event, void *_out) const;
 	};
 
 
@@ -49,7 +49,7 @@ namespace ShaderGraph {
 
 			SpectralInput(const Spectrum &_spec);
 
-			void GetSpectrum(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetSpectrum(const ScatterEvent *_event, void *_out) const;
 	};
 
 
@@ -60,7 +60,7 @@ namespace ShaderGraph {
 
 			BlackbodyInput(Socket* _temperatureSocket, const unsigned _samples = Spectrum::nSamples);
 
-			void GetSpectrum(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetSpectrum(const ScatterEvent *_event, void *_out) const;
 
 		private:
 			void Blackbody(const Real *_lambda, int _n, Real _T, Real *_Le) const;
@@ -78,9 +78,9 @@ namespace ShaderGraph {
 
 			ImageTextureInput(Texture *_tex);
 
-			void GetColour(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetColour(const ScatterEvent *_event, void *_out) const;
 
-			void GetScalar(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetScalar(const ScatterEvent *_event, void *_out) const;
 	};
 
 
@@ -92,7 +92,7 @@ namespace ShaderGraph {
 
 			ImageTextureChannelInput(Texture *_tex, const uint8_t _channel = 0);
 
-			void GetScalar(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetScalar(const ScatterEvent *_event, void *_out) const;
 	};
 
 
@@ -102,7 +102,7 @@ namespace ShaderGraph {
 
 			SpectralTextureInput(texture_t<Spectrum> *_tex);
 
-			void GetSpectrum(const SurfaceScatterEvent *_event, void *_out) const;
+			void GetSpectrum(const ScatterEvent *_event, void *_out) const;
 	};
 }
 

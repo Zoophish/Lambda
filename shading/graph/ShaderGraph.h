@@ -3,14 +3,14 @@
 #include <memory>
 #include <utility/Delegate.h>
 #include <core/Spectrum.h>
-#include "../SurfaceScatterEvent.h"
+#include "../ScatterEvent.h"
 #include <image/Texture.h>
 
 LAMBDA_BEGIN
 
 namespace ShaderGraph {
 
-	using NodeDelegate = ConstDelegate<void, const SurfaceScatterEvent *, void *>;
+	using NodeDelegate = ConstDelegate<void, const ScatterEvent *, void *>;
 
 	#define MAKE_SOCKET_CALLBACK(_func) NodeDelegate::FromFunction<std::remove_reference<decltype(*this)>::type, (_func)>(this)
 
@@ -32,7 +32,7 @@ namespace ShaderGraph {
 		NodeDelegate callback;
 		std::string tag;
 
-		inline Real GetAsScalar(const SurfaceScatterEvent *_event) const {
+		inline Real GetAsScalar(const ScatterEvent *_event) const {
 			if(callback && socketType == SocketType::TYPE_SCALAR) {
 				Real r;
 				callback(_event, &r);
@@ -41,7 +41,7 @@ namespace ShaderGraph {
 			return 0;
 		}
 
-		inline Colour GetAsColour(const SurfaceScatterEvent *_event) const {
+		inline Colour GetAsColour(const ScatterEvent *_event) const {
 			if (callback.operator bool() && socketType == SocketType::TYPE_COLOUR) {
 				Colour c;
 				callback(_event, &c);
@@ -50,7 +50,7 @@ namespace ShaderGraph {
 			return Colour(1, 0, 1);
 		}
 
-		inline Vec2 GetAsVec2(const SurfaceScatterEvent *_event) const {
+		inline Vec2 GetAsVec2(const ScatterEvent *_event) const {
 			if (callback.operator bool() && socketType == SocketType::TYPE_VEC2) {
 				Vec2 v;
 				callback(_event, &v);
@@ -59,7 +59,7 @@ namespace ShaderGraph {
 			return Vec2(0, 0);
 		}
 
-		inline BxDF* GetAsBxDF(const SurfaceScatterEvent *_event) const {
+		inline BxDF* GetAsBxDF(const ScatterEvent *_event) const {
 			if (callback && socketType == SocketType::TYPE_BXDF) {
 				BxDF *v = nullptr;
 				BxDF **vRef = &v;
@@ -69,7 +69,7 @@ namespace ShaderGraph {
 			return nullptr;
 		}
 
-		inline Spectrum GetAsSpectrum(const SurfaceScatterEvent *_event, const SpectrumType _type = SpectrumType::Reflectance) {
+		inline Spectrum GetAsSpectrum(const ScatterEvent *_event, const SpectrumType _type = SpectrumType::Reflectance) {
 			const Vec2 uv(maths::Fract(_event->hit->uvCoords.x), maths::Fract(_event->hit->uvCoords.y));
 			switch (socketType) {
 			case SocketType::TYPE_COLOUR:

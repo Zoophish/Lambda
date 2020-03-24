@@ -1,6 +1,6 @@
 #pragma once
 #include "../graph/ShaderGraph.h"
-#include "../SurfaceScatterEvent.h"
+#include "../ScatterEvent.h"
 #include <sampling/Sampling.h>
 #include <sampling/Sampler.h>
 
@@ -22,13 +22,13 @@ class BxDF {
 
 		BxDF(const BxDFType _type);
 
-		virtual Spectrum f(const SurfaceScatterEvent &_event) const = 0;
+		virtual Spectrum f(const ScatterEvent &_event) const = 0;
 
-		virtual Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const;
+		virtual Spectrum Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const;
 
-		virtual Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const;
+		virtual Spectrum Rho(const ScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const;
 
-		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const;	//First two arguments redundant but need checking.
+		virtual Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const;	//First two arguments redundant but need checking.
 
 		static inline Real CosineHemispherePdf(const Vec3 &_wo, const Vec3 &_wi) {
 			return SameHemisphere(_wo, _wi) ? std::abs(_wi.y) * INV_PI : 0;
@@ -43,9 +43,9 @@ class LambertianBRDF : public BxDF {
 
 		LambertianBRDF(ShaderGraph::Socket **_albedoSocket);
 
-		Spectrum f(const SurfaceScatterEvent &_event) const override;
+		Spectrum f(const ScatterEvent &_event) const override;
 
-		Spectrum Rho(const SurfaceScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const override;
+		Spectrum Rho(const ScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const override;
 };
 
 
@@ -56,11 +56,11 @@ class MixBSDF : public BxDF {
 
 		MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket);
 
-		Spectrum f(const SurfaceScatterEvent &_event) const override;
+		Spectrum f(const ScatterEvent &_event) const override;
 
-		Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
+		Spectrum Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 
-		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
+		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const override;
 };
 
 LAMBDA_END

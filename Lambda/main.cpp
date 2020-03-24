@@ -52,10 +52,10 @@ int main() {
 
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
-	Real volC[3] = { .1, 5, .1 };
+	Real volC[3] = { 5, 3, 4 };
 	Spectrum volS = Spectrum::FromRGB(volC);
 
-	Medium *med = new HomogeneousMedium(volS, Spectrum(.1));
+	Medium *med = new HomogeneousMedium(volS, Spectrum(10));
 	HenyeyGreenstein *phase = new HenyeyGreenstein;
 	phase->g = 0;
 	med->phase = phase;
@@ -66,7 +66,7 @@ int main() {
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
 		if (m) {
-			it.second->bxdf = nullptr;
+			it.second->bxdf = fresMat;
 			it.second->mediaBoundary = new MediaBoundary;
 			it.second->mediaBoundary->interior = med;
 			scene.AddObject(it.second);
@@ -84,19 +84,19 @@ int main() {
 	scene.AddObject(&plane);
 
 
-	ai.Import("../content/DragonsLight.obj");
-	ai.PushToResourceManager(&resources);
-	TriangleMesh lightMesh;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	lightMesh.smoothNormals = false;
-	MeshLight light(&lightMesh);
-	sg::ScalarInput temp1(3500);
-	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
-	light.emission = &blckInpt1.outputSockets[0];
-	light.intensity = 500;
-	lightMesh.mediaBoundary = new MediaBoundary;
-	scene.AddLight(&light);
-	scene.AddObject(&lightMesh);
+	//ai.Import("../content/DragonsLight.obj");
+	//ai.PushToResourceManager(&resources);
+	//TriangleMesh lightMesh;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	//lightMesh.smoothNormals = false;
+	//MeshLight light(&lightMesh);
+	//sg::ScalarInput temp1(3500);
+	//sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	//light.emission = &blckInpt1.outputSockets[0];
+	//light.intensity = 500;
+	//lightMesh.mediaBoundary = new MediaBoundary;
+	//scene.AddLight(&light);
+	//scene.AddObject(&lightMesh);
 	
 	//ai.Import("../content/SideLight.obj");
 	//ai.PushToResourceManager(&resources);
@@ -115,7 +115,7 @@ int main() {
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	envMap.LoadImageFile("..\\content\\veranda_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
@@ -141,10 +141,10 @@ int main() {
 
 	CircularAperture aperture2(.05);
 	ThinLensCamera cam(Vec3(0, 1.5, 10), 16, 9, 12, &aperture2);
-	aperture2.size = .002;
+	aperture2.size = .025;
 	aperture2.sampler = &sampler;
-	cam.SetFov(.35);
-	cam.SetRotation(-PI, PI*-0.02);
+	cam.SetFov(.25);
+	cam.SetRotation(-PI, PI*-0.0286);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);

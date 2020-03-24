@@ -14,7 +14,7 @@ Spectrum DirectLightingIntegrator::Li(Ray _ray, const Scene &_scene) const {
 	RayHit hit;
 	if (_scene.Intersect(_ray, hit)) {
 		if (hit.object->bxdf) {
-			SurfaceScatterEvent event;
+			ScatterEvent event;
 			event.hit = &hit;
 			event.scene = &_scene;
 			event.wo = -_ray.d;

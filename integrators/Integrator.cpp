@@ -2,7 +2,7 @@
 
 LAMBDA_BEGIN
 
-Spectrum Integrator::SampleOneLight(SurfaceScatterEvent &_event, const Scene &_scene) const {
+Spectrum Integrator::SampleOneLight(ScatterEvent &_event, const Scene &_scene) const {
 	if (_event.hit->object->bxdf) {
 		Real lightPdf = 1;
 		Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightPdf)];
@@ -11,7 +11,7 @@ Spectrum Integrator::SampleOneLight(SurfaceScatterEvent &_event, const Scene &_s
 	return Spectrum(0);
 }
 
-Spectrum Integrator::EstimateDirect(SurfaceScatterEvent &_event, const Scene &_scene, const Light &_light) const {
+Spectrum Integrator::EstimateDirect(ScatterEvent &_event, const Scene &_scene, const Light &_light) const {
 	Spectrum Ld(0);
 	Real scatteringPDF, lightPDF;
 	Spectrum f, Li = _light.Sample_Li(_event, sampler, lightPDF);
@@ -36,7 +36,7 @@ Spectrum Integrator::EstimateDirect(SurfaceScatterEvent &_event, const Scene &_s
 			return Ld;
 		}
 		weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-		SurfaceScatterEvent bsdfIntersect;
+		ScatterEvent bsdfIntersect;
 		bsdfIntersect.scene = &_scene;
 		RayHit lightHit;
 		bsdfIntersect.hit = &lightHit;

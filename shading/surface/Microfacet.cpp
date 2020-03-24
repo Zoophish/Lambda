@@ -9,7 +9,7 @@ MicrofacetBRDF::MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph:
 	fresnel = _fresnel;
 }
 
-Spectrum MicrofacetBRDF::f(const SurfaceScatterEvent &_event) const {
+Spectrum MicrofacetBRDF::f(const ScatterEvent &_event) const {
 	const Real cosThetaO = std::abs(_event.woL.y), cosThetaI = std::abs(_event.wiL.y);
 	Vec3 wh = _event.wiL + _event.woL;
 	if (cosThetaI == 0 || cosThetaO == 0) return Spectrum(0);
@@ -24,7 +24,7 @@ Spectrum MicrofacetBRDF::f(const SurfaceScatterEvent &_event) const {
 	return albedoSpec * D * G * F / (4 * cosThetaI * cosThetaO);
 }
 
-Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+Spectrum MicrofacetBRDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	if (_event.woL.y == 0) return Spectrum(0);
 	const Vec2 alpha = RoughnessToAlpha(&_event);
 	const Vec3 wh = distribution->Sample_wh(_sampler, _event.woL, alpha).Normalised();
@@ -39,7 +39,7 @@ Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler
 	return f(_event);
 }
 
-Real MicrofacetBRDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
+Real MicrofacetBRDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const {
 	if (!SameHemisphere(_wo, _wi)) return 0;
 	const Vec3 wh = (_wo + _wi).Normalised();
 	const Vec2 alpha = RoughnessToAlpha(&_event);
@@ -53,7 +53,7 @@ static inline Real ToAlpha(Real _roughness) {
 	return x;
 }
 
-inline Vec2 MicrofacetBRDF::RoughnessToAlpha(const SurfaceScatterEvent *_event) const {
+inline Vec2 MicrofacetBRDF::RoughnessToAlpha(const ScatterEvent *_event) const {
 	switch ((*roughnessSocket)->socketType) {
 		case ShaderGraph::SocketType::TYPE_SCALAR:	//Isotropic distribution
 		{

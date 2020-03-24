@@ -29,12 +29,18 @@ bool Scene::Intersect(const Ray &_ray, RayHit &_hit) const {
 }
 
 bool Scene::IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr) const {
+	//Real tFar = 0;
 	while (Intersect(_r, _hit)) {
+		//tFar += _hit.tFar;
 		if (_med && _Tr) *_Tr *= _med->Tr(_r, _hit.tFar, _sampler);
-		if (_hit.object->bxdf || _hit.object->light) return true;
+		if (_hit.object->bxdf || _hit.object->light) {
+			//_hit.tFar = tFar;
+			return true;
+		}
 		_med = _hit.object->mediaBoundary->GetMedium(_r.d, _hit.normalG);
 		_r.o = _hit.point + _hit.normalG *(maths::Dot(_hit.normalG, _r.d) < 0 ? -.0001 : .0001);
 	}
+	//if (_med) _Tr = 0;
 	return false;
 }
 

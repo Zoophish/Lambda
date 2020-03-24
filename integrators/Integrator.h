@@ -14,9 +14,9 @@ class Integrator {
 
 		virtual Spectrum Li(Ray _ray, const Scene &_scene) const = 0;
 
-		Spectrum SampleOneLight(SurfaceScatterEvent &_event, const Scene &_scene) const;
+		Spectrum SampleOneLight(ScatterEvent &_event, const Scene &_scene) const;
 
-		Spectrum EstimateDirect(SurfaceScatterEvent &_event, const Scene &_scene, const Light &_light) const;
+		Spectrum EstimateDirect(ScatterEvent &_event, const Scene &_scene, const Light &_light) const;
 
 		//bool IntersectTr(const Scene &_scene, Ray &_ray, RayHit &_hit, Spectrum *_tr) const;
 

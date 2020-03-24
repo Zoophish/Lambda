@@ -6,11 +6,11 @@ GhostBTDF::GhostBTDF(ShaderGraph::Socket **_alphaSocket) : BxDF(BxDF_TRANSMISSIO
 	alphaSocket = _alphaSocket;
 }
 
-Spectrum GhostBTDF::f(const SurfaceScatterEvent &_event) const {
+Spectrum GhostBTDF::f(const ScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+Spectrum GhostBTDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_pdf = 1;
 	const Real alpha = (*alphaSocket)->GetAsScalar(&_event);
 	const bool isInside = _event.woL.y < 0;
@@ -27,7 +27,7 @@ Spectrum GhostBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Rea
 	return Spectrum(0);
 }
 
-Real GhostBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
+Real GhostBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const {
 	return 0;
 }
 

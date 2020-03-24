@@ -21,15 +21,16 @@ EnvironmentLight::EnvironmentLight(Texture *_texture, const Real _intesity) {
 	distribution.reset(new Distribution::Piecewise2D(img.get(), w, h));
 }
 
-static inline bool RayEscapes(const Ray &_r, const SurfaceScatterEvent &_event, Sampler &_sampler, Spectrum *_Tr = nullptr) {
+static inline bool RayEscapes(const Ray &_r, const ScatterEvent &_event, Sampler &_sampler, Spectrum *_Tr = nullptr) {
 	if (_event.scene->hasVolumes) {
 		RayHit hit;
-		return !_event.scene->IntersectTr(_r, hit, _sampler, _event.medium, _Tr);
+		Medium *med = _event.medium;
+		return !_event.scene->IntersectTr(_r, hit, _sampler, med, _Tr);
 	}
 	return _event.scene->RayEscapes(_r);
 }
 
-Spectrum EnvironmentLight::Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
+Spectrum EnvironmentLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const Vec2 uv = distribution->SampleContinuous(_sampler->Get2D(), &_pdf);
 	if (_pdf == 0) return Spectrum(0);
 	const Real theta = uv.y * PI + offset.y;
@@ -52,7 +53,7 @@ Spectrum EnvironmentLight::Sample_Li(SurfaceScatterEvent &_event, Sampler *_samp
 	return Spectrum(0);
 }
 
-Real EnvironmentLight::PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) const {
+Real EnvironmentLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	const Real theta = maths::SphericalTheta(_event.wi) - offset.y;
 	const Real phi = maths::SphericalPhi(_event.wi) - offset.x;
 	const Real sinTheta = std::sin(theta);

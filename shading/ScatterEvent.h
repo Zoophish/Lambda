@@ -1,6 +1,6 @@
 /*----	Sam Warren 2019-2020	----
-	Structure that provides access to necessary information needed for shading at a given point ona  surface
-	or within a volume.
+	Structure that provides access to necessary information needed for shading
+	at a given point on a  surface or within a volume.
 */
 
 #pragma once
@@ -14,7 +14,7 @@ class BxDF;
 class Scene;
 class Medium;
 
-struct SurfaceScatterEvent {
+struct ScatterEvent {
 	Vec3 wo, wi, woL, wiL;
 	Real eta = 1;
 	bool mediumInteraction = false;

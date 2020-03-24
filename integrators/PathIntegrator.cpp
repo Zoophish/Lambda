@@ -15,7 +15,7 @@ Integrator *PathIntegrator::clone() const {
 Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 	Spectrum L(0), beta(1);
 	RayHit hit;
-	SurfaceScatterEvent event;
+	ScatterEvent event;
 	event.hit = &hit;
 	event.scene = &_scene;
 	event.wo = -r.d;

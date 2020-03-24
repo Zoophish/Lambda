@@ -17,7 +17,7 @@ class HomogeneousMedium : public Medium {
 			return Spectrum::Exp(-sigmaT * std::min(_tFar, MAX_REAL));
 		}
 
-		Spectrum Sample(const Ray &_ray, Sampler &_sampler, SurfaceScatterEvent &_event) const override {
+		Spectrum Sample(const Ray &_ray, Sampler &_sampler, ScatterEvent &_event) const override {
 			const Spectrum sigmaT = sigmaA + sigmaS;
 			const unsigned channel = std::min((unsigned)(_sampler.Get1D() * Spectrum::nSamples), Spectrum::nSamples - 1);
 			const Real dist = -std::log(1 - _sampler.Get1D()) / sigmaT[channel];

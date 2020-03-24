@@ -15,14 +15,14 @@ class MicrofacetBRDF : public BxDF {
 
 		MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_roughnessSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
 
-		Spectrum f(const SurfaceScatterEvent &_event) const override;
+		Spectrum f(const ScatterEvent &_event) const override;
 
-		Spectrum Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
+		Spectrum Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 
-		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const override;
+		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const override;
 
 	private:
-		inline Vec2 RoughnessToAlpha(const SurfaceScatterEvent *_event) const;
+		inline Vec2 RoughnessToAlpha(const ScatterEvent *_event) const;
 };
 
 //class MicrofacetBSDF {};

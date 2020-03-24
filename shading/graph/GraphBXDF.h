@@ -13,7 +13,7 @@ namespace ShaderGraph {
 	#define BXDF_CALLBACK &std::add_const<_DECLTYPE>::type::GetBxDF
 	#define MAKE_BXDF_SOCKET(_type, _callback, _tag) {	(_type), NodeDelegate::FromFunction<_DECLTYPE, _callback>(this), (_tag)	}
 	
-	#define DECL_CLBCK_FUNC void GetBxDF(const SurfaceScatterEvent *_event, void *_out) const;
+	#define DECL_CLBCK_FUNC void GetBxDF(const ScatterEvent *_event, void *_out) const;
 
 	class MixBxDFNode : public Node, public MixBSDF {
 		public:

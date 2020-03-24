@@ -2,7 +2,7 @@
 #include "Light.h"
 #include <shading/TextureAdapter.h>
 #include <sampling/Piecewise.h>
-#include <shading/SurfaceScatterEvent.h>
+#include <shading/ScatterEvent.h>
 #include <core/Ray.h>
 #include <core/Scene.h>
 
@@ -18,9 +18,9 @@ class EnvironmentLight : public Light {
 
 		EnvironmentLight(Texture *_texture, const Real _intesity = 1);
 
-		Spectrum Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override;
+		Spectrum Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override;
 
-		Real PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) const override;
+		Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const override;
 
 		Spectrum Le(const Ray &_r) const override;
 

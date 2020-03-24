@@ -12,7 +12,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BxDF");
 	}
 
-	void MixBxDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void MixBxDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF*>(static_cast<MixBSDF*>(const_cast<MixBxDFNode*>(this)));
 	}
 
@@ -23,7 +23,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
 	}
 
-	void LambertianBRDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void LambertianBRDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<LambertianBRDF *>(const_cast<LambertianBRDFNode *>(this)));
 	}
 
@@ -36,7 +36,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
 	}
 
-	void OrenNayarBxDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void OrenNayarBxDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<OrenNayarBRDF *>(const_cast<OrenNayarBxDFNode *>(this)));
 	}
 
@@ -48,7 +48,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
 	}
 
-	void MicrofacetBRDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void MicrofacetBRDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<MicrofacetBRDF *>(const_cast<MicrofacetBRDFNode *>(this)));
 	}
 
@@ -58,7 +58,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BTDF");
 	}
 
-	void GhostBTDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void GhostBTDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<GhostBTDF *>(const_cast<GhostBTDFNode *>(this)));
 	}
 
@@ -71,7 +71,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BSDF");
 	}
 
-	void FresnelBSDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void FresnelBSDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<FresnelBSDF *>(const_cast<FresnelBSDFNode *>(this)));
 	}
 
@@ -82,7 +82,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
 	}
 
-	void SpecularBRDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void SpecularBRDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<SpecularBRDF *>(const_cast<SpecularBRDFNode *>(this)));
 	}
 
@@ -94,7 +94,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BTDF");
 	}
 
-	void SpecularBTDFNode::GetBxDF(const SurfaceScatterEvent *_event, void *_out) const {
+	void SpecularBTDFNode::GetBxDF(const ScatterEvent *_event, void *_out) const {
 		*reinterpret_cast<BxDF **>(_out) = static_cast<BxDF *>(static_cast<SpecularBTDF *>(const_cast<SpecularBTDFNode *>(this)));
 	}
 

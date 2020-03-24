@@ -7,11 +7,11 @@ FresnelBSDF::FresnelBSDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socke
 	iorSocket = _iorSocket;
 }
 
-Spectrum FresnelBSDF::f(const SurfaceScatterEvent &_event) const {
+Spectrum FresnelBSDF::f(const ScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum FresnelBSDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+Spectrum FresnelBSDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	const bool entering = _event.woL.y > 0;
 	const Real ior = (*iorSocket)->GetAsScalar(&_event);
 	const Real etaI = entering ? _event.eta : ior;
@@ -38,7 +38,7 @@ Spectrum FresnelBSDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, R
 	}
 }
 
-Real FresnelBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
+Real FresnelBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const {
 	return 0;
 }
 
@@ -49,11 +49,11 @@ SpecularBRDF::SpecularBRDF(ShaderGraph::Socket **_albedoSocket, Fresnel *_fresne
 	albedoSocket = _albedoSocket;
 }
 
-Spectrum SpecularBRDF::f(const SurfaceScatterEvent &_event) const {
+Spectrum SpecularBRDF::f(const ScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum SpecularBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+Spectrum SpecularBRDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_pdf = 1;
 	_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
 	_event.wi = _event.ToWorld(_event.wiL);
@@ -68,11 +68,11 @@ SpecularBTDF::SpecularBTDF(ShaderGraph::Socket **_albedoSocket, const Real _etaT
 	fresnel.etaT = _etaT;
 }
 
-Spectrum SpecularBTDF::f(const SurfaceScatterEvent &_event) const {
+Spectrum SpecularBTDF::f(const ScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
-Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+Spectrum SpecularBTDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_pdf = 1;
 	const Vec3 woL = _event.ToLocal(_event.wo);
 	const bool outside = woL.y > 0;
@@ -88,7 +88,7 @@ Spectrum SpecularBTDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler, 
 	return ft * inv;
 }
 
-Real SpecularBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const SurfaceScatterEvent &_event) const {
+Real SpecularBTDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const {
 	return 0;
 }
 

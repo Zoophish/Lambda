@@ -9,7 +9,7 @@ MeshPortal::MeshPortal(EnvironmentLight *_parentLight, TriangleMesh *_mesh) {
 	InitDistribution();
 }
 
-Spectrum MeshPortal::Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
+Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 	const Vec2 u = _sampler->Get2D();
 	const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
@@ -28,7 +28,7 @@ Spectrum MeshPortal::Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, R
 	return Spectrum(0);
 }
 
-Real MeshPortal::PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) const {
+Real MeshPortal::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	RayHit hit;
 	if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit)) return 0;
 	if (hit.object->light != this) return 0;
@@ -40,7 +40,7 @@ Real MeshPortal::PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) co
 	return 0;
 }
 
-Spectrum MeshPortal::L(const SurfaceScatterEvent &_event) const {
+Spectrum MeshPortal::L(const ScatterEvent &_event) const {
 	if (maths::Dot(_event.hit->normalS, _event.wo) > 0) {
 		return parentLight->Le(-_event.wo);
 	}
