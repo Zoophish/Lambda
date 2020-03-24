@@ -5,6 +5,7 @@
 #include <shading/MicrofacetDistribution.h>
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/PathIntegrator.h>
+#include <integrators/VolumetricPathIntegrator.h>
 #include <integrators/UtilityIntegrators.h>
 #include <sampling/HaltonSampler.h>
 #include <camera/Camera.h>
@@ -16,6 +17,7 @@
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
+#include <shading/media/HomogenousMedium.h>
 
 using namespace lambda;
 
@@ -42,46 +44,59 @@ int main() {
 	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.0001);
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001));
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&greenNode->outputSockets[0], &iorNode->outputSockets[0]);
-	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&greenNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&gridNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::SpecularBRDFNode *specMat = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
 	
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&greenNode->outputSockets[0], &sigmaNode->outputSockets[0], &d, &fres);
 
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
+	Real volC[3] = { .1, 5, .1 };
+	Spectrum volS = Spectrum::FromRGB(volC);
+
+	Medium *med = new HomogeneousMedium(volS, Spectrum(.1));
+	HenyeyGreenstein *phase = new HenyeyGreenstein;
+	phase->g = 0;
+	med->phase = phase;
+
 	AssetImporter ai2;
-	ai2.Import("D:\\Assets\\xFrogScene.obj");
+	ai2.Import("../content/dragon.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
 		if (m) {
-			it.second->bxdf = m->bxdf;
+			it.second->bxdf = nullptr;
+			it.second->mediaBoundary = new MediaBoundary;
+			it.second->mediaBoundary->interior = med;
 			scene.AddObject(it.second);
 		}
 	}
 
 	AssetImporter ai;
-	ai.Import("../content/lucy.obj");
+	ai.Import("../content/plane.obj");
 	ai.PushToResourceManager(&resources);
-	TriangleMesh lucy;
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lucy);
-	lucy.bxdf = microfacetBRDF;
-	scene.AddObject(&lucy);
+	TriangleMesh plane;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
+	plane.bxdf = mat;
+	plane.mediaBoundary = new MediaBoundary;
+
+	scene.AddObject(&plane);
 
 
-	//ai.Import("../content/TopLight.obj");
-	//ai.PushToResourceManager(&resources);
-	//TriangleMesh lightMesh;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	//lightMesh.smoothNormals = false;
-	//MeshLight light(&lightMesh);
-	//sg::ScalarInput temp1(3500);
-	//sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
-	//light.emission = &blckInpt1.outputSockets[0];
-	//light.intensity = 4000;
-	//scene.AddLight(&light);
-	//scene.AddObject(&lightMesh);
+	ai.Import("../content/DragonsLight.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh lightMesh;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	lightMesh.smoothNormals = false;
+	MeshLight light(&lightMesh);
+	sg::ScalarInput temp1(3500);
+	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	light.emission = &blckInpt1.outputSockets[0];
+	light.intensity = 500;
+	lightMesh.mediaBoundary = new MediaBoundary;
+	scene.AddLight(&light);
+	scene.AddObject(&lightMesh);
 	
 	//ai.Import("../content/SideLight.obj");
 	//ai.PushToResourceManager(&resources);
@@ -98,12 +113,13 @@ int main() {
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("..\\content\\quarry_01_2k.hdr");
+	envMap.LoadImageFile("..\\content\\veranda_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
-	ibl.offset = Vec2(PI*-.5, 0);
+	ibl.intensity = 0;
+	ibl.offset = Vec2(PI*0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
+	scene.hasVolumes = true;
 
 	//ai.Import("D:\\Assets\\sponza_portal.obj");
 	//ai.PushToResourceManager(&resources);
@@ -124,26 +140,27 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(0, 1, 12), 16, 9, 12, &aperture2);
+	ThinLensCamera cam(Vec3(0, 1.5, 10), 16, 9, 12, &aperture2);
 	aperture2.size = .002;
 	aperture2.sampler = &sampler;
 	cam.SetFov(.35);
-	cam.SetRotation(-PI, PI*0);
+	cam.SetRotation(-PI, PI*-0.02);
 
 	//Make some integrators.
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
+	VolumetricPathIntegrator volPathIntegrator(&sampler);
 	NormalPass normalPass(&sampler);
 	Film film(1280, 720);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
 	renderDirective.camera = &cam;
-	renderDirective.integrator = &pathIntegrator;
+	renderDirective.integrator = &volPathIntegrator;
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 16;
+	renderDirective.spp = 128;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

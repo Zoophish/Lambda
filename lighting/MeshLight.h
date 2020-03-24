@@ -17,7 +17,7 @@ class MeshLight : public Light {
 
 		Spectrum Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override;
 
-		Real PDF_Li(const SurfaceScatterEvent &_event) const override;
+		Real PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) const override;
 
 		Spectrum L(const SurfaceScatterEvent &_event) const override;
 

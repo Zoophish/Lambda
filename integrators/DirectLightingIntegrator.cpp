@@ -10,7 +10,7 @@ Integrator *DirectLightingIntegrator::clone() const {
 	return new DirectLightingIntegrator(*this);
 }
 
-Spectrum DirectLightingIntegrator::Li(const Ray &_ray, const Scene &_scene) const {
+Spectrum DirectLightingIntegrator::Li(Ray _ray, const Scene &_scene) const {
 	RayHit hit;
 	if (_scene.Intersect(_ray, hit)) {
 		if (hit.object->bxdf) {
@@ -18,7 +18,7 @@ Spectrum DirectLightingIntegrator::Li(const Ray &_ray, const Scene &_scene) cons
 			event.hit = &hit;
 			event.scene = &_scene;
 			event.wo = -_ray.d;
-			event.Localise();
+			event.SurfaceLocalise();
 			return SampleOneLight(event, _scene);
 		}
 		else {

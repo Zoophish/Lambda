@@ -34,7 +34,6 @@ Spectrum MicrofacetBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler
 		return Spectrum(0);
 	}
 	_pdf = distribution->Pdf(wh, alpha) / (4 * maths::Dot(_event.woL, wh));
-	_event.pdf = _pdf;
 	_event.wi = _event.ToWorld(_event.wiL);
 	_event.hit->point += _event.hit->normalG * SURFACE_EPSILON;
 	return f(_event);

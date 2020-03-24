@@ -9,7 +9,7 @@ class DirectLightingIntegrator : public Integrator {
 
 		Integrator *clone() const override;
 
-		Spectrum Li(const Ray &_ray, const Scene &_scene) const override;
+		Spectrum Li(Ray _ray, const Scene &_scene) const override;
 
 	protected:
 		const unsigned maxDepth;

@@ -6,6 +6,7 @@ Scene::Scene(const RTCSceneFlags _sceneFlags, const char *_deviceConfig) {
 	device = rtcNewDevice(_deviceConfig);
 	scene = rtcNewScene(device);
 	SetFlags(_sceneFlags);
+	hasVolumes = false;
 }
 
 bool Scene::Intersect(const Ray &_ray, RayHit &_hit) const {
@@ -23,6 +24,16 @@ bool Scene::Intersect(const Ray &_ray, RayHit &_hit) const {
 		else _hit.object = objects[rayHit.hit.geomID];
 		_hit.primId = rayHit.hit.primID;
 		return true;
+	}
+	return false;
+}
+
+bool Scene::IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr) const {
+	while (Intersect(_r, _hit)) {
+		if (_med && _Tr) *_Tr *= _med->Tr(_r, _hit.tFar, _sampler);
+		if (_hit.object->bxdf || _hit.object->light) return true;
+		_med = _hit.object->mediaBoundary->GetMedium(_r.d, _hit.normalG);
+		_r.o = _hit.point + _hit.normalG *(maths::Dot(_hit.normalG, _r.d) < 0 ? -.0001 : .0001);
 	}
 	return false;
 }

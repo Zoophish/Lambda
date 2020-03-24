@@ -7,7 +7,7 @@ class UtilityIntegrator : public Integrator {
 	public:
 		virtual Colour P(const Ray &_ray, const Scene &_scene) const = 0;
 
-		Spectrum Li(const Ray &_ray, const Scene &_scene) const override;
+		Spectrum Li(Ray _ray, const Scene &_scene) const override;
 };
 
 

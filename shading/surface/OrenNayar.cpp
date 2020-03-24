@@ -27,7 +27,6 @@ Spectrum OrenNayarBRDF::Sample_f(SurfaceScatterEvent &_event, Sampler &_sampler,
 	const bool isInside = _event.woL.y < 0;
 	if (isInside) _event.wiL.y *= -1;
 	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
-	_event.pdf = _pdf;
 	_event.wi = _event.ToWorld(_event.wiL);
 	_event.hit->point += _event.hit->normalG * SURFACE_EPSILON * (isInside ? -1 : 1);
 	return f(_event);

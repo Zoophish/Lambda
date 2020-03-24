@@ -15,6 +15,7 @@
 #include "Object.h"
 #include <lighting/Light.h>
 #include <sampling/Piecewise.h>
+#include <shading/media/Media.h>
 
 LAMBDA_BEGIN
 
@@ -28,6 +29,7 @@ class Scene {
 		std::vector<Light*> lights;
 		Light* envLight;
 		Distribution::Piecewise1D lightDistribution;
+		bool hasVolumes;
 
 		Scene(const RTCSceneFlags _sceneFlags = RTC_SCENE_FLAG_NONE, const char *_deviceConfig = NULL);
 
@@ -53,6 +55,11 @@ class Scene {
 				- Hit information passed to _hit.
 		*/
 		bool Intersect(const Ray &_ray, RayHit &_hit) const;
+
+		/*
+			Queries _ray against scene geometry, ignoring pure volumes and returning beam transmittance to _Tr.
+		*/
+		bool IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr = nullptr) const;
 
 		/*
 			Returns true if points _p1 and _p2 are mutually visible against scene geometry.
@@ -102,6 +109,14 @@ class Scene {
 				- Call if lights have been changed but geometry hasn't.
 		*/
 		void UpdateLightDistribution();
+};
+
+struct SceneNode {
+	std::string name;
+	SceneNode *parent = nullptr;
+	Affine3 xfm;
+	std::vector<Object*> objects;
+	std::vector<SceneNode> children;
 };
 
 LAMBDA_END

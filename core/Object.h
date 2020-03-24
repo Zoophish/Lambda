@@ -16,9 +16,11 @@ class Object : public Transformable {
 		RTCGeometry geometry;
 		BxDF *bxdf = nullptr;
 		Light *light = nullptr;
-		MediaBoundary *mediaBoundary = nullptr;
+		MediaBoundary *mediaBoundary;
 		
 		Object() {}
+
+		Object(const Affine3 &_xfm) : Transformable(_xfm) {}
 		
 		/*
 			Process hit information from Embree RTCRayHit to a Lambda RayHit.
@@ -42,6 +44,19 @@ class Object : public Transformable {
 			All derivatives must override to provide their own hit information.
 		*/
 		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
+};
+
+class Empty : public Object {
+	public:
+		Empty(const Affine3 &_xfm) : Object(_xfm) {}
+
+		void Commit(const RTCDevice &_device) override {
+			return;
+		}
+
+		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override {
+			return;
+		}
 };
 
 LAMBDA_END

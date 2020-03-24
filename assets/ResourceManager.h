@@ -1,9 +1,9 @@
 #pragma once
 #include <unordered_map>
-#include <core/Object.h>
+#include <core/Instance.h>
 #include <image/Texture.h>
 #include <shading/Material.h>
-#include <core/SceneGraph.h>
+#include <core/Scene.h>
 
 LAMBDA_BEGIN
 
@@ -30,21 +30,6 @@ class ResourcePool {
 			return pool.size();
 		}
 
-		//inline bool Find(const std::string &_tag, T *&_res) const {
-		//	const std::unordered_map<std::string, T*>::const_iterator it = pool.find(_tag);
-		//	if (it != pool.end()) {
-		//		_res = it->second;
-		//		return true;
-		//	}
-		//	return false;
-		//}
-		//
-		//inline bool Find(const std::string &_tag) const {
-		//	const std::unordered_map<std::string, T *>::const_iterator it = pool.find(_tag);
-		//	if (it != pool.end()) return true;
-		//	return false;
-		//}
-
 		inline T *Find(const std::string &_tag) const {
 			const std::unordered_map<std::string, T *>::const_iterator it = pool.find(_tag);
 			if (it != pool.end()) return it->second;
@@ -56,14 +41,12 @@ class ResourcePool {
 	General container for asset objects.
 		- Automatically owns everything pushed to it.
 */
-class ResourceManager {
-	public:
+struct ResourceManager {
 		ResourcePool<Object> objectPool;
 		ResourcePool<Texture> texturePool;
 		ResourcePool<Material> materialPool;
 		ResourcePool<SceneNode> graphPool;
-
-		ResourceManager() {}
+		ResourcePool<InstanceProxy> proxyPool;
 };
 
 LAMBDA_END

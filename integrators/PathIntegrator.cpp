@@ -12,9 +12,8 @@ Integrator *PathIntegrator::clone() const {
 	return new PathIntegrator(*this);
 }
 
-Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
+Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 	Spectrum L(0), beta(1);
-	Ray r = _r;
 	RayHit hit;
 	SurfaceScatterEvent event;
 	event.hit = &hit;
@@ -23,14 +22,12 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 	bool scatterIntersect = false;
 	for (unsigned bounces = 0; bounces < maxBounces; ++bounces) {
 		if (bounces == 0 ? _scene.Intersect(r, hit) : scatterIntersect) {
-			event.pdf = 1;
-
 			if (bounces == 0 && hit.object->light) {
 				L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product.
 			}
 
 			if (hit.object->bxdf) {
-				event.Localise();
+				event.SurfaceLocalise();
 				event.wo = -r.d;
 				Real lightDistPdf = 1;
 				const Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightDistPdf)];
@@ -47,7 +44,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 				}
 				f = hit.object->bxdf->Sample_f(event, *sampler, scatteringPDF);
 				f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL.
-				lightPDF = l->PDF_Li(event);	//Evaluated before hit is altered to next path vertex
+				lightPDF = l->PDF_Li(event, *sampler);	//Evaluated before hit is altered to next path vertex
 				r.o = hit.point;
 				r.d = event.wi;
 				scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex
@@ -72,6 +69,7 @@ Spectrum PathIntegrator::Li(const Ray &_r, const Scene &_scene) const {
 			}
 			else {
 				r.o = event.hit->point + r.d * .0005;
+				bounces--;
 				continue;
 			}
 

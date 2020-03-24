@@ -1,8 +1,8 @@
-/*
-Structure that provides access to necessary information needed for shading.
+/*----	Sam Warren 2019-2020	----
+	Structure that provides access to necessary information needed for shading at a given point ona  surface
+	or within a volume.
 */
 
-//TO DO: Rename to SurfaceEvent?
 #pragma once
 #include <iostream>
 #include <maths/maths.h>
@@ -12,11 +12,14 @@ LAMBDA_BEGIN
 
 class BxDF;
 class Scene;
+class Medium;
 
 struct SurfaceScatterEvent {
 	Vec3 wo, wi, woL, wiL;
-	Real pdf, eta = 1;
+	Real eta = 1;
+	bool mediumInteraction = false;
 	RayHit *hit;
+	Medium *medium;
 	const Scene *scene;
 
 	inline Vec3 ToLocal(const Vec3 &_v) const {
@@ -27,7 +30,7 @@ struct SurfaceScatterEvent {
 		if(hit) return maths::FromSpace(_v, hit->tangent, hit->normalS, hit->bitangent);
 	}
 
-	inline void Localise() {
+	inline void SurfaceLocalise() {
 		woL = ToLocal(wo);
 		wiL = ToLocal(wi);
 	}

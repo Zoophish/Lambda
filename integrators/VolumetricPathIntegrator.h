@@ -3,11 +3,11 @@
 
 LAMBDA_BEGIN
 
-class PathIntegrator : public Integrator {
+class VolumetricPathIntegrator : public Integrator {
 	public:
 		unsigned maxBounces, minBounces;
 
-		PathIntegrator(Sampler *_sampler, const unsigned _maxBounces = 128, const unsigned _minBounces = 3);
+		VolumetricPathIntegrator(Sampler *_sampler, const unsigned _maxBounces = 128, const unsigned _minBounces = 3);
 
 		Integrator *clone() const override;
 

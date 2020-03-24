@@ -31,7 +31,7 @@ Spectrum Integrator::EstimateDirect(SurfaceScatterEvent &_event, const Scene &_s
 	if (scatteringPDF > 0 && !f.IsBlack()) {
 		Real weight = 1;
 		Spectrum Li(0);
-		lightPDF = _light.PDF_Li(_event);
+		lightPDF = _light.PDF_Li(_event, *sampler);
 		if (lightPDF == 0) {
 			return Ld;
 		}
@@ -54,18 +54,18 @@ Spectrum Integrator::EstimateDirect(SurfaceScatterEvent &_event, const Scene &_s
 	return Ld;
 }
 
-bool Integrator::IntersectTr(const Scene &_scene, Ray &_ray, RayHit &_hit, Spectrum *_tr) const {
-	*_tr = Spectrum(1.f);
-	while (true) {
-		bool hitSurface = _scene.Intersect(_ray, _hit);
-		if (_hit.object->mediaBoundary && _hit.object->mediaBoundary->GetMedium(_ray.d, _hit.normalS))
-			*_tr *= _hit.object->mediaBoundary->GetMedium(_ray.d, _hit.normalS)->Tr(_ray, _hit.tFar, *sampler);
-		if (!hitSurface)
-			return false;
-		if (_hit.object->bxdf)
-			return true;
-		_ray.o = _hit.point + _ray.d * .0001;
-	}
-}
+//bool Integrator::IntersectTr(const Scene &_scene, Ray &_ray, RayHit &_hit, Spectrum *_tr) const {
+//	*_tr = Spectrum(1.f);
+//	while (true) {
+//		bool hitSurface = _scene.Intersect(_ray, _hit);
+//		if (_hit.object->mediaBoundary && _hit.object->mediaBoundary->GetMedium(_ray.d, _hit.normalS))
+//			*_tr *= _hit.object->mediaBoundary->GetMedium(_ray.d, _hit.normalS)->Tr(_ray, _hit.tFar, *sampler);
+//		if (!hitSurface)
+//			return false;
+//		if (_hit.object->bxdf)
+//			return true;
+//		_ray.o = _hit.point + _ray.d * .0001;
+//	}
+//}
 
 LAMBDA_END

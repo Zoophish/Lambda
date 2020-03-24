@@ -28,7 +28,7 @@ Spectrum MeshPortal::Sample_Li(SurfaceScatterEvent &_event, Sampler *_sampler, R
 	return Spectrum(0);
 }
 
-Real MeshPortal::PDF_Li(const SurfaceScatterEvent &_event) const {
+Real MeshPortal::PDF_Li(const SurfaceScatterEvent &_event, Sampler &_sampler) const {
 	RayHit hit;
 	if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit)) return 0;
 	if (hit.object->light != this) return 0;

@@ -2,7 +2,7 @@
 
 LAMBDA_BEGIN
 
-Spectrum UtilityIntegrator::Li(const Ray &_ray, const Scene &_scene) const {
+Spectrum UtilityIntegrator::Li(Ray _ray, const Scene &_scene) const {
 	const Colour c = P(_ray, _scene);
 	const Real cr[3] = { c.r, c.g, c.b };
 	return Spectrum::FromRGB(cr, SpectrumType::Reflectance);
