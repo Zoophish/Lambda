@@ -1,15 +1,15 @@
 #pragma once
 #include <utility/Memory.h>
+#include "media/Media.h"
 
 LAMBDA_BEGIN
 
-class MediaBoundary;
 class Light;
 class BxDF;
 
 struct Material {	
+	MediaBoundary MediaBoundary;
 	BxDF *bxdf;
-	MediaBoundary *MediaBoundary;
 	Light *light;
 	MemoryArena graphArena;
  };

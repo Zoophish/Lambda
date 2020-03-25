@@ -49,7 +49,7 @@ class TriangleMesh : public Object {
 		}
 
 	protected:
-		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override;
+		void ProcessHit(const RTCRayHit &_rtcHit, RayHit &_hit) const override;
 };
 
 LAMBDA_END

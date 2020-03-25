@@ -1,6 +1,6 @@
 #pragma once
-#include "HenyeyGreenstein.h"
-#include <core/Scene.h>
+#include <core/Spectrum.h>
+#include "PhaseFunction.h"
 #include "../ScatterEvent.h"
 
 LAMBDA_BEGIN
@@ -23,6 +23,9 @@ class MediaBoundary {
 			exterior = _exterior;
 		}
 
+		/*
+			Returns the medium that direction _w is 'going into' at the boundary.
+		*/
 		inline Medium *GetMedium(const Vec3 &_w, const Vec3 &_n) const {
 			return maths::Dot(_w, _n) < 0 ? interior : exterior;
 		}

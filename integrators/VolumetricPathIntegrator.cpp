@@ -23,13 +23,12 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	ScatterEvent event;
 	event.hit = &hit;
 	event.scene = &_scene;
-	event.wo = -r.d;
+	event.wo = -r.d;	//Redundant
 	bool scatterIntersect = false;
 	bool newIntersect = true;
-	bool hadMed = false;
 	event.medium = InMedium(r.o, _scene);
 	for (int bounces = 0; bounces < maxBounces; ++bounces) {
-		if (bounces == 0 && newIntersect ? _scene.Intersect(r, hit) : scatterIntersect) {
+		if (bounces == 0 && newIntersect ? _scene.Intersect(r, *event.hit) : scatterIntersect) {
 
 			if (bounces == 0) {	//Direct lighting on bounce 0 done here
 				if (hit.object->light) {
@@ -40,7 +39,10 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 			}
 
-			if (event.medium) beta *= event.medium->Sample(r, *sampler, event);	//Apply beam transmittance attenuation current ray to beta
+			if (event.medium) {
+				//const Spectrum Tr = event.medium->Sample(r, *sampler, event);	//Apply beam transmittance attenuation current ray to beta
+				beta *= event.medium->Sample(r, *sampler, event);
+			}
 			else event.mediumInteraction = false;
 
 			if (!event.mediumInteraction) {
@@ -67,7 +69,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					r.d = event.wi;
 					event.medium = hit.object->mediaBoundary->GetMedium(event.wi, hit.normalG);	//Evaluate any medium we are going into before we get new hit
 
-					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex
+					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex and potential light contribution
 					newIntersect = false;
 
 					if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scattering light contribution
@@ -86,7 +88,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					}
 					else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
 
-					L += beta * (Ld / lightDistPdf);
+					L += beta * Ld / lightDistPdf;
 					beta *= f / scatteringPDF;
 				}
 				else {
@@ -99,9 +101,9 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 			}
 			else if(event.medium) {
-				hadMed = true;
 				event.wo = -r.d;
 				Real lightDistPdf = 1;
+				const Vec3 scatterPoint = hit.point;	//Keep the point in which the media scatter occurs so we can reuse hit.
 				const Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightDistPdf)];
 				Spectrum Ld(0);
 				Real scatteringPDF, lightPDF;
@@ -122,35 +124,34 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				r.d = event.wi;
 
 				Spectrum Tr(1);
-				RayHit lHit;
 				Medium *med = event.medium;
-				scatterIntersect = _scene.IntersectTr(r, lHit, *sampler, med, &Tr);	//Direct lighting from phase scatter
+				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, med, &Tr);	//Direct lighting from phase scatter
 
 				if (scatteringPDF > 0) {	//Add phase-scattering light contribution
 					if (lightPDF > 0) {
 						Li = Spectrum(0);
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
 						if (scatterIntersect) {
-							if (lHit.object->light == l) Li = lHit.object->light->L(event);
+							if (hit.object->light == l) Li = hit.object->light->L(event);
 						}
 						else {
 							Li = l->Le(r);
 						}
-						if (!Li.IsBlack()) Ld += Li * Tr * p * weight / scatteringPDF;
+						if (!Li.IsBlack()) Ld += Li * Tr * weight / scatteringPDF;
 					}
 				}
  				else break;
 				
 				scatteringPDF = event.medium->phase->Sample_p(event.wo, &event.wi, *sampler);	//Sample phase for next path vertex
 				p = Spectrum(scatteringPDF);
-				r.o = hit.point;
-				r.d = event.wi;
 
+				r.o = scatterPoint;
+				r.d = event.wi;
 				scatterIntersect = _scene.Intersect(r, hit);	//Next path vertex
 				newIntersect = false;
 
-				L += beta * (Ld / lightDistPdf);
-				beta *= p / scatteringPDF;
+				L += beta * Ld / lightDistPdf;
+				//p is equal to the scattering pdf, so beta *= p / scatteringPDF is redundant
 			}
 
 			if (bounces > minBounces) {

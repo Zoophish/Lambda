@@ -17,7 +17,8 @@
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
-#include <shading/media/HomogenousMedium.h>
+#include <shading/media/HomogeneousMedium.h>
+#include <shading/media/HenyeyGreenstein.h>
 
 using namespace lambda;
 
@@ -55,9 +56,9 @@ int main() {
 	Real volC[3] = { 5, 3, 4 };
 	Spectrum volS = Spectrum::FromRGB(volC);
 
-	Medium *med = new HomogeneousMedium(volS, Spectrum(10));
+	Medium *med = new HomogeneousMedium(Spectrum(4), Spectrum(50));
 	HenyeyGreenstein *phase = new HenyeyGreenstein;
-	phase->g = 0;
+	phase->g = -.7;
 	med->phase = phase;
 
 	AssetImporter ai2;
@@ -66,7 +67,7 @@ int main() {
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
 		if (m) {
-			it.second->bxdf = fresMat;
+			it.second->bxdf = nullptr;
 			it.second->mediaBoundary = new MediaBoundary;
 			it.second->mediaBoundary->interior = med;
 			scene.AddObject(it.second);
@@ -113,7 +114,7 @@ int main() {
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("..\\content\\veranda_2k.hdr");
+	envMap.LoadImageFile("..\\content\\qwantani_2k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*0, 0);
@@ -140,9 +141,10 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(0, 1.5, 10), 16, 9, 12, &aperture2);
-	aperture2.size = .025;
+	ThinLensCamera cam(Vec3(0, 1.5, 10), 16, 9, 10, &aperture2);
+	aperture2.size = .03;
 	aperture2.sampler = &sampler;
+	cam.focalLength = 10;
 	cam.SetFov(.25);
 	cam.SetRotation(-PI, PI*-0.0286);
 
@@ -160,7 +162,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 128;
+	renderDirective.spp = 256;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

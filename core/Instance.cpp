@@ -19,8 +19,8 @@ void Instance::Commit(const RTCDevice &_device) {
 	rtcCommitGeometry(geometry);
 }
 
-void Instance::ProcessHit(RayHit &_hit, const RTCRayHit &_h) const {
-	proxy->iObject->ProcessHit(_hit, _h);
+void Instance::ProcessHit(const RTCRayHit &_rtcHit, RayHit &_hit) const {
+	proxy->iObject->ProcessHit(_rtcHit, _hit);
 }
 
 LAMBDA_END

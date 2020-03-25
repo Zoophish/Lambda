@@ -25,14 +25,13 @@ class Object : public Transformable {
 		/*
 			Process hit information from Embree RTCRayHit to a Lambda RayHit.
 		*/
-		inline RayHit Hit(const RTCRayHit &_h) const {
-			RayHit hit;
-			hit.point.x = _h.ray.org_x + _h.ray.dir_x * _h.ray.tfar;
-			hit.point.y = _h.ray.org_y + _h.ray.dir_y * _h.ray.tfar;
-			hit.point.z = _h.ray.org_z + _h.ray.dir_z * _h.ray.tfar;
-			hit.normalG = Vec3(_h.hit.Ng_x, _h.hit.Ng_y, _h.hit.Ng_z).Normalised();
-			ProcessHit(hit, _h);
-			return hit;
+		inline void Hit(const RTCRayHit &_rtcHit, RayHit &_hit) const {
+			_hit.tFar = _rtcHit.ray.tfar;
+			_hit.point.x = _rtcHit.ray.org_x + _rtcHit.ray.dir_x * _rtcHit.ray.tfar;
+			_hit.point.y = _rtcHit.ray.org_y + _rtcHit.ray.dir_y * _rtcHit.ray.tfar;
+			_hit.point.z = _rtcHit.ray.org_z + _rtcHit.ray.dir_z * _rtcHit.ray.tfar;
+			_hit.normalG = Vec3(_rtcHit.hit.Ng_x, _rtcHit.hit.Ng_y, _rtcHit.hit.Ng_z).Normalised();
+			ProcessHit(_rtcHit, _hit);
 		}
 
 		/*
@@ -43,7 +42,7 @@ class Object : public Transformable {
 		/*
 			All derivatives must override to provide their own hit information.
 		*/
-		virtual void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const = 0;
+		virtual void ProcessHit(const RTCRayHit &_rtcHit, RayHit &_hit) const = 0;
 };
 
 class Empty : public Object {
@@ -54,7 +53,7 @@ class Empty : public Object {
 			return;
 		}
 
-		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override {
+		void ProcessHit(const RTCRayHit &_rtcHit, RayHit &_hit) const override {
 			return;
 		}
 };

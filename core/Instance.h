@@ -40,7 +40,7 @@ class Instance : public Object {
 		/*
 			Uses proxy's iObject for hit information.
 		*/
-		void ProcessHit(RayHit &_hit, const RTCRayHit &_h) const override;
+		void ProcessHit(const RTCRayHit &_h, RayHit &_hit) const override;
 };
 
 LAMBDA_END

@@ -23,11 +23,9 @@ A high performance physically-based renderer written in C++ as a project in my s
 
 ![Blackbody lamps and MixBSDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucy_blackbody.png)
 
-![Microfacet (Beckmann) test @100spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/box_outdoors.png)
+![Volumetric Scattering](https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png)
 
 ![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png)
-
-![Example Render of the Lucy statue using FresnelBSDF and Oren-NayarBRDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/glass_lucy_2.png)
 
 ## Third Party Dependencies
 - Embree3 (https://www.embree.org/)

@@ -24,7 +24,7 @@ Real TriangleMesh::Area() const {
 	return area * .5;
 }
 
-void TriangleMesh::ProcessHit(RayHit &_hit, const RTCRayHit &_h) const {
+void TriangleMesh::ProcessHit(const RTCRayHit &_h, RayHit &_hit) const {
 	if (hasUVs) {
 		_hit.uvCoords = maths::BarycentricInterpolation(
 			uvs[triangles[_h.hit.primID].v0],

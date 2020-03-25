@@ -1,6 +1,7 @@
 #pragma once
 #include <Lambda.h>
 #include <maths/maths.h>
+#include <sampling/Sampler.h>
 
 LAMBDA_BEGIN
 

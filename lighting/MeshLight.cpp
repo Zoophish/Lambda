@@ -16,8 +16,9 @@ static inline bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEve
 		_event.wi = dir;
 		const Real minT = mag - .00001;
 		RayHit hit;
+		Medium *med = _event.medium;
 		Ray r(_p1, dir);
-		if (_scene.IntersectTr(r, hit, _sampler, _event.medium, _Tr)) {
+		if (_scene.IntersectTr(r, hit, _sampler, med, _Tr)) {
 			return hit.tFar > minT;
 		}
 		return false;
