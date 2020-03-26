@@ -7,6 +7,7 @@ LAMBDA_BEGIN
 class Ray;
 struct RayHit;
 struct ScatterEvent;
+class Scene;
 
 class Light {
 	public:
@@ -47,6 +48,20 @@ class Light {
 		Real Power() const {
 			return Irradiance() * Area();
 		}
+
+		/*
+			Special scene intersection functions for direct lighting that account for volumetric
+			beam transmittance.
+			_scene.hasVolumes must be true to account for beam transmittance, _Tr.
+
+			Returns true if there is mutual visibility between _p1 and _p2
+		*/
+		static bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEvent &_event, const Scene &_scene, Sampler &_sampler, Spectrum *_Tr = nullptr);
+
+		/*
+			Returns true if ray, _r, escapes the scene.
+		*/
+		static bool RayEscapes(const Ray &_r, const ScatterEvent &_event, Sampler &_sampler, Spectrum *_Tr = nullptr);
 };
 
 LAMBDA_END

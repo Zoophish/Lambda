@@ -4,8 +4,6 @@
 #include <sampling/Sampling.h>
 #include <sampling/Sampler.h>
 
-#define SURFACE_EPSILON 1e-5
-
 LAMBDA_BEGIN
 
 class BxDF {

@@ -20,11 +20,10 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 	event.scene = &_scene;
 	event.wo = -r.d;
 	bool scatterIntersect = false;
-	for (unsigned bounces = 0; bounces < maxBounces; ++bounces) {
+	for (int bounces = 0; bounces < maxBounces; ++bounces) {
 		if (bounces == 0 ? _scene.Intersect(r, hit) : scatterIntersect) {
-			if (bounces == 0 && hit.object->light) {
-				L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product.
-			}
+			
+			if (bounces == 0 && hit.object->light) L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product.
 
 			if (hit.object->bxdf) {
 				event.SurfaceLocalise();
@@ -68,7 +67,8 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 				beta *= f / scatteringPDF;
 			}
 			else {
-				r.o = event.hit->point + r.d * .0005;
+				r.o = hit.point + hit.normalG * (maths::Dot(r.d, hit.normalG) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
+				if (bounces > 0) scatterIntersect = _scene.Intersect(r, hit);
 				bounces--;
 				continue;
 			}

@@ -23,12 +23,11 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	ScatterEvent event;
 	event.hit = &hit;
 	event.scene = &_scene;
-	event.wo = -r.d;	//Redundant
+	event.wo = -r.d;
 	bool scatterIntersect = false;
-	bool newIntersect = true;
 	event.medium = InMedium(r.o, _scene);
 	for (int bounces = 0; bounces < maxBounces; ++bounces) {
-		if (bounces == 0 && newIntersect ? _scene.Intersect(r, *event.hit) : scatterIntersect) {
+		if (bounces == 0 ? _scene.Intersect(r, *event.hit) : scatterIntersect) {
 
 			if (bounces == 0) {	//Direct lighting on bounce 0 done here
 				if (hit.object->light) {
@@ -40,7 +39,6 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 			}
 
 			if (event.medium) {
-				//const Spectrum Tr = event.medium->Sample(r, *sampler, event);	//Apply beam transmittance attenuation current ray to beta
 				beta *= event.medium->Sample(r, *sampler, event);
 			}
 			else event.mediumInteraction = false;
@@ -70,9 +68,8 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					event.medium = hit.object->mediaBoundary->GetMedium(event.wi, hit.normalG);	//Evaluate any medium we are going into before we get new hit
 
 					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex and potential light contribution
-					newIntersect = false;
 
-					if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scattering light contribution
+					if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scattering light contribution. NOTE TO SELF: if we do bsdf sampling first, could use hit.point for light sampling
 						if (lightPDF > 0) {
 							Li = Spectrum(0);
 							const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
@@ -94,8 +91,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				else {
 					event.medium = hit.object->mediaBoundary->GetMedium(r.d, hit.normalG);	//Set medium for next ray
 					r.o = hit.point + hit.normalG * (maths::Dot(event.hit->normalG, r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
-					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex, but...
-					newIntersect = false;
+					if(bounces > 0) scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex, but...
 					bounces--;	//don't consider it a bounce (no scatter event)
 					continue;
 				}
@@ -148,7 +144,6 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				r.o = scatterPoint;
 				r.d = event.wi;
 				scatterIntersect = _scene.Intersect(r, hit);	//Next path vertex
-				newIntersect = false;
 
 				L += beta * Ld / lightDistPdf;
 				//p is equal to the scattering pdf, so beta *= p / scatteringPDF is redundant

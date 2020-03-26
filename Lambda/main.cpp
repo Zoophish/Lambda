@@ -54,11 +54,11 @@ int main() {
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &checkNode->outputSockets[1]);
 
 	Real volC[3] = { 5, 3, 4 };
-	Spectrum volS = Spectrum::FromRGB(volC);
+	Spectrum volS = Spectrum::FromRGB(volC) * .5;
 
-	Medium *med = new HomogeneousMedium(Spectrum(4), Spectrum(50));
+	Medium *med = new HomogeneousMedium(Spectrum(2), Spectrum(10));
 	HenyeyGreenstein *phase = new HenyeyGreenstein;
-	phase->g = -.7;
+	phase->g = -.2;
 	med->phase = phase;
 
 	AssetImporter ai2;
@@ -85,19 +85,19 @@ int main() {
 	scene.AddObject(&plane);
 
 
-	//ai.Import("../content/DragonsLight.obj");
-	//ai.PushToResourceManager(&resources);
-	//TriangleMesh lightMesh;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	//lightMesh.smoothNormals = false;
-	//MeshLight light(&lightMesh);
-	//sg::ScalarInput temp1(3500);
-	//sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
-	//light.emission = &blckInpt1.outputSockets[0];
-	//light.intensity = 500;
-	//lightMesh.mediaBoundary = new MediaBoundary;
-	//scene.AddLight(&light);
-	//scene.AddObject(&lightMesh);
+	ai.Import("../content/DragonsLight.obj");
+	ai.PushToResourceManager(&resources);
+	TriangleMesh lightMesh;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	lightMesh.smoothNormals = false;
+	MeshLight light(&lightMesh);
+	sg::ScalarInput temp1(3500);
+	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	light.emission = &blckInpt1.outputSockets[0];
+	light.intensity = 1000;
+	lightMesh.mediaBoundary = new MediaBoundary;
+	scene.AddLight(&light);
+	scene.AddObject(&lightMesh);
 	
 	//ai.Import("../content/SideLight.obj");
 	//ai.PushToResourceManager(&resources);
@@ -107,7 +107,8 @@ int main() {
 	//sg::ScalarInput temp(10000);
 	//sg::BlackbodyInput blckInpt(&temp.outputSockets[0]);
 	//light2.emission = &blckInpt.outputSockets[0];
-	//light2.intensity = 32;
+	//light2.intensity = 300;
+	//lightMesh2.mediaBoundary = new MediaBoundary;
 	//scene.AddLight(&light2);
 	//scene.AddObject(&lightMesh2);
 
@@ -116,19 +117,11 @@ int main() {
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	envMap.LoadImageFile("..\\content\\qwantani_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 	scene.hasVolumes = true;
-
-	//ai.Import("D:\\Assets\\sponza_portal.obj");
-	//ai.PushToResourceManager(&resources);
-	//TriangleMesh portal;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &portal);
-	//MeshPortal portalLight(&ibl, &portal);
-	//scene.AddLight(&portalLight);
-	//scene.AddObject(&portal);
 
 	scene.Commit();
 
@@ -162,7 +155,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 256;
+	renderDirective.spp = 32;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

@@ -9,11 +9,19 @@ MeshPortal::MeshPortal(EnvironmentLight *_parentLight, TriangleMesh *_mesh) {
 	InitDistribution();
 }
 
+/*
+	Speed up intersections when no volumes are present.
+*/
+static inline bool Intersect(const Ray &_ray, RayHit &_hit, const Scene &_scene, Sampler &_sampler, Medium *_med) {
+	return _scene.hasVolumes ? _scene.IntersectTr(_ray, _hit, _sampler, _med) : _scene.Intersect(_ray, _hit);
+}
+
 Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 	const Vec2 u = _sampler->Get2D();
 	const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
-	if (_event.scene->MutualVisibility(_event.hit->point + _event.hit->normalG * .00001, p, &_event.wi)) {
+	Spectrum Tr(1);
+	if (MutualVisibility(_event.hit->point + _event.hit->normalG * .00001, p, _event, *_event.scene, *_sampler, &Tr)) {
 		Real triArea;
 		Vec3 normal;
 		mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
@@ -21,7 +29,7 @@ Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_p
 		if (denom > 0) {
 			_event.wiL = _event.ToLocal(_event.wi);
 			_pdf *= maths::DistSq(_event.hit->point, p) / denom;
-			return parentLight->Le(_event.wi);
+			return parentLight->Le(_event.wi) * Tr;
 		}
 	}
 	_pdf = 0;
@@ -30,7 +38,7 @@ Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_p
 
 Real MeshPortal::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	RayHit hit;
-	if (!_event.scene->Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit)) return 0;
+	if (!Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit, *_event.scene, _sampler, _event.medium)) return 0;
 	if (hit.object->light != this) return 0;
 	Real triArea;
 	Vec3 normal;

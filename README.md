@@ -5,9 +5,10 @@ A high performance physically-based renderer written in C++ as a project in my s
 - Triangulated mesh geometry
 - Graph based shading system
 - Geometry instancing
-- PBRT-style spectral rendering
+- PBRT-style unbiased spectral rendering
 - Fresnel, specular & mix BSDFs
 - Microfacet BSDFs: Beckmann-Spizzichino, Towbridge-Reitz/GGX
+- Volumetric rendering
 - Path integrator with multiple importance sampling
 - Utlilty integrators: direct lighting, normals, depth
 - Mesh lights, infinite/environment lights, mesh portals

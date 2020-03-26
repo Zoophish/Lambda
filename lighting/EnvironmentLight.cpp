@@ -21,15 +21,6 @@ EnvironmentLight::EnvironmentLight(Texture *_texture, const Real _intesity) {
 	distribution.reset(new Distribution::Piecewise2D(img.get(), w, h));
 }
 
-static inline bool RayEscapes(const Ray &_r, const ScatterEvent &_event, Sampler &_sampler, Spectrum *_Tr = nullptr) {
-	if (_event.scene->hasVolumes) {
-		RayHit hit;
-		Medium *med = _event.medium;
-		return !_event.scene->IntersectTr(_r, hit, _sampler, med, _Tr);
-	}
-	return _event.scene->RayEscapes(_r);
-}
-
 Spectrum EnvironmentLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const Vec2 uv = distribution->SampleContinuous(_sampler->Get2D(), &_pdf);
 	if (_pdf == 0) return Spectrum(0);
@@ -42,9 +33,9 @@ Spectrum EnvironmentLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Re
 	}
 	const Real sinPhi = std::sin(phi), cosPhi = std::cos(phi);
 	_event.wi = maths::SphericalDirection(sinTheta, cosTheta, phi);
-	const Real ep = _event.woL.y < 0 ? -.00001 : .00001;
+	const Real ep = SURFACE_EPSILON;// maths::Dot(_event.wi, _event.hit->normalG) < 0 ? -.00001 : .00001;// _event.woL.y < 0 ? -.00001 : .00001;	Can we assume bsdf will zero out wrong side?
 	Spectrum Tr(1);
-	if (RayEscapes(Ray(_event.hit->point + _event.hit->normalG * ep, _event.wi), _event, *_sampler, &Tr)) {
+	if (Light::RayEscapes(Ray(_event.hit->point + _event.hit->normalG * ep, _event.wi), _event, *_sampler, &Tr)) {
 		_event.wiL = _event.ToLocal(_event.wi);
 		_pdf /= 2 * PI * PI * sinTheta;
 		return radianceMap.GetUV(uv) * Tr * intensity;
@@ -59,8 +50,8 @@ Real EnvironmentLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) con
 	const Real sinTheta = std::sin(theta);
 	if (sinTheta == 0) return 0;
 	const Vec3 wiOffset = maths::SphericalDirection(sinTheta, std::cos(theta), phi);
-	const Real ep = _event.woL.y < 0 ? -.00001 : .00001;
-	if (RayEscapes(Ray(_event.hit->point + _event.hit->normalG * ep, wiOffset), _event, _sampler)) {
+	//const Real ep = _event.wiL.y < 0 ? -.00001 : .00001;	//We assume that the bxdf has handled pushing the hit.point to the correct side
+	if (RayEscapes(Ray(_event.hit->point, wiOffset), _event, _sampler)) {
 		return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / ((Real)2 * PI * PI * sinTheta);
 	}
 	return 0;

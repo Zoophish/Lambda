@@ -8,6 +8,8 @@
 #include <maths/maths.h>
 #include <core/Ray.h>
 
+#define SURFACE_EPSILON 1e-6
+
 LAMBDA_BEGIN
 
 class BxDF;
@@ -19,7 +21,7 @@ struct ScatterEvent {
 	Real eta = 1;
 	bool mediumInteraction = false;
 	RayHit *hit;
-	Medium *medium;
+	Medium *medium = nullptr;
 	const Scene *scene;
 
 	inline Vec3 ToLocal(const Vec3 &_v) const {
