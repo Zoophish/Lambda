@@ -3,6 +3,10 @@
 
 LAMBDA_BEGIN
 
+/*
+	Potential optimisation could be to inline these in the header...
+*/
+
 bool Light::MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEvent &_event, const Scene &_scene, Sampler &_sampler, Spectrum *_Tr) {
 	if (_scene.hasVolumes) {
 		const Vec3 diff = _p2 - _p1;

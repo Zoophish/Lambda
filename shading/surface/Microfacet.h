@@ -22,7 +22,7 @@ class MicrofacetBRDF : public BxDF {
 		Real Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const override;
 
 	private:
-		inline Vec2 RoughnessToAlpha(const ScatterEvent *_event) const;
+		inline Vec2 RoughnessToAlpha(const ScatterEvent &_event) const;
 };
 
 //class MicrofacetBSDF {};

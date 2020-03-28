@@ -29,7 +29,7 @@ Spectrum MeshLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pd
 		if (denom > 0) {
 			_event.wiL = _event.ToLocal(_event.wi);
 			_pdf *= maths::DistSq(_event.hit->point, pL) / denom;
-			return emission->GetAsSpectrum(&_event, SpectrumType::Illuminant) * intensity * INV_PI;
+			return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity * INV_PI;
 		}
 	}
 	_pdf = 0;
@@ -50,7 +50,7 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 }
 
 Spectrum MeshLight::L(const ScatterEvent &_event) const {
-	return emission->GetAsSpectrum(&_event, SpectrumType::Illuminant) * intensity * INV_PI;
+	return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity * INV_PI;
 }
 
 Real MeshLight::Area() const {

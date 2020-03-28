@@ -13,7 +13,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &ScalarInput::GetScalar, "Scalar");
 	}
 	
-	void ScalarInput::GetScalar(const ScatterEvent *_event, void *_out) const {
+	void ScalarInput::GetScalar(const ScatterEvent &_event, void *_out) const {
 		*reinterpret_cast<Real *>(_out) = value;
 	}
 
@@ -26,7 +26,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_VEC2, &Vec2Input::GetVec2, "Vector2");
 	}
 
-	void Vec2Input::GetVec2(const ScatterEvent *_event, void *_out) const {
+	void Vec2Input::GetVec2(const ScatterEvent &_event, void *_out) const {
 		*reinterpret_cast<Vec2 *>(_out) = vec2;
 	}
 
@@ -44,7 +44,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_COLOUR, &RGBInput::GetColour, "Colour");
 	}
 
-	void RGBInput::GetColour(const ScatterEvent *_event, void *_out) const {
+	void RGBInput::GetColour(const ScatterEvent &_event, void *_out) const {
 		*reinterpret_cast<Colour *>(_out) = rgb;
 	}
 
@@ -66,7 +66,7 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SPECTRUM, &SpectralInput::GetSpectrum, "Spectrum");
 	}
 
-	void SpectralInput::GetSpectrum(const ScatterEvent *_event, void *_out) const {
+	void SpectralInput::GetSpectrum(const ScatterEvent &_event, void *_out) const {
 		*reinterpret_cast<Spectrum *>(_out) = spec;
 	}
 
@@ -76,15 +76,15 @@ namespace ShaderGraph {
 
 	BlackbodyInput::BlackbodyInput(Socket *_temperatureSocket, const unsigned _samples) : Node(1, 1, "Blackbody Spectrum") {
 		samples = _samples;
-		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _temperatureSocket);
+		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _temperatureSocket, "Temperature");
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SPECTRUM, &BlackbodyInput::GetSpectrum, "Spectrum");
 	}
 
-	void BlackbodyInput::GetSpectrum(const ScatterEvent *_event, void *_out) const {
-		*reinterpret_cast<Spectrum *>(_out) = MakeBlackbodySpectrum(inputSockets[0].socket->GetAsScalar(_event), samples);
+	void BlackbodyInput::GetSpectrum(const ScatterEvent &_event, void *_out) const {
+		*reinterpret_cast<Spectrum *>(_out) = MakeBlackbodySpectrum(inputSockets[0].socket->GetAs<Real>(_event), samples);
 	}
 
-	void BlackbodyInput::Blackbody(const Real *_lambda, int _n, Real _T, Real *_Le) const {
+	static void Blackbody(const Real *_lambda, int _n, Real _T, Real *_Le) {
 		const Real c = 299792458;
 		const Real h = 6.62606957e-34;
 		const Real kb = 1.3806488e-23;
@@ -95,7 +95,7 @@ namespace ShaderGraph {
 		} 
 	}
 
-	inline void BlackbodyInput::BlackbodyNormalized(const Real *_lambda, int _n, Real _temp, Real *_Le) const {
+	static inline void BlackbodyNormalized(const Real *_lambda, int _n, Real _temp, Real *_Le) {
 		Blackbody(_lambda, _n, _temp, _Le);
 		const Real lambdaMax = 2.8977721e-3 / _temp * 1e9;
 		Real maxL;
@@ -125,13 +125,13 @@ namespace ShaderGraph {
 		outputSockets[1] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &ImageTextureInput::GetScalar, "Scalar");
 	}
 
-	void ImageTextureInput::GetColour(const ScatterEvent *_event, void *_out) const {
-		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+	void ImageTextureInput::GetColour(const ScatterEvent &_event, void *_out) const {
+		const Vec2 uvs = maths::Fract(_event.hit->uvCoords);
 		*reinterpret_cast<Colour *>(_out) = tex->GetPixelUV(uvs.x, uvs.y);
 	}
 
-	void ImageTextureInput::GetScalar(const ScatterEvent *_event, void *_out) const {
-		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+	void ImageTextureInput::GetScalar(const ScatterEvent &_event, void *_out) const {
+		const Vec2 uvs = maths::Fract(_event.hit->uvCoords);
 		*reinterpret_cast<Real *>(_out) = tex->GetPixelUV(uvs.x, uvs.y).r;
 	}
 
@@ -145,8 +145,8 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &ImageTextureChannelInput::GetScalar, "Scalar");
 	}
 
-	void ImageTextureChannelInput::GetScalar(const ScatterEvent *_event, void *_out) const {
-		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+	void ImageTextureChannelInput::GetScalar(const ScatterEvent &_event, void *_out) const {
+		const Vec2 uvs = maths::Fract(_event.hit->uvCoords);
 		*reinterpret_cast<Real *>(_out) = tex->GetPixelUV(uvs.x, uvs.y)[channel];
 	}
 
@@ -159,10 +159,23 @@ namespace ShaderGraph {
 		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SPECTRUM, &SpectralTextureInput::GetSpectrum, "Spectrum");
 	}
 
-	void SpectralTextureInput::GetSpectrum(const ScatterEvent *_event, void *_out) const {
-		const Vec2 uvs = maths::Fract(_event->hit->uvCoords);
+	void SpectralTextureInput::GetSpectrum(const ScatterEvent &_event, void *_out) const {
+		const Vec2 uvs = maths::Fract(_event.hit->uvCoords);
 		*reinterpret_cast<Spectrum *>(_out) = tex->GetPixelUV(uvs.x, uvs.y);
 	}
+
+	/*
+		--------- SurfaceInfo Input ---------
+	*/
+
+	SurfaceInfoInput::SurfaceInfoInput() : Node(0, 1, "Surface Information") {
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_VEC3, &SurfaceInfoInput::GetNormal, "Normal");
+	}
+
+	void SurfaceInfoInput::GetNormal(const ScatterEvent &_event, void *_out) const {
+		*reinterpret_cast<Vec3 *>(_out) = _event.hit->normalS;
+	}
+
 }
 
 LAMBDA_END

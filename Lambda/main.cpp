@@ -45,7 +45,8 @@ int main() {
 	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.0001);
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001));
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::OrenNayarBxDFNode *mat = graphArena.New<sg::OrenNayarBxDFNode>(&gridNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBRDFNode *mat = graphArena.New<sg::OrenNayarBRDFNode>(&gridNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBTDFNode *matT = graphArena.New<sg::OrenNayarBTDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::SpecularBRDFNode *specMat = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
 	
@@ -56,23 +57,25 @@ int main() {
 	Real volC[3] = { 5, 3, 4 };
 	Spectrum volS = Spectrum::FromRGB(volC) * .5;
 
-	Medium *med = new HomogeneousMedium(Spectrum(2), Spectrum(10));
+	Medium *med = new HomogeneousMedium(Spectrum(2), Spectrum(40));
 	HenyeyGreenstein *phase = new HenyeyGreenstein;
 	phase->g = -.2;
 	med->phase = phase;
 
 	AssetImporter ai2;
-	ai2.Import("../content/dragon.obj");
+	ai2.Import("../content/square.obj");
 	ai2.PushToResourceManager(&resources);
 	for (auto &it : resources.objectPool.pool) {
 		Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
 		if (m) {
-			it.second->bxdf = nullptr;
+			it.second->bxdf = matT;
 			it.second->mediaBoundary = new MediaBoundary;
-			it.second->mediaBoundary->interior = med;
+			it.second->mediaBoundary->interior = nullptr;
 			scene.AddObject(it.second);
 		}
 	}
+
+	scene.hasVolumes = false;
 
 	AssetImporter ai;
 	ai.Import("../content/plane.obj");
@@ -85,7 +88,7 @@ int main() {
 	scene.AddObject(&plane);
 
 
-	ai.Import("../content/DragonsLight.obj");
+	ai.Import("../content/circleLight.obj");
 	ai.PushToResourceManager(&resources);
 	TriangleMesh lightMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
@@ -94,7 +97,7 @@ int main() {
 	sg::ScalarInput temp1(3500);
 	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
 	light.emission = &blckInpt1.outputSockets[0];
-	light.intensity = 1000;
+	light.intensity = 650;
 	lightMesh.mediaBoundary = new MediaBoundary;
 	scene.AddLight(&light);
 	scene.AddObject(&lightMesh);
@@ -115,13 +118,12 @@ int main() {
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("..\\content\\qwantani_2k.hdr");
+	envMap.LoadImageFile("..\\content\\royal_esplanade_2k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*0, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
-	scene.hasVolumes = true;
 
 	scene.Commit();
 
@@ -151,11 +153,11 @@ int main() {
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
 	renderDirective.camera = &cam;
-	renderDirective.integrator = &volPathIntegrator;
+	renderDirective.integrator = &pathIntegrator;
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 32;
+	renderDirective.spp = 8;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

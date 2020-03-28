@@ -190,10 +190,10 @@ namespace MaterialImport {
 
 		namespace MatMake {
 
-			inline sg::OrenNayarBxDFNode *MakeDiffuse(Material *_material, Texture *_texD) {
+			inline sg::OrenNayarBRDFNode *MakeDiffuse(Material *_material, Texture *_texD) {
 				sg::ImageTextureInput *albedo = _material->graphArena.New<sg::ImageTextureInput>(_texD);
 				sg::ScalarInput *sig = _material->graphArena.New<sg::ScalarInput>(2);
-				return _material->graphArena.New<sg::OrenNayarBxDFNode>(&albedo->outputSockets[0], &sig->outputSockets[0]);
+				return _material->graphArena.New<sg::OrenNayarBRDFNode>(&albedo->outputSockets[0], &sig->outputSockets[0]);
 			}
 
 			inline sg::GhostBTDFNode *MakeGhost(Material *_material, const Real _alpha = 1) {
@@ -203,14 +203,14 @@ namespace MaterialImport {
 
 			inline sg::MixBxDFNode *MakeDiffuseAlphaMap(Material *_material, Texture *_texD, Texture *_texA) {
 				sg::ImageTextureInput *alpha = _material->graphArena.New<sg::ImageTextureInput>(_texA);
-				sg::OrenNayarBxDFNode *diffuseBxDF = MakeDiffuse(_material, _texD);
+				sg::OrenNayarBRDFNode *diffuseBxDF = MakeDiffuse(_material, _texD);
 				sg::GhostBTDFNode *ghostBxDF = MakeGhost(_material);
 				return _material->graphArena.New<sg::MixBxDFNode>(&ghostBxDF->outputSockets[0], &diffuseBxDF->outputSockets[0], &alpha->outputSockets[1]);
 			}
 
 			inline sg::MixBxDFNode *MakeDiffuseAlpha(Material *_material, Texture *_texD) {
 				sg::ImageTextureChannelInput *alpha = _material->graphArena.New<sg::ImageTextureChannelInput>(_texD, 3);
-				sg::OrenNayarBxDFNode *diffuseBxDF = MakeDiffuse(_material, _texD);
+				sg::OrenNayarBRDFNode *diffuseBxDF = MakeDiffuse(_material, _texD);
 				sg::GhostBTDFNode *ghostBTDF = MakeGhost(_material, 1);
 				sg::ScalarInput *scl = _material->graphArena.New<sg::ScalarInput>(.1);
 				sg::MixBxDFNode *mixBxDF = _material->graphArena.New<sg::MixBxDFNode>(&diffuseBxDF->outputSockets[0], &ghostBTDF->outputSockets[0], &scl->outputSockets[0]);

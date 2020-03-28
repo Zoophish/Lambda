@@ -13,62 +13,74 @@ namespace ShaderGraph {
 	#define BXDF_CALLBACK &std::add_const<_DECLTYPE>::type::GetBxDF
 	#define MAKE_BXDF_SOCKET(_type, _callback, _tag) {	(_type), NodeDelegate::FromFunction<_DECLTYPE, _callback>(this), (_tag)	}
 	
-	#define DECL_CLBCK_FUNC void GetBxDF(const ScatterEvent *_event, void *_out) const;
+	/*
+		All BxDF nodes return the same thing, so we can use this macro as a
+		shortcut to add the GetBxDF method that all the BxDF nodes need.
+		(Inheritance is too slow)
+	*/
+	#define DECL_CLBCK_FUNC void GetBxDF(const ScatterEvent &_event, void *_out) const
 
 	class MixBxDFNode : public Node, public MixBSDF {
 		public:
 			MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 
 	class LambertianBRDFNode : public Node, public LambertianBRDF {
 		public:
 			LambertianBRDFNode(Socket *_albedo);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 
-	class OrenNayarBxDFNode : public Node, public OrenNayarBRDF {
+	class OrenNayarBRDFNode : public Node, public OrenNayarBRDF {
 		public:
-			OrenNayarBxDFNode(Socket *_albedo, Socket *_roughness);
+			OrenNayarBRDFNode(Socket *_albedo, Socket *_roughness);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
+	};
+
+	class OrenNayarBTDFNode : public Node, public OrenNayarBTDF {
+		public:
+			OrenNayarBTDFNode(Socket *_albedo, Socket *_roughness);
+
+			DECL_CLBCK_FUNC;
 	};
 
 	class MicrofacetBRDFNode : public Node, public MicrofacetBRDF {
 		public:
 			MicrofacetBRDFNode(Socket *_albedo, Socket *_roughness, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 
 	class GhostBTDFNode : public Node, public GhostBTDF {
 		public:
 			GhostBTDFNode(Socket *_alpha);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 
 	class FresnelBSDFNode : public Node, public FresnelBSDF {
 		public:
 			FresnelBSDFNode(Socket *_albedo, Socket *_ior);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 
 	class SpecularBRDFNode : public Node, public SpecularBRDF {
 		public:
 			SpecularBRDFNode(Socket *_albedo, Fresnel *_fresnel);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 
 	class SpecularBTDFNode : public Node, public SpecularBTDF {
 		public:
 			SpecularBTDFNode(Socket *_albedo, const Real _etaT);
 
-			DECL_CLBCK_FUNC
+			DECL_CLBCK_FUNC;
 	};
 	
 }

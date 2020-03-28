@@ -1,5 +1,6 @@
 /* Virtual functions are avoided here with void*.
-TODO: Benchmark virtual implementation vs void*.
+
+TO SELF: NEEDS DEPRECATING FOR SHADERGRAPH
 */
 
 #pragma once

@@ -1,5 +1,5 @@
 //----	Sam Warren 2019	----
-//3x3 column-major transformation matrix plus a 3D translation vector; xfm = 3x4 column major.
+//3x3 column-major transformation matrix plus a 3D translation vector;
 
 #pragma once
 #include <Lambda.h>
