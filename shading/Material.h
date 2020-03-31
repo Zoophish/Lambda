@@ -10,13 +10,22 @@ LAMBDA_BEGIN
 
 class Light;
 class BxDF;
+struct Socket;
 
-struct Material {
-	std::string name;
-	MediaBoundary MediaBoundary;
-	BxDF *bxdf;
-	Light *light;
-	MemoryArena graphArena;
+class Material {
+	public:
+		std::string name;
+		MediaBoundary mediaBoundary;
+		BxDF *bxdf;
+		Light *light;
+		MemoryArena graphArena;
+		//Socket *_albedo;
+
+		Material();
+
+		Socket *FindAlbedoSocket() const {
+
+		}
  };
 
 LAMBDA_END

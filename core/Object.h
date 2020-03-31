@@ -3,6 +3,7 @@
 
 #pragma once
 #include <core/Transformable.h>
+#include <shading/Material.h>
 #include "Ray.h"
 
 LAMBDA_BEGIN
@@ -14,9 +15,10 @@ class BxDF;
 class Object : public Transformable {
 	public:
 		RTCGeometry geometry;
-		BxDF *bxdf = nullptr;
-		Light *light = nullptr;
-		MediaBoundary *mediaBoundary;
+		//BxDF *bxdf = nullptr;
+		//Light *light = nullptr;
+		//MediaBoundary *mediaBoundary;
+		Material *material;
 		
 		Object() {}
 

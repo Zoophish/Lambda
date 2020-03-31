@@ -30,7 +30,7 @@ namespace GraphImport {
 			Instance *inst = new Instance(iProxy);
 			inst->xfm = aiMatToAff3(_aiNode->mTransformation);
 			Material *instMat = _resources->materialPool.Find(matName.C_Str());
-			if (instMat) inst->bxdf = instMat->bxdf;
+			if (instMat) inst->material->bxdf = instMat->bxdf;
 			else _metrics->AppendError("Could not find material for instance: " + objName);
 			_sceneNode->objects.push_back(inst);
 			_resources->objectPool.Append(objName + "_INST", inst);

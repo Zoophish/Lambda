@@ -4,7 +4,7 @@ LAMBDA_BEGIN
 
 MeshLight::MeshLight(TriangleMesh *_mesh) {
 	mesh = _mesh;
-	_mesh->light = this;
+	_mesh->material->light = this;
 	InitDistribution();
 }
 
@@ -40,7 +40,7 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	RayHit hit;
 	const Ray r(_event.hit->point + _event.hit->normalG * 1e-5, _event.wi);
 	if (!Intersect(r, hit, *_event.scene, _sampler, _event.medium)) return 0;
-	if (hit.object->light != this) return 0;
+	if (hit.object->material->light != this) return 0;
 	Real triArea;
 	Vec3 normal;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);

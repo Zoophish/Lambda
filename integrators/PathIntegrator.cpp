@@ -23,9 +23,9 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 	for (int bounces = 0; bounces < maxBounces; ++bounces) {
 		if (bounces == 0 ? _scene.Intersect(r, hit) : scatterIntersect) {
 			
-			if (bounces == 0 && hit.object->light) L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product.
+			if (bounces == 0 && hit.object->material->light) L += hit.object->material->light->L(event); //Beta is always 1 here, so it is excluded from the product.
 
-			if (hit.object->bxdf) {
+			if (hit.object->material && hit.object->material->bxdf) {
 				event.SurfaceLocalise();
 				event.wo = -r.d;
 				Real lightDistPdf = 1;
@@ -34,14 +34,14 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 				Real scatteringPDF, lightPDF;
 				Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);
 				if (lightPDF > 0 && !Li.IsBlack()) {	//Add light sample contribution
-					f = hit.object->bxdf->f(event) * std::abs(event.wiL.y);
-					scatteringPDF = hit.object->bxdf->Pdf(event.woL, event.wiL, event);
+					f = hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
+					scatteringPDF = hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
 					if (!f.IsBlack() && scatteringPDF > 0) {
 						const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
 						Ld += Li * f * weight / lightPDF;
 					}
 				}
-				f = hit.object->bxdf->Sample_f(event, *sampler, scatteringPDF);
+				f = hit.object->material->bxdf->Sample_f(event, *sampler, scatteringPDF);
 				f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL.
 				lightPDF = l->PDF_Li(event, *sampler);	//Evaluated before hit is altered to next path vertex
 				r.o = hit.point;
@@ -52,8 +52,8 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 						Li = Spectrum(0);
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
 						if (scatterIntersect) {
-							if (hit.object->light == l)
-								Li = hit.object->light->L(event);
+							if (hit.object->material->light == l)
+								Li = hit.object->material->light->L(event);
 						}
 						else {
 							Li = l->Le(r);

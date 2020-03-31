@@ -13,7 +13,7 @@ Integrator *DirectLightingIntegrator::clone() const {
 Spectrum DirectLightingIntegrator::Li(Ray _ray, const Scene &_scene) const {
 	RayHit hit;
 	if (_scene.Intersect(_ray, hit)) {
-		if (hit.object->bxdf) {
+		if (hit.object->material && hit.object->material->bxdf) {
 			ScatterEvent event;
 			event.hit = &hit;
 			event.scene = &_scene;

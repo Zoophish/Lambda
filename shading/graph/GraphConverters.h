@@ -50,6 +50,15 @@ namespace Converter {
 			void GetColour(const ScatterEvent &_event, void *_out) const;
 	};
 
+
+
+	class ScalarToColour : public Node {
+		public:
+			ScalarToColour(Socket *_scalar = nullptr);
+
+			void GetScalar(const ScatterEvent &_event, void *_out) const;
+	};
+
 }
 
 SG_END

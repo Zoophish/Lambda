@@ -30,11 +30,11 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 		if (bounces == 0 ? _scene.Intersect(r, *event.hit) : scatterIntersect) {
 
 			if (bounces == 0) {	//Direct lighting on bounce 0 done here
-				if (hit.object->light) {
+				if (hit.object->material->light) {
 					if (event.medium) {
-						L += hit.object->light->L(event) * event.medium->Tr(r, hit.tFar, *sampler);
+						L += hit.object->material->light->L(event) * event.medium->Tr(r, hit.tFar, *sampler);
 					}
-					else L += hit.object->light->L(event); //Beta is always 1 here, so it is excluded from the product
+					else L += hit.object->material->light->L(event); //Beta is always 1 here, so it is excluded from the product
 				}
 			}
 
@@ -44,7 +44,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 			else event.mediumInteraction = false;
 
 			if (!event.mediumInteraction) {
-				if (hit.object->bxdf) {
+				if (hit.object->material && hit.object->material->bxdf) {
 					event.SurfaceLocalise();
 					event.wo = -r.d;
 					Real lightDistPdf = 1;
@@ -53,19 +53,19 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					Real scatteringPDF, lightPDF;
 					Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);
 					if (lightPDF > 0 && !Li.IsBlack()) {	//Add light sample contribution
-						f = hit.object->bxdf->f(event) * std::abs(event.wiL.y);
-						scatteringPDF = hit.object->bxdf->Pdf(event.woL, event.wiL, event);
+						f = hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
+						scatteringPDF = hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
 						if (!f.IsBlack() && scatteringPDF > 0) {
 							const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
 							Ld += Li * f * weight / lightPDF;
 						}
 					}
-					f = hit.object->bxdf->Sample_f(event, *sampler, scatteringPDF);
+					f = hit.object->material->bxdf->Sample_f(event, *sampler, scatteringPDF);
 					f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL.
 					lightPDF = l->PDF_Li(event, *sampler);	//Evaluated before hit is altered to next path vertex
 					r.o = hit.point;
 					r.d = event.wi;
-					event.medium = hit.object->mediaBoundary->GetMedium(event.wi, hit.normalG);	//Evaluate any medium we are going into before we get new hit
+					event.medium = hit.object->material->mediaBoundary.GetMedium(event.wi, hit.normalG);	//Evaluate any medium we are going into before we get new hit
 
 					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex and potential light contribution
 
@@ -74,8 +74,8 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 							Li = Spectrum(0);
 							const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
 							if (scatterIntersect) {
-								if (hit.object->light == l)
-									Li = hit.object->light->L(event);
+								if (hit.object->material->light == l)
+									Li = hit.object->material->light->L(event);
 							}
 							else {
 								Li = l->Le(r);
@@ -89,7 +89,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					beta *= f / scatteringPDF;
 				}
 				else {
-					event.medium = hit.object->mediaBoundary->GetMedium(r.d, hit.normalG);	//Set medium for next ray
+					event.medium = hit.object->material->mediaBoundary.GetMedium(r.d, hit.normalG);	//Set medium for next ray
 					r.o = hit.point + hit.normalG * (maths::Dot(event.hit->normalG, r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
 					if(bounces > 0) scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex, but...
 					bounces--;	//don't consider it a bounce (no scatter event)
@@ -128,7 +128,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 						Li = Spectrum(0);
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
 						if (scatterIntersect) {
-							if (hit.object->light == l) Li = hit.object->light->L(event);
+							if (hit.object->material->light == l) Li = hit.object->material->light->L(event);
 						}
 						else {
 							Li = l->Le(r);

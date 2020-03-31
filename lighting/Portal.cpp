@@ -5,7 +5,7 @@ LAMBDA_BEGIN
 MeshPortal::MeshPortal(EnvironmentLight *_parentLight, TriangleMesh *_mesh) {
 	parentLight = _parentLight;
 	mesh = _mesh;
-	_mesh->light = this;
+	_mesh->material->light = this;
 	InitDistribution();
 }
 
@@ -39,7 +39,7 @@ Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_p
 Real MeshPortal::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	RayHit hit;
 	if (!Intersect(Ray(_event.hit->point + _event.hit->normalG * .00001, _event.wi), hit, *_event.scene, _sampler, _event.medium)) return 0;
-	if (hit.object->light != this) return 0;
+	if (hit.object->material->light != this) return 0;
 	Real triArea;
 	Vec3 normal;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);

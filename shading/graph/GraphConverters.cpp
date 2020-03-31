@@ -93,6 +93,17 @@ namespace Converter {
 		*reinterpret_cast<Colour *>(_out) = Colour(r, g, b, a);
 	}
 
+
+
+	ScalarToColour::ScalarToColour(Socket *_scalar) : Node(1, 1, "ScalarToColour") {
+		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _scalar, "Scalar");
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_COLOUR, &ScalarToColour::GetScalar, "Colour");
+	}
+
+	void ScalarToColour::GetScalar(const ScatterEvent &_event, void *_out) const {
+		ASSERT_INPUTS(inputSockets[0]);
+		*reinterpret_cast<Colour *>(_out) = Colour(inputSockets[0].socket->GetAs<Real>(_event));
+	}
 }
 
 SG_END

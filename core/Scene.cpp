@@ -31,11 +31,11 @@ bool Scene::IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, S
 	while (Intersect(_r, _hit)) {
 		tFar += _hit.tFar;
 		if ((bool)_med && _Tr) *_Tr *= _med->Tr(_r, _hit.tFar, _sampler);
-		if (_hit.object->bxdf || _hit.object->light) {
+		if (_hit.object->material->bxdf || _hit.object->material->light) {
 			_hit.tFar = tFar;
 			return true;
 		}
-		_med = _hit.object->mediaBoundary->GetMedium(_r.d, _hit.normalG);
+		_med = _hit.object->material->mediaBoundary.GetMedium(_r.d, _hit.normalG);
 		_r.o = _hit.point + _hit.normalG *(maths::Dot(_hit.normalG, _r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
 	}
 	//if (_med) _Tr = 0;
@@ -73,8 +73,8 @@ void Scene::AddObject(Object *_obj, const bool _addLight) {
 	_obj->Commit(device);
 	rtcAttachGeometryByID(scene, _obj->geometry, objects.size());
 	objects.push_back(_obj);
-	if (_addLight && _obj->light) {
-		AddLight(_obj->light);
+	if (_addLight && _obj->material->light) {
+		AddLight(_obj->material->light);
 	}
 }
 
