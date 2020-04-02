@@ -51,17 +51,4 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
 		Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const override;
 };
 
-
-
-//class GGXDistribution : public MicrofacetDistribution {
-//	public:
-//		GGXDistribution();
-//
-//		Real D(const Vec3 &_wh, const Vec2 &_alpha) const override;
-//
-//		Real Lambda(const Vec3 &_w, const Vec2 &_alpha) const override;
-//
-//		Vec3 Sample_wh(Sampler &_sampler, const Vec3 &_wo, const Vec2 &_alpha) const override;
-//};
-
 LAMBDA_END

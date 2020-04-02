@@ -3,6 +3,7 @@
 #include <shading/graph/GraphBxDF.h>
 #include <shading/graph/GraphConverters.h>
 #include <shading/graph/GraphTexture.h>
+#include <shading/graph/GraphMaths.h>
 #include <shading/Fresnel.h>
 #include <shading/MicrofacetDistribution.h>
 #include <integrators/DirectLightingIntegrator.h>
@@ -43,25 +44,34 @@ int main() {
 	sg::RGBInput *greenNode = graphArena.New<sg::RGBInput>(Colour(.1, 1, .1));
 	sg::ImageTextureInput *gridNode = graphArena.New<sg::ImageTextureInput>(&grid);
 	sg::ImageTextureInput *checkNode = graphArena.New<sg::ImageTextureInput>(&checker);
-	Texture scratches(1,1, Colour(.5,.5,.5));// scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
+	Texture scratches(1,1, Colour(.5,.5,.5)); //scratches.LoadImageFile("D:\\Assets\\POLIIGON Surface Imperfections\\Stains Liquid\\StainsLiquidGeneric003_OVERLAY_VAR1_HIRES.jpg");
+	sg::ImageTextureInput *scratchesNode = graphArena.New<sg::ImageTextureInput>(&scratches);
 
-	//Perlin noise texture!
-	sg::Textures::Checker *perlinNoise = graphArena.New<sg::Textures::Checker>(20);
-	sg::Converter::ScalarToColour *scalarToColour = graphArena.New<sg::Converter::ScalarToColour>(&perlinNoise->outputSockets[0]);
+	sg::Textures::Checker *checkerNoise = graphArena.New<sg::Textures::Checker>(25);
+	sg::Textures::ValueNoise *valueNoise = graphArena.New<sg::Textures::ValueNoise>(25);
+	sg::Textures::PerlinNoise *perlinNoise = graphArena.New<sg::Textures::PerlinNoise>(25);
+	sg::Textures::Voronoi *voronoiNoise = graphArena.New<sg::Textures::Voronoi>(25);
+	sg::Textures::OctaveNoise *octaveNoise = graphArena.New<sg::Textures::OctaveNoise>(1, 1);
+	octaveNoise->noise = voronoiNoise;
+	sg::ScalarInput *scalarInput = graphArena.New<sg::ScalarInput>(.02);
+	sg::Maths::ScalarMaths *mathsNode = graphArena.New<sg::Maths::ScalarMaths>(sg::Maths::ScalarOperatorType::MULTIPLY);
+	sg::Connect(mathsNode->inputSockets[0], scalarInput->outputSockets[0]);
+	sg::Connect(mathsNode->inputSockets[1], octaveNoise->outputSockets[0]);
+	sg::Converter::ScalarToColour *scalarToColour = graphArena.New<sg::Converter::ScalarToColour>(&octaveNoise->outputSockets[0]);
 
-	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.0001);
+	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.1);
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001));
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::OrenNayarBRDFNode *mat = graphArena.New<sg::OrenNayarBRDFNode>(&greenNode->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBRDFNode *mat = graphArena.New<sg::OrenNayarBRDFNode>(&scalarToColour->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::OrenNayarBRDFNode *mat2 = graphArena.New<sg::OrenNayarBRDFNode>(&gridNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::OrenNayarBTDFNode *matT = graphArena.New<sg::OrenNayarBTDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::SpecularBRDFNode *specMat = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
 
 
-	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[0], &d, &fres);
+	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &mathsNode->outputSockets[0], &d, &fres);
 
-	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresMat->outputSockets[0], &mat->outputSockets[0], &perlinNoise->outputSockets[0]);
+	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &mat->outputSockets[0], &checkerNoise->outputSockets[0]);
 
 	Real volC[3] = { 5, 3, 4 };
 	Spectrum volS = Spectrum::FromRGB(volC) * .5;
@@ -72,13 +82,13 @@ int main() {
 	med->phase = phase;
 
 	Material material;
-	material.bxdf = mixMat;
+	material.bxdf = mat;
 
 	Material material2;
 	material2.bxdf = mat2;
 
 	AssetImporter ai2;
-	ai2.Import("../content/sphere.obj");
+	ai2.Import("../content/cube.obj");
 	ai2.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
 	for (auto &it : resources.objectPool.pool) {
 		//Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
@@ -93,7 +103,7 @@ int main() {
 	scene.hasVolumes = false;
 
 	AssetImporter ai;
-	ai.Import("../content/plane.obj");
+	ai.Import("../content/Backdrop.obj");
 	ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
 	TriangleMesh plane;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
@@ -101,39 +111,42 @@ int main() {
 	
 	scene.AddObject(&plane);
 
-
-	//ai.Import("../content/circleLight.obj");
-	//ai.PushToResourceManager(&resources);
+	//Material lightMat;
+	//ai.Import("../content/TopLight.obj");
+	//ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
 	//TriangleMesh lightMesh;
+	//lightMesh.material = &lightMat;
 	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
 	//lightMesh.smoothNormals = false;
 	//MeshLight light(&lightMesh);
 	//sg::ScalarInput temp1(3500);
 	//sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
 	//light.emission = &blckInpt1.outputSockets[0];
-	//light.intensity = 650;
+	//light.intensity = 500;
 	//scene.AddLight(&light);
 	//scene.AddObject(&lightMesh);
-	
+	//
+	//Material lightMat2;
 	//ai.Import("../content/SideLight.obj");
-	//ai.PushToResourceManager(&resources);
+	//ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
 	//TriangleMesh lightMesh2;
+	//lightMesh2.material = &lightMat2;
 	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
 	//MeshLight light2(&lightMesh2);
 	//sg::ScalarInput temp(10000);
 	//sg::BlackbodyInput blckInpt(&temp.outputSockets[0]);
 	//light2.emission = &blckInpt.outputSockets[0];
-	//light2.intensity = 300;
+	//light2.intensity = 250;
 	//scene.AddLight(&light2);
 	//scene.AddObject(&lightMesh2);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("..\\content\\veranda_2k.hdr");
+	envMap.LoadImageFile("..\\content\\quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 1;
-	ibl.offset = Vec2(PI*0, 0);
+	ibl.offset = Vec2(PI*-.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
@@ -148,11 +161,11 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(0, 2, 10), 16, 9, 10, &aperture2);
+	ThinLensCamera cam(Vec3(0, 2, 10), 1, 1, 10, &aperture2);
 	aperture2.size = .03;
 	aperture2.sampler = &sampler;
 	cam.focalLength = 10;
-	cam.SetFov(.25);
+	cam.SetFov(.15);
 	cam.SetRotation(-PI, -PI*.035);
 
 	//Make some integrators.
@@ -160,7 +173,7 @@ int main() {
 	PathIntegrator pathIntegrator(&sampler);
 	VolumetricPathIntegrator volPathIntegrator(&sampler);
 	NormalPass normalPass(&sampler);
-	Film film(1280, 720);
+	Film film(500, 500);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -169,7 +182,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 4;
+	renderDirective.spp = 64;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
