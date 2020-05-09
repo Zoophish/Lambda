@@ -1,4 +1,3 @@
-#include <future>
 #include "ProgressiveRender.h"
 
 LAMBDA_BEGIN
@@ -58,7 +57,12 @@ void ProgressiveRender::Resize(const unsigned _w, const unsigned _h) {
 void ProgressiveRender::SetRenderDirective(const RenderDirective &_directive) {
 	renderDirective = _directive;
 	renderDirective.spp = refreshRate;
+	Resize(renderDirective.film->filmData.GetWidth(), renderDirective.film->filmData.GetHeight());
 	Work();
+}
+
+const Film &ProgressiveRender::GetFilm() const {
+	return levelFilms[0];
 }
 
 void ProgressiveRender::ResetLevels() {
@@ -80,7 +84,7 @@ void ProgressiveRender::UpdateOutputTexture(const unsigned _level) {
 			levelFilms[_level].filmData.GetPixelCoord(xc, yc).ToRGB(&c);
 		}
 	}
-	updateCallback();
+	if(updateCallback) updateCallback();
 }
 
 LAMBDA_END

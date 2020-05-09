@@ -37,37 +37,37 @@ class vec3 {
 		inline vec3<T> operator/(const T _rhs) const { const T inv = (T)1 / _rhs; return vec3<T>(x * inv, y * inv, z * inv); }
 		inline vec3<T> operator-() const { return *this * -1; }
 
-		inline vec3<T>& operator+=(const vec3<T> &_rhs) {
+		inline vec3<T> &operator+=(const vec3<T> &_rhs) {
 			x += _rhs.x;
 			y += _rhs.y;
 			z += _rhs.z;
 			return *this;
 		}
-		inline vec3<T>& operator-=(const vec3<T> &_rhs) {
+		inline vec3<T> &operator-=(const vec3<T> &_rhs) {
 			x -= _rhs.x;
 			y -= _rhs.y;
 			z -= _rhs.z;
 			return *this;
 		}
-		inline vec3<T>& operator*=(const vec3<T> &_rhs) {
+		inline vec3<T> &operator*=(const vec3<T> &_rhs) {
 			x *= _rhs.x;
 			y *= _rhs.y;
 			z *= _rhs.z;
 			return *this;
 		}
-		inline vec3<T>& operator*=(const T _rhs) {
+		inline vec3<T> &operator*=(const T _rhs) {
 			x *= _rhs;
 			y *= _rhs;
 			z *= _rhs;
 			return *this;
 		}
-		inline vec3<T>& operator/=(const vec3<T> &_rhs) {
+		inline vec3<T> &operator/=(const vec3<T> &_rhs) {
 			x /= _rhs.x;
 			y /= _rhs.y;
 			z /= _rhs.z;
 			return *this;
 		}
-		inline vec3<T>& operator/=(const T _rhs) {
+		inline vec3<T> &operator/=(const T _rhs) {
 			const T inv = (T)1 / _rhs;
 			x *= inv;
 			y *= inv;
@@ -77,6 +77,10 @@ class vec3 {
 		
 		inline bool operator==(const vec3<T> &_rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
 		inline bool operator!=(const vec3<T> &_rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
+
+		inline T operator[](const unsigned _dim) const { return reinterpret_cast<T *>(const_cast<vec3<T> *>(this))[_dim]; }
+
+		inline T &operator[](const unsigned _dim) { return reinterpret_cast<T *>(this)[_dim]; }
 
 		inline T Magnitude() const { return std::sqrt(x * x + y * y + z * z); }
 
@@ -128,33 +132,37 @@ class alignas(16) vec3<float> {
 		}
 		inline vec3<float> operator-() const { return *this * -1; }
 
-		inline vec3<float>& operator+=(const vec3<float> &_rhs) {
+		inline vec3<float> &operator+=(const vec3<float> &_rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_add_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
 			return *this;
 		}
-		inline vec3<float>& operator-=(const vec3<float> &_rhs) {
+		inline vec3<float> &operator-=(const vec3<float> &_rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_sub_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
 			return *this;
 		}
-		inline vec3<float>& operator*=(const vec3<float> &_rhs) {
+		inline vec3<float> &operator*=(const vec3<float> &_rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
 			return *this;
 		}
-		inline vec3<float>& operator/=(const vec3<float> &_rhs) {
+		inline vec3<float> &operator/=(const vec3<float> &_rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_div_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_load_ps(reinterpret_cast<const float*>(&_rhs))));
 			return *this;
 		}
-		inline vec3<float>& operator*=(const float _rhs) {
+		inline vec3<float> &operator*=(const float _rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_set_ps1(_rhs)));
 			return *this;
 		}
-		inline vec3<float>& operator/=(const float _rhs) {
+		inline vec3<float> &operator/=(const float _rhs) {
 			_mm_store_ps(reinterpret_cast<float*>(this), _mm_mul_ps(_mm_load_ps(reinterpret_cast<float*>(this)), _mm_set_ps1(1.f / _rhs)));
 			return *this;
 		}
 
 		inline bool operator==(const vec3<float> &_rhs) const { return x == _rhs.x && y == _rhs.y && z == _rhs.z; }
 		inline bool operator!=(const vec3<float> &_rhs) const { return x != _rhs.x || y != _rhs.y || z != _rhs.z; }
+
+		inline float operator[](const unsigned _dim) const { return reinterpret_cast<float *>(const_cast<vec3<float> *>(this))[_dim]; }
+
+		inline float &operator[](const unsigned _dim) { return reinterpret_cast<float *>(this)[_dim]; }
 
 		inline float Magnitude() const {
 			const vec3<float> sq = *this * *this;
@@ -215,6 +223,13 @@ namespace maths {
 	inline T SphericalPhi(const vec3<T> &_v) {
 		const T p = std::atan2(_v.z, _v.x);
 		return (p < 0) ? (p + 3.14159265359 * 2.) : p;
+	}
+
+	template<class T>
+	inline vec3<T> Rotate(const vec3<T> &_v, const vec3<T> &_axis, const T _theta) {
+		const T cosTheta = std::cos(_theta);
+		const T sinTheta = std::sqrt((T)1 - cosTheta * cosTheta);
+		return _v * cosTheta + maths::Cross(_axis, _v) * sinTheta + _axis * maths::Dot(_axis, _v) * ((T)1 - cosTheta);
 	}
 
 	#ifdef LAMBDA_VEC3_USE_SSE

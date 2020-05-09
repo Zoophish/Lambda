@@ -39,17 +39,16 @@ A high performance physically-based renderer written in C++ as a project in my s
  - Sobol' sampler
  - Light portals (projected)
  - Spatial importance sampling of lights
- - Packet-tracing
+ - Packet-tracing on albedo and look-dev integrators
  - Tonemapping post-process
  - Utility integrators (depth, normal, albedo, etc)
  - Bidirectional path-integrator
  - Realistic camera model with lens and sensor profiles
  - Camera chromatic aberration
- - Infinite plane geommetry
  - Parameterised Hair BSDF (Bitterli, Chiang - 2016)
  - Virtual-displacement mapping
  - Animated rendering
  - Massive-scene optimisation (LOD, occlusion of insignificant object groups)
  - Light-pass rendering
- - Scene-marching, planetary scale rendering
+ - Floating origin chunk instantiation for planetary scale rendering
  - Physical-atmosphere approximation with clouds

@@ -18,7 +18,7 @@ namespace {
 		return a;
 	}
 
-	inline uint32_t Hash2D(uint32_t _x, uint32_t _y) {
+	inline uint32_t Hash21(uint32_t _x, uint32_t _y) {
 		_x *= 1597334677u;
 		_y *= 3812015801u;
 		return (_x ^ _y) * 1597334677u;
@@ -29,11 +29,14 @@ namespace {
 		return maths::Fract(Vec2(std::sin(_v.x), std::sin(_v.y)) * 18.5453);
 	}
 
-	inline uint32_t Hash3D(uint32_t _x, uint32_t _y, uint32_t _z) {
-		return 0;
+	//Based on: https://www.shadertoy.com/view/4djSRW - Dave Hoskins
+	inline Vec3 Hash33(Vec3 _p) {
+		_p = maths::Fract(_p * Vec3(.1031, .1030, .0973));
+		_p += maths::Dot(_p, Vec3(_p.y, _p.x, _p.z) + 33.33);
+		return maths::Fract((Vec3(_p.x, _p.x, _p.y) + Vec3(_p.y, _p.x, _p.x)) * Vec3(_p.z, _p.y, _p.z));
 	}
 
-	inline Vec2 GetGradient(Real _u) {
+	inline Vec2 GetGradient2D(Real _u) {
 		_u *= PI2;
 		return Vec2(std::cos(_u), std::sin(_u));
 	}
@@ -68,10 +71,10 @@ namespace Textures {
 		const Vec2 p10(gridX + 1, gridY);
 		const Vec2 p11(gridX + 1, gridY + 1);
 		const Vec2 p01(gridX, gridY + 1);
-		const Vec2 g00 = GetGradient(Hash2D(p00.x, p00.y) * inv32);
-		const Vec2 g10 = GetGradient(Hash2D(p10.x, p10.y) * inv32);
-		const Vec2 g11 = GetGradient(Hash2D(p11.x, p11.y) * inv32);
-		const Vec2 g01 = GetGradient(Hash2D(p01.x, p01.y) * inv32);
+		const Vec2 g00 = GetGradient2D(Hash21(p00.x, p00.y) * inv32);
+		const Vec2 g10 = GetGradient2D(Hash21(p10.x, p10.y) * inv32);
+		const Vec2 g11 = GetGradient2D(Hash21(p11.x, p11.y) * inv32);
+		const Vec2 g01 = GetGradient2D(Hash21(p01.x, p01.y) * inv32);
 		const Real dg00 = maths::Dot(_texCoords - p00, g00);
 		const Real dg10 = maths::Dot(_texCoords - p10, g10);
 		const Real dg11 = maths::Dot(_texCoords - p11, g11);
@@ -125,10 +128,10 @@ namespace Textures {
 		_texCoords *= scale;
 		const Vec2 p00(std::floor(_texCoords.x), std::floor(_texCoords.y));
 		const Vec2 p = _texCoords - p00;
-		const Real v00 = Hash2D(p00.x, p00.y) * inv32;
-		const Real v10 = Hash2D(p00.x + 1, p00.y) * inv32;
-		const Real v11 = Hash2D(p00.x + 1, p00.y + 1) * inv32;
-		const Real v01 = Hash2D(p00.x, p00.y + 1) * inv32;
+		const Real v00 = Hash21(p00.x, p00.y) * inv32;
+		const Real v10 = Hash21(p00.x + 1, p00.y) * inv32;
+		const Real v11 = Hash21(p00.x + 1, p00.y + 1) * inv32;
+		const Real v01 = Hash21(p00.x, p00.y + 1) * inv32;
 		const Real vx0 = maths::Lerp(v00, v10, Cubic(p.x));
 		const Real vx1 = maths::Lerp(v01, v11, Cubic(p.x));
 		return maths::Lerp(vx0, vx1, Cubic(p.y));
@@ -162,7 +165,13 @@ namespace Textures {
 	}
 
 	Real OctaveNoise::Get3D(Vec3 _point) const {
-		return 0;
+		Real out = 0, amp = .5, scl = 1;
+		for (unsigned i = 0; i < octaves; ++i) {
+			out += noise->Get3D(_point * scale * scl) * amp;
+			scl *= 2;
+			amp *= .5;
+		}
+		return out;
 	}
 
 
@@ -193,7 +202,20 @@ namespace Textures {
 	}
 
 	Real Voronoi::Get3D(Vec3 _point) const {
-		return 0;
+		_point *= scale;
+		const Vec3 p00(std::floor(_point.x), std::floor(_point.y), std::floor(_point.z));
+		Real minDist2 = INFINITY;
+		for (int z = -1; z < 2; ++z) {
+			for (int y = -1; y < 2; ++y) {
+				for (int x = -1; x < 2; ++x) {
+					const Vec3 pOff = p00 + Vec3(x, y, z);
+					const Vec3 rp = pOff + Hash33(pOff) - _point;
+					const Real dist2 = maths::Dot(rp, rp);
+					if (dist2 < minDist2) minDist2 = dist2;
+				}
+			}
+		}
+		return std::sqrt(minDist2);
 	}
 
 }

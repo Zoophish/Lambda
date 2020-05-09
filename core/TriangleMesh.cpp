@@ -15,6 +15,12 @@ void TriangleMesh::Commit(const RTCDevice &_device) {
 	rtcCommitGeometry(geometry);
 }
 
+Bounds TriangleMesh::GetLocalBounds() const {
+	Bounds bounds;
+	for (size_t i = 0; i < verticesSize; ++i) bounds = maths::Union(bounds, vertices[i]);
+	return bounds;
+}
+
 Real TriangleMesh::Area() const {
 	Real area = 0;
 	for (size_t i = 0; i < trianglesSize; ++i) {

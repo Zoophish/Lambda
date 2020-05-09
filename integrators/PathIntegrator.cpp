@@ -29,7 +29,8 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 				event.SurfaceLocalise();
 				event.wo = -r.d;
 				Real lightDistPdf = 1;
-				const Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightDistPdf)];
+				//const Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightDistPdf)];
+				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
 				Spectrum Ld(0);
 				Real scatteringPDF, lightPDF;
 				Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);

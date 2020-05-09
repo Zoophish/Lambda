@@ -20,6 +20,7 @@
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
+#include <image/processing/ToneMap.h>
 #include <shading/media/HomogeneousMedium.h>
 #include <shading/media/HenyeyGreenstein.h>
 
@@ -150,6 +151,8 @@ int main() {
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
+	PowerLightSampler lightSampler(scene);
+	scene.lightSampler = &lightSampler;
 	scene.Commit();
 
 	//Set up sampler.
@@ -197,6 +200,8 @@ int main() {
 	//Convert film to an RGB image;
 	film.ToRGBTexture(&tex);
 
+	//PostProcessing::ToneMap toneMapPP;
+	//toneMapPP.Process(&tex);
 
 	//Save to file.
 	tex.SaveToImageFile("out.png", true, false);

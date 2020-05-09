@@ -28,6 +28,10 @@ class EnvironmentLight : public Light {
 
 		Real Irradiance() const override;
 
+		Bounds GetBounds() const override;
+
+		Vec3 GetDirection() const override;
+
 		inline Spectrum Le(const Vec3 &_w) const {
 			const Vec2 uv = maths::Fract(Vec2((maths::SphericalPhi(_w) - offset.x) * INV_PI2, (maths::SphericalTheta(_w) - offset.y) * INV_PI));
 			return radianceMap.GetUV(uv) * intensity;

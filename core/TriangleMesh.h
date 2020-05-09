@@ -32,6 +32,8 @@ class TriangleMesh : public Object {
 
 		void Commit(const RTCDevice &_device) override;
 
+		Bounds GetLocalBounds() const override;
+
 		//To avoid duplicate computation, we can optionally fetch the normal in the same function.
 		inline void GetTriangleAreaAndNormal(const Triangle *_t, Real *_area, Vec3 *_normal = nullptr) const {
 			const Vec3 cross = maths::Cross(vertices[_t->v1] - vertices[_t->v0], vertices[_t->v2] - vertices[_t->v0]);

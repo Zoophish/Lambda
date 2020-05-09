@@ -5,7 +5,7 @@ LAMBDA_BEGIN
 Spectrum Integrator::SampleOneLight(ScatterEvent &_event, const Scene &_scene) const {
 	if (_event.hit->object->material->bxdf) {
 		Real lightPdf = 1;
-		Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightPdf)];
+		Light *l = _scene.lightSampler->Sample(_event, *sampler, &lightPdf);
 		return EstimateDirect(_event, _scene, *l) / lightPdf;
 	}
 	return Spectrum(0);

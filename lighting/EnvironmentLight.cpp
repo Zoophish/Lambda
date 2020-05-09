@@ -69,4 +69,12 @@ Real EnvironmentLight::Irradiance() const {
 	return intensity;
 }
 
+Bounds EnvironmentLight::GetBounds() const {
+	return { {-INFINITY,-INFINITY,-INFINITY}, {INFINITY, INFINITY,INFINITY} };
+}
+
+Vec3 EnvironmentLight::GetDirection() const {
+	return Vec3(0, 0, 0);
+}
+
 LAMBDA_END

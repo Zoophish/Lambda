@@ -9,6 +9,16 @@ Scene::Scene(const RTCSceneFlags _sceneFlags, const char *_deviceConfig) {
 	hasVolumes = false;
 }
 
+void Scene::SetFlags(const RTCSceneFlags _flags) {
+	rtcSetSceneFlags(scene, _flags);
+}
+
+void Scene::Commit(const RTCBuildQuality _buildQuality) {
+	rtcSetSceneBuildQuality(scene, _buildQuality);
+	rtcCommitScene(scene);
+	lightSampler->Commit();
+}
+
 bool Scene::Intersect(const Ray &_ray, RayHit &_hit) const {
 	RTCRayHit rayHit;
 	rayHit.ray = _ray.ToRTCRay();
@@ -78,20 +88,17 @@ void Scene::AddObject(Object *_obj, const bool _addLight) {
 	}
 }
 
-void Scene::UpdateLightDistribution() {
-	if (envLight) {
-		RTCBounds b;
-		rtcGetSceneBounds(scene, &b);
-		const Real xd = b.upper_x - b.lower_x;
-		const Real yd = b.upper_y - b.lower_y;
-		const Real zd = b.upper_z - b.lower_z;
-		envLight->radius = std::max(std::max(xd, yd), zd) * .5;
+void Scene::RemoveObject(const unsigned _i) {
+	rtcDetachGeometry(scene, _i);
+	objects.erase(objects.begin() + _i);
+}
+
+void Scene::RemoveObject(Object *_obj) {
+	auto obj = std::find(objects.begin(), objects.end(), _obj);
+	if (obj != objects.end()) {
+		rtcDetachGeometry(scene, std::distance(objects.begin(), obj));
+		objects.erase(obj);
 	}
-	std::unique_ptr<Real[]> importances(new Real[lights.size()]);
-	for (unsigned i = 0; i < lights.size(); ++i) {
-		importances[i] = lights[i]->Power();
-	}
-	lightDistribution = Distribution::Piecewise1D(&importances[0], lights.size());
 }
 
 LAMBDA_END

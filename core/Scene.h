@@ -16,6 +16,7 @@
 #include <lighting/Light.h>
 #include <sampling/Piecewise.h>
 #include <shading/media/Media.h>
+#include <lighting/LightSampler.h>
 
 LAMBDA_BEGIN
 
@@ -28,7 +29,8 @@ class Scene {
 		std::vector<Object*> objects; //Root(s) of object tree.
 		std::vector<Light*> lights;
 		Light* envLight;
-		Distribution::Piecewise1D lightDistribution;
+		LightSampler *lightSampler;
+
 		bool hasVolumes;
 
 		Scene(const RTCSceneFlags _sceneFlags = RTC_SCENE_FLAG_NONE, const char *_deviceConfig = NULL);
@@ -36,18 +38,12 @@ class Scene {
 		/*
 			Sets Embree scene flags.
 		*/
-		inline void SetFlags(const RTCSceneFlags _flags = RTC_SCENE_FLAG_NONE) {
-			rtcSetSceneFlags(scene, _flags);
-		}
+		void SetFlags(const RTCSceneFlags _flags = RTC_SCENE_FLAG_NONE);
 
 		/*
 			Builds scene's accelleration structure and lighting distribution.
 		*/
-		inline void Commit(const RTCBuildQuality _buildQuality = RTC_BUILD_QUALITY_HIGH) {
-			rtcSetSceneBuildQuality(scene, _buildQuality);
-			rtcCommitScene(scene);
-			UpdateLightDistribution();
-		}
+		void Commit(const RTCBuildQuality _buildQuality = RTC_BUILD_QUALITY_HIGH);
 
 		/*
 			Queries _ray against scene geometry.
@@ -87,12 +83,14 @@ class Scene {
 		void AddObject(Object *_obj, const bool _addLight = true);
 
 		/*
-			Removes the object indexed by _i from scene.
+			Removes object by index.
 		*/
-		inline void RemoveObject(const unsigned _i) {
-			rtcDetachGeometry(scene, _i);
-			objects.erase(objects.begin() + _i);
-		}
+		void RemoveObject(const unsigned _i);
+
+		/*
+			Removes object by value.
+		*/
+		void RemoveObject(Object *_obj);
 
 		/*
 			Returns bounding box of scene's geometry.
@@ -102,13 +100,6 @@ class Scene {
 			rtcGetSceneBounds(scene, &b);
 			return Bounds(Vec3(b.lower_x, b.lower_y, b.lower_z), Vec3(b.upper_x, b.upper_y, b.upper_z));
 		}
-
-		/*
-			Commits changes to scene lighting ready for rendering.
-				- Automatically called when scene is committed.
-				- Call if lights have been changed but geometry hasn't.
-		*/
-		void UpdateLightDistribution();
 };
 
 struct SceneNode {

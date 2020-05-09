@@ -61,6 +61,18 @@ Real MeshLight::Irradiance() const {
 	return intensity;
 }
 
+Bounds MeshLight::GetBounds() const {
+	return mesh->GetBounds();
+}
+
+Vec3 MeshLight::GetDirection() const {
+	return Vec3(0, 0, 0);
+}
+
+TriangleMesh const &MeshLight::GetMesh() const {
+	return *mesh;
+}
+
 void MeshLight::InitDistribution() {
 	const size_t ts = mesh->trianglesSize;
 	std::unique_ptr<Real[]> triAreas(new Real[ts]);
@@ -68,6 +80,84 @@ void MeshLight::InitDistribution() {
 		mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triAreas[i]);
 	}
 	triDistribution = Distribution::Piecewise1D(&triAreas[0], ts);
+}
+
+
+
+TriangleLight::TriangleLight(MeshLight *_meshLight, const size_t _i) {
+	meshLight = _meshLight;
+	triIndex = _i;
+}
+
+Spectrum TriangleLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
+	const Vec3 pL = meshLight->mesh->SamplePoint(meshLight->mesh->triangles[triIndex], _sampler->Get2D());
+	const Vec3 pS = _event.hit->point + _event.hit->normalG * 1e-5;
+	Spectrum Tr(1);
+	if (MutualVisibility(pS, pL, _event, *_event.scene, *_sampler, &Tr)) {
+		Real triArea;
+		Vec3 normal;
+		meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[triIndex], &triArea, &normal);
+		const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
+		if (denom > 0) {
+			_event.wiL = _event.ToLocal(_event.wi);
+			_pdf = maths::DistSq(_event.hit->point, pL) / denom;
+			return meshLight->emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * meshLight->intensity * INV_PI;
+		}
+	}
+	_pdf = 0;
+	return Spectrum(0);
+}
+
+Real TriangleLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
+	return meshLight->PDF_Li(_event, _sampler);
+}
+
+Spectrum TriangleLight::L(const ScatterEvent &_event) const {
+	return meshLight->L(_event);
+}
+
+Real TriangleLight::Area() const {
+	Real area;
+	meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[triIndex], &area);
+	return area;
+}
+
+Real TriangleLight::Irradiance() const {
+	//Approximation of irradiance by sampling emission texture inside triangle.
+	constexpr unsigned samples = 3;	//samples used = samples^2
+	constexpr Real invSamples = (Real)1 / (Real)samples;
+	ScatterEvent fakeEvent;	//TO SELF: This needs a design reconsideration in ShaderGraph
+	RayHit fakeHit;
+	fakeEvent.hit = &fakeHit;
+	const Vec2 &uv0 = meshLight->mesh->uvs[meshLight->mesh->triangles[triIndex].v0];
+	const Vec2 &uv1 = meshLight->mesh->uvs[meshLight->mesh->triangles[triIndex].v1];
+	const Vec2 &uv2 = meshLight->mesh->uvs[meshLight->mesh->triangles[triIndex].v2];
+	Real irradiance = 0;
+	for (unsigned a = 0; a < samples; ++a) {
+		for (unsigned b = 0; b < samples; ++b) {
+			fakeHit.uvCoords = maths::BarycentricInterpolation(uv0, uv1, uv2, (Real)a * invSamples, (Real)b * invSamples);
+			irradiance += meshLight->emission->GetAsSpectrum(fakeEvent, SpectrumType::Illuminant).y();
+		}
+	}
+	return irradiance * meshLight->intensity;
+}
+
+Bounds TriangleLight::GetBounds() const {
+	Bounds bounds;
+	const Vec3 &p0 = meshLight->mesh->vertices[meshLight->mesh->triangles[triIndex].v0];
+	const Vec3 &p1 = meshLight->mesh->vertices[meshLight->mesh->triangles[triIndex].v1];
+	const Vec3 &p2 = meshLight->mesh->vertices[meshLight->mesh->triangles[triIndex].v2];
+	bounds = maths::Union(bounds, p0);
+	bounds = maths::Union(bounds, p1);
+	bounds = maths::Union(bounds, p2);
+	return { meshLight->mesh->xfm * bounds.min, meshLight->mesh->xfm * bounds.max };
+}
+
+Vec3 TriangleLight::GetDirection() const {
+	Vec3 normal;
+	Real area;
+	meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[triIndex], &area, &normal);
+	return normal;
 }
 
 LAMBDA_END

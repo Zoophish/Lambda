@@ -77,7 +77,7 @@ struct Socket {
 	std::string tag;
 
 	/*
-		Methods kept inline so higher chance of expansion to reduce
+		Methods kept inline for higher chance of expansion to reduce
 		function calls (very frequently called when rendering).
 	*/
 

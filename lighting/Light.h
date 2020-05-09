@@ -50,6 +50,16 @@ class Light {
 		}
 
 		/*
+			Get bounds of light in world.
+		*/
+		virtual Bounds GetBounds() const = 0;
+
+		/*
+			Get main direction of light.
+		*/
+		virtual Vec3 GetDirection() const = 0;
+
+		/*
 			Special scene intersection functions for direct lighting that account for volumetric
 			beam transmittance.
 			_scene.hasVolumes must be true to account for beam transmittance, _Tr.

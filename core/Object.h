@@ -45,6 +45,21 @@ class Object : public Transformable {
 			All derivatives must override to provide their own hit information.
 		*/
 		virtual void ProcessHit(const RTCRayHit &_rtcHit, RayHit &_hit) const = 0;
+
+		/*
+			World-space bounds.
+		*/
+		virtual Bounds GetBounds() const {
+			const Bounds localBounds = GetLocalBounds();
+			return { xfm * localBounds.min, xfm * localBounds.max };
+		}
+
+		/*
+			Local-space bounds.
+		*/
+		virtual Bounds GetLocalBounds() const {
+			return { { 0,0,0 }, { 0,0,0 } };
+		}
 };
 
 class Empty : public Object {

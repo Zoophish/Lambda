@@ -28,6 +28,8 @@ class MeshPortal : public Light {
 
 		Real Irradiance() const override;
 
+		Bounds GetBounds() const override;
+
 	protected:
 		Distribution::Piecewise1D triDistribution;
 		TriangleMesh *mesh;

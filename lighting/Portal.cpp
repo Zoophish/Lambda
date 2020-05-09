@@ -63,6 +63,10 @@ Real MeshPortal::Irradiance() const {
 	return parentLight->intensity;
 }
 
+Bounds MeshPortal::GetBounds() const {
+	return mesh->GetBounds();
+}
+
 void MeshPortal::InitDistribution() {
 	const size_t ts = mesh->trianglesSize;
 	std::unique_ptr<Real[]> triAreas(new Real[ts]);
