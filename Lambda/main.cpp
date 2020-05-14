@@ -23,6 +23,7 @@
 #include <image/processing/ToneMap.h>
 #include <shading/media/HomogeneousMedium.h>
 #include <shading/media/HenyeyGreenstein.h>
+#include <lighting/ManyLightSampler.h>
 
 using namespace lambda;
 
@@ -63,7 +64,7 @@ int main() {
 	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.1);
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001));
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::OrenNayarBRDFNode *mat = graphArena.New<sg::OrenNayarBRDFNode>(&scalarToColour->outputSockets[0], &iorNode->outputSockets[0]);
+	sg::OrenNayarBRDFNode *mat = graphArena.New<sg::OrenNayarBRDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::OrenNayarBRDFNode *mat2 = graphArena.New<sg::OrenNayarBRDFNode>(&gridNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::OrenNayarBTDFNode *matT = graphArena.New<sg::OrenNayarBTDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresMat = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
@@ -72,7 +73,7 @@ int main() {
 
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &mathsNode->outputSockets[0], &d, &fres);
 
-	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &mat->outputSockets[0], &checkerNoise->outputSockets[0]);
+	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &mat->outputSockets[0], &whiteNode->outputSockets[0]);
 
 	Real volC[3] = { 5, 3, 4 };
 	Spectrum volS = Spectrum::FromRGB(volC) * .5;
@@ -89,7 +90,7 @@ int main() {
 	material2.bxdf = mat2;
 
 	AssetImporter ai2;
-	ai2.Import("../content/cube.obj");
+	ai2.Import("../content/lucy.obj");
 	ai2.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
 	for (auto &it : resources.objectPool.pool) {
 		//Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
@@ -112,20 +113,19 @@ int main() {
 	
 	scene.AddObject(&plane);
 
-	//Material lightMat;
-	//ai.Import("../content/TopLight.obj");
-	//ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
-	//TriangleMesh lightMesh;
-	//lightMesh.material = &lightMat;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
-	//lightMesh.smoothNormals = false;
-	//MeshLight light(&lightMesh);
-	//sg::ScalarInput temp1(3500);
-	//sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
-	//light.emission = &blckInpt1.outputSockets[0];
-	//light.intensity = 500;
-	//scene.AddLight(&light);
-	//scene.AddObject(&lightMesh);
+	Material lightMat;
+	ai.Import("../content/SpiralLight.obj");
+	ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
+	TriangleMesh lightMesh;
+	lightMesh.material = &lightMat;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
+	lightMesh.smoothNormals = false;
+	MeshLight light(&lightMesh);
+	sg::ScalarInput temp1(3500);
+	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
+	light.emission = &blckInpt1.outputSockets[0];
+	light.intensity = 160;
+	scene.AddObject(&lightMesh);
 	//
 	//Material lightMat2;
 	//ai.Import("../content/SideLight.obj");
@@ -146,13 +146,14 @@ int main() {
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	envMap.LoadImageFile("..\\content\\quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*-.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
-	PowerLightSampler lightSampler(scene);
-	scene.lightSampler = &lightSampler;
+	//PowerLightSampler lightSampler(scene);
+	ManyLightSampler manyLightSampler(scene);
+	scene.lightSampler = &manyLightSampler;
 	scene.Commit();
 
 	//Set up sampler.
@@ -164,7 +165,7 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(0, 2, 10), 1, 1, 10, &aperture2);
+	ThinLensCamera cam(Vec3(0, 2, 10), 512, 800, 10, &aperture2);
 	aperture2.size = .03;
 	aperture2.sampler = &sampler;
 	cam.focalLength = 10;
@@ -176,7 +177,7 @@ int main() {
 	PathIntegrator pathIntegrator(&sampler);
 	VolumetricPathIntegrator volPathIntegrator(&sampler);
 	NormalPass normalPass(&sampler);
-	Film film(500, 500);
+	Film film(512, 800);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -185,7 +186,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 64;
+	renderDirective.spp = 16;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

@@ -50,14 +50,14 @@ Vec2 HaltonSampler::Get2D() {
 	return out;
 }
 
-inline Real HaltonSampler::Halton(const int index, const int b) {
+inline Real HaltonSampler::Halton(const int _index, const int _b) {
 	Real result = 0;
-	Real f = 1. / (Real)b;
-	int i = index;
+	Real f = (Real)1 / (Real)_b;
+	int i = _index;
 	while (i > 0) {
-		result = result + f * (i % b);
-		i /= b;
-		f /= (Real)b;
+		result = result + f * (i % _b);
+		i /= _b;
+		f /= (Real)_b;
 	}
 	return result;
 }

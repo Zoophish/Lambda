@@ -139,18 +139,17 @@ Real TriangleLight::Irradiance() const {
 			irradiance += meshLight->emission->GetAsSpectrum(fakeEvent, SpectrumType::Illuminant).y();
 		}
 	}
-	return irradiance * meshLight->intensity;
+	return irradiance * invSamples * invSamples * meshLight->intensity;
 }
 
 Bounds TriangleLight::GetBounds() const {
-	Bounds bounds;
 	const Vec3 &p0 = meshLight->mesh->vertices[meshLight->mesh->triangles[triIndex].v0];
 	const Vec3 &p1 = meshLight->mesh->vertices[meshLight->mesh->triangles[triIndex].v1];
 	const Vec3 &p2 = meshLight->mesh->vertices[meshLight->mesh->triangles[triIndex].v2];
-	bounds = maths::Union(bounds, p0);
+	Bounds bounds(p0);
 	bounds = maths::Union(bounds, p1);
 	bounds = maths::Union(bounds, p2);
-	return { meshLight->mesh->xfm * bounds.min, meshLight->mesh->xfm * bounds.max };
+	return bounds;
 }
 
 Vec3 TriangleLight::GetDirection() const {

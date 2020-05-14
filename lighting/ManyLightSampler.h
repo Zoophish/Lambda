@@ -8,6 +8,7 @@
 	during tree construction and accessed using a hash table.
 */
 #pragma once
+#include <deque>
 #include <unordered_map>
 #include "LightSampler.h"
 
@@ -17,7 +18,7 @@ class TriangleLight;
 
 class ManyLightSampler : public LightSampler {
 	public:
-		Real threshold = .1;
+		Real threshold;
 
 		ManyLightSampler(const Real _threshold = 0.1);
 
@@ -26,7 +27,7 @@ class ManyLightSampler : public LightSampler {
 		/*
 			Builds the light tree.
 		*/
-		void Commit();
+		void Commit() override;
 
 		/*
 			Stochastically samples a good light to sample from shading event, _event. 
@@ -40,8 +41,10 @@ class ManyLightSampler : public LightSampler {
 			I mainly included thetaE to future-proof the sampler with emission profiles & spotlights etc.
 		*/
 		struct OrientationCone {
-			Vec3 axis;	//Cone axis
-			Real thetaO, thetaE;
+			Vec3 axis = { 0,1,0 };	//Cone axis
+			Real thetaO = 0, thetaE = 0;
+
+			static OrientationCone MakeCone(const Vec3 &_axis, const Real _thetaO = 0, const Real thetaE = PI / 2.);
 
 			/*
 				Returns the union of cones _a and _b.
@@ -72,17 +75,17 @@ class ManyLightSampler : public LightSampler {
 			OrientationCone cone;
 		};
 
-		std::vector<TriangleLight> triangleLights;	//Stored with sampler
+		std::deque<TriangleLight> triangleLights;	//Stored with sampler
 		std::vector<Light *> infiniteLights, lights;	//Keep infinite lights separate from finite lights for convenience when sampling
 		std::unordered_map<unsigned, Distribution::Piecewise1D> leafDistributions;
-		LightNode *root;	//Root node of light tree
+		std::unique_ptr<LightNode> root;	//Root node of light tree
 
 		/*
 			Filters lights in _lights into respective containers.
 			Converts mesh lights into triangle lights.
 			Initiates root node as an unfinished leaf over all lights ready for RecursiveBuild().
 		*/
-		void InitLights(std::vector<Light *> _lights);
+		void InitLights(const std::vector<Light *> &_lights);
 
 		/*
 			Orientation cone measure function - analagous to bounding box surface area (MArea)
