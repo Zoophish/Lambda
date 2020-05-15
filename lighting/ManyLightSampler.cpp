@@ -94,12 +94,21 @@ Real ManyLightSampler::GeometricVariance(LightNode *_node) const {
 	return 0;
 }
 
+void ManyLightSampler::InitLeaf(LightNode *_node) {
+	std::unique_ptr<Real[]> d(new Real[_node->numLights]);
+	for (unsigned i = 0; i < _node->numLights; ++i) {
+		d[i] = lights[_node->firstLightIndex + i]->Power();
+	}
+	leafDistributions.insert({ _node->firstLightIndex, Distribution::Piecewise1D(d.get(), _node->numLights) });
+	_node->children[0] = _node->children[1] = nullptr;
+}
+
 /*
-	Recursive split. Inital _node must contain all lights.
+	Recursive SAOH split. Inital _node must contain all lights.
 */
 void ManyLightSampler::RecursiveBuild(LightNode *_node) {
-	
-	_node->bounds = lights[_node->firstLightIndex]->GetBounds();	//Confused why this is necassary...
+
+	_node->bounds = lights[_node->firstLightIndex]->GetBounds();
 	_node->orientationCone = OrientationCone::MakeCone(lights[_node->firstLightIndex]->GetDirection());
 	for (unsigned i = 0; i < _node->numLights; ++i) {
 		_node->bounds = maths::Union(_node->bounds, lights[i + _node->firstLightIndex]->GetBounds());
@@ -113,8 +122,9 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 	const unsigned splitAxis = axes.x > axes.y && axes.x > axes.z ? 0 : (axes.y > axes.x && axes.y > axes.z) ? 1 : 2;
 
 	//Initialise buckets
-	Bucket buckets[numBuckets];
-	bool bucketInits[numBuckets] = { false };
+	std::unique_ptr<Bucket[]> buckets(new Bucket[numBuckets]);
+	std::unique_ptr<bool[]> bucketInits(new bool[numBuckets]);
+	std::fill(&bucketInits[0], &bucketInits[numBuckets], false);
 	for (unsigned i = _node->firstLightIndex; i < _node->firstLightIndex + _node->numLights; ++i) {
 		const Light *light = lights[i];
 		unsigned b = (Real)numBuckets * _node->bounds.Offset(light->GetBounds().Center())[splitAxis];
@@ -122,7 +132,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 		if (!bucketInits[b]) {
 			buckets[b].totalPower = light->Power();
 			buckets[b].bounds = light->GetBounds();
-			buckets[b].cone = { light->GetDirection(), 0, PI / 2. };
+			buckets[b].cone = OrientationCone::MakeCone(light->GetDirection());
 			bucketInits[b] = true;
 		}
 		else {
@@ -161,16 +171,6 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 
 	//Create leaf or split node
 	if (_node->numLights > 1 && minCost < _node->totalPower) {	//Split
-		LightNode *left = new LightNode;
-		LightNode *right = new LightNode;
-		_node->children[0] = left;
-		_node->children[1] = right;
-		left->bounds = leftBucket.bounds;
-		left->orientationCone = leftBucket.cone;
-		left->totalPower = leftBucket.totalPower;
-		right->bounds = rightBucket.bounds;
-		right->orientationCone = rightBucket.cone;
-		right->totalPower = rightBucket.totalPower;
 
 		auto pred = [&](const Light *l) {
 			unsigned b = _node->bounds.Offset(l->GetBounds().Center())[splitAxis] * (Real)numBuckets;
@@ -181,24 +181,36 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 		Light **it = std::partition(&lights[_node->firstLightIndex], &lights[_node->firstLightIndex + _node->numLights - 1] + 1, pred);	//Range not inclusive of last, hence +1
 		const unsigned pivot = it - &lights[0];
 		//Set the light primitive range
-		left->numLights = pivot - _node->firstLightIndex;
-		right->firstLightIndex = pivot;
-		left->firstLightIndex = _node->firstLightIndex;
-		right->numLights = _node->numLights - left->numLights;
+		const unsigned leftNumLights = pivot - _node->firstLightIndex;
+		const unsigned rightNumLights = _node->numLights - leftNumLights;
 
-		//Split left and right since they are not leaves yet
-		RecursiveBuild(left);
-		RecursiveBuild(right);
-	}
-	else {	//Leaf light distribution and terminate recursion
-		std::unique_ptr<Real[]> d(new Real[_node->numLights]);
-		for (unsigned i = 0; i < _node->numLights; ++i) {
-			d[i] = lights[_node->firstLightIndex + i]->Power();
+		if (leftNumLights != 0 && rightNumLights != 0) {
+			LightNode *left = new LightNode {
+				{nullptr, nullptr},
+				_node->firstLightIndex,
+				leftNumLights,
+				leftBucket.bounds,
+				leftBucket.cone,
+				leftBucket.totalPower,
+				0	//Variance (to do)
+			};
+			LightNode *right = new LightNode {
+				{nullptr, nullptr},
+				pivot,
+				rightNumLights,
+				rightBucket.bounds,
+				rightBucket.cone,
+				rightBucket.totalPower,
+				0	//Variance (to do)
+			};
+			_node->children[0] = left;
+			_node->children[1] = right;
+			RecursiveBuild(left);
+			RecursiveBuild(right);
 		}
-		leafDistributions.insert({ _node->firstLightIndex, Distribution::Piecewise1D(d.get(), _node->numLights) });
-		_node->children[0] = _node->children[1] = nullptr;	//Defines it as a leaf
+		else InitLeaf(_node);
 	}
-	//_node->powerVariance = PowerVariance(_node);
+	else InitLeaf(_node);	//Leaf light distribution and terminate recursion (TODO add variance)
 }
 
 void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
@@ -241,7 +253,7 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 	root->firstLightIndex = 0;
 	root->bounds = lights[0]->GetBounds();
 	root->totalPower = 0;
-	root->powerVariance = 0;
+	root->clusterVariance = 0;
 	root->orientationCone = OrientationCone::MakeCone(lights[0]->GetDirection());
 	root->children[0] = root->children[1] = nullptr;
 	for (unsigned i = 0; i < root->numLights; ++i) {
@@ -257,12 +269,12 @@ Real ManyLightSampler::ImportanceMeasure(const ScatterEvent &_event, LightNode *
 	const Real d2 = maths::Dot(delta, delta);
 	const Real d = std::sqrt(d2);
 	delta /= d;
-	const Real bsdfApprox = maths::Clamp(maths::Dot(delta, _event.hit->normalS), (Real)0, (Real)1);	//Does not approx the exact bsdf, which could be very useful!
+	const Real thetaI = std::acos(maths::Dot(delta, _event.hit->normalS));
 	const Real theta = std::acos(maths::Dot(delta, _node->orientationCone.axis));
 	const Vec3 box = _node->bounds.max - _node->bounds.min;
 	const Real thetaU = std::atan((box.Magnitude() * .5) / d);
 	const Real thetaDash = std::max(theta - _node->orientationCone.thetaO - thetaU, (Real)0);
-	return (bsdfApprox * E) / (d2) * (thetaDash < _node->orientationCone.thetaE ? std::cos(thetaDash) : 0);
+	return (std::cos(std::max(thetaI - thetaU, (Real)0)) * E) / (d2) * (thetaDash < _node->orientationCone.thetaE ? std::cos(thetaDash) : 0);
 }
 
 Real ManyLightSampler::SplitMeasure(LightNode *_node) const {
@@ -277,12 +289,18 @@ Light *ManyLightSampler::PickLight(const ScatterEvent &_event, Real _epsilon, Li
 	else {
 		const Real IL = ImportanceMeasure(_event, _node->children[0]);
 		const Real IR = ImportanceMeasure(_event, _node->children[1]);
-		if (_epsilon < IL / (IL + IR)) {
-			_epsilon = _epsilon * (IL + IR) / IL;
+		const Real PL = IL / (IL + IR);
+		const Real PR = 1 - PL;
+		if (_epsilon < PL) {
+			//_epsilon = _epsilon * (IL + IR) / IL;
+			_epsilon /= PL;
+			*_pdf *= PL;
 			return PickLight(_event, _epsilon, _node->children[0], _pdf);
 		}
 		else {
-			_epsilon = (_epsilon * (IL + IR) - IL) / IR;
+			//_epsilon = (_epsilon * (IL + IR) - IL) / IR;
+			_epsilon = (_epsilon - PL) / PR;
+			*_pdf *= PR;
 			return PickLight(_event, _epsilon, _node->children[1], _pdf);
 		}
 	}

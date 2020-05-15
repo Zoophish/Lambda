@@ -57,7 +57,7 @@ class ManyLightSampler : public LightSampler {
 			unsigned firstLightIndex, numLights;
 			Bounds bounds;	//'each level of the hierarchy stores spatial and orientation bounds, as well as the energy total for all lights contained below.'
 			OrientationCone orientationCone;
-			Real totalPower, powerVariance;	//Total power in cluster and variance of cluster
+			Real totalPower, clusterVariance;	//Total power in cluster and variance of cluster
 
 			~LightNode();
 
@@ -86,6 +86,11 @@ class ManyLightSampler : public LightSampler {
 			Initiates root node as an unfinished leaf over all lights ready for RecursiveBuild().
 		*/
 		void InitLights(const std::vector<Light *> &_lights);
+
+		/*
+			Converts _node into a leaf over range of lights and builds respective distribution.
+		*/
+		void InitLeaf(LightNode *_node);
 
 		/*
 			Orientation cone measure function - analagous to bounding box surface area (MArea)
