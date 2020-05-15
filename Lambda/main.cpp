@@ -152,8 +152,8 @@ int main() {
 	scene.envLight = &ibl;
 
 	//PowerLightSampler lightSampler(scene);
-	ManyLightSampler manyLightSampler(scene);
-	scene.lightSampler = &manyLightSampler;
+	ManyLightSampler lightSampler(scene);
+	scene.lightSampler = &lightSampler;
 	scene.Commit();
 
 	//Set up sampler.

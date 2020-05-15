@@ -99,7 +99,7 @@ void ManyLightSampler::InitLeaf(LightNode *_node) {
 	for (unsigned i = 0; i < _node->numLights; ++i) {
 		d[i] = lights[_node->firstLightIndex + i]->Power();
 	}
-	leafDistributions.insert({ _node->firstLightIndex, Distribution::Piecewise1D(d.get(), _node->numLights) });
+	leafDistributions.insert({ _node->firstLightIndex, Distribution::Piecewise1D(&d[0], _node->numLights) });
 	_node->children[0] = _node->children[1] = nullptr;
 }
 
@@ -185,7 +185,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 		const unsigned rightNumLights = _node->numLights - leftNumLights;
 
 		if (leftNumLights != 0 && rightNumLights != 0) {
-			LightNode *left = new LightNode {
+			_node->children[0] = new LightNode {	//Left
 				{nullptr, nullptr},
 				_node->firstLightIndex,
 				leftNumLights,
@@ -194,7 +194,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				leftBucket.totalPower,
 				0	//Variance (to do)
 			};
-			LightNode *right = new LightNode {
+			_node->children[1] = new LightNode {	//Right
 				{nullptr, nullptr},
 				pivot,
 				rightNumLights,
@@ -203,10 +203,8 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				rightBucket.totalPower,
 				0	//Variance (to do)
 			};
-			_node->children[0] = left;
-			_node->children[1] = right;
-			RecursiveBuild(left);
-			RecursiveBuild(right);
+			RecursiveBuild(_node->children[0]);
+			RecursiveBuild(_node->children[1]);
 		}
 		else InitLeaf(_node);
 	}
@@ -283,7 +281,9 @@ Real ManyLightSampler::SplitMeasure(LightNode *_node) const {
 
 Light *ManyLightSampler::PickLight(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const {
 	if (_node->IsLeaf()) {
-		const unsigned i = leafDistributions.at(_node->firstLightIndex).SampleDiscrete(_epsilon, _pdf);	//Sample light distribution of cluster
+		Real lpdf = 1;
+		const unsigned i = leafDistributions.at(_node->firstLightIndex).SampleDiscrete(_epsilon, &lpdf);	//Sample light distribution of cluster
+		*_pdf *= lpdf;
 		return lights[_node->firstLightIndex + i];
 	}
 	else {
