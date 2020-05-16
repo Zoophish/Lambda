@@ -49,6 +49,15 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	return 0;
 }
 
+Real MeshLight::PDF_Li(const ScatterEvent &_event) const {
+	const Real triPdf = triDistribution.PDF(_event.hit->primId);
+	const Real distSq = _event.hit->tFar * _event.hit->tFar;
+	Real triArea;
+	mesh->GetTriangleAreaAndNormal(&mesh->triangles[_event.hit->primId], &triArea);
+	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for doubles sided
+	return triPdf * distSq / (cosTheta * triArea);
+}
+
 Spectrum MeshLight::L(const ScatterEvent &_event) const {
 	return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity * INV_PI;
 }
@@ -110,6 +119,14 @@ Spectrum TriangleLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real 
 
 Real TriangleLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	return meshLight->PDF_Li(_event, _sampler);
+}
+
+Real TriangleLight::PDF_Li(const ScatterEvent &_event) const {
+	const Real distSq = _event.hit->tFar * _event.hit->tFar;
+	Real triArea;
+	meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[_event.hit->primId], &triArea);
+	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for doubles sided
+	return distSq / (cosTheta * triArea);
 }
 
 Spectrum TriangleLight::L(const ScatterEvent &_event) const {

@@ -25,6 +25,11 @@ class Light {
 		virtual Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const = 0;
 
 		/*
+			Pdf ray intersection under _event, given that the intersection hit THIS light (except for infinite lights).
+		*/
+		virtual Real PDF_Li(const ScatterEvent &_event) const = 0;
+
+		/*
 			Returns radiance incoming along a ray that has escaped scene.
 		*/
 		virtual Spectrum Le(const Ray &_r) const {
@@ -32,8 +37,8 @@ class Light {
 		}
 
 		/*
-			Returns emitted radiance at point on surface in outgoing direction wo.
-			Only valid for ray-tracable area lights.
+			Assuming there is mutual visibilty between the previous shading point
+			and new one that is stored in event, returns incoming radiance.
 		*/
 		virtual Spectrum L(const ScatterEvent &_event) const {
 			return Spectrum(0);

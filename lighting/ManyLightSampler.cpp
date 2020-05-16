@@ -16,15 +16,19 @@ ManyLightSampler::ManyLightSampler(const Scene &_scene, const Real _threshold) :
 	threshold = _threshold;
 }
 
+Light *ManyLightSampler::Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const {
+	return PickLight(_event, _sampler.Get1D(), root.get(), _pdf);
+}
+
+Real ManyLightSampler::Pdf(const ScatterEvent &_event, const Light *_light) const {
+	return 1;	//Todo
+}
+
 void ManyLightSampler::Commit() {
 	std::cout << std::endl << "Building light tree...";
 	InitLights(scene->lights);
 	RecursiveBuild(root.get());
 	std::cout << std::endl << "Done.";
-}
-
-Light *ManyLightSampler::Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const {
-	return PickLight(_event, _sampler.Get1D(), root.get(), _pdf);
 }
 
 ManyLightSampler::OrientationCone ManyLightSampler::OrientationCone::MakeCone(const Vec3 &_axis, const Real _thetaO, const Real thetaE) {

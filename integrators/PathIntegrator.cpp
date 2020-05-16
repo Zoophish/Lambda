@@ -28,12 +28,12 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 			if (hit.object->material && hit.object->material->bxdf) {
 				event.SurfaceLocalise();
 				event.wo = -r.d;
-				Real lightDistPdf = 1;
-				//const Light *l = _scene.lights[_scene.lightDistribution.SampleDiscrete(sampler->Get1D(), &lightDistPdf)];
+				Real lightDistPdf = 1;	//Probability of choosing dicrete light
 				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
 				Spectrum Ld(0);
 				Real scatteringPDF, lightPDF;
 				Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);
+				lightPDF *= lightDistPdf;	//The full light pdf
 				if (lightPDF > 0 && !Li.IsBlack()) {	//Add light sample contribution
 					f = hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
 					scatteringPDF = hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
@@ -44,27 +44,27 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 				f = hit.object->material->bxdf->Sample_f(event, *sampler, scatteringPDF);
 				f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL.
-				lightPDF = l->PDF_Li(event, *sampler);	//Evaluated before hit is altered to next path vertex
+				
 				r.o = hit.point;
 				r.d = event.wi;
-				scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex
+				scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex (also the bxdf light sample)
 				if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scatter light contribution
-					if (lightPDF > 0) {
+					const Light *nl = scatterIntersect ? hit.object->material->light : _scene.envLight;
+					if (nl) {	//Check a light was hit or infinite light is present
+
+						if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
+						lightPDF = lightDistPdf * nl->PDF_Li(event);
 						Li = Spectrum(0);
+						if (scatterIntersect) Li = nl->L(event);
+						else Li = nl->Le(r);	//Special case for infinite lights
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-						if (scatterIntersect) {
-							if (hit.object->material->light == l)
-								Li = hit.object->material->light->L(event);
-						}
-						else {
-							Li = l->Le(r);
-						}
 						if (!Li.IsBlack()) Ld += Li * f * weight / scatteringPDF;
+
 					}
 				}
 				else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
 
-				L += beta * (Ld / lightDistPdf);
+				L += beta * Ld;
 				beta *= f / scatteringPDF;
 			}
 			else {

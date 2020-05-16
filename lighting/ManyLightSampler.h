@@ -25,14 +25,19 @@ class ManyLightSampler : public LightSampler {
 		ManyLightSampler(const Scene &_scene, const Real _threshold = 0.1);
 
 		/*
+			Stochastically samples a good light to sample from shading event, _event.
+		*/
+		Light *Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const override;
+
+		/*
+			Probability of choosing _light via traversal.
+		*/
+		Real Pdf(const ScatterEvent &_event, const Light *_light) const override;
+
+		/*
 			Builds the light tree.
 		*/
 		void Commit() override;
-
-		/*
-			Stochastically samples a good light to sample from shading event, _event. 
-		*/
-		Light *Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const override;
 
 	private:
 		/*

@@ -21,6 +21,8 @@ class MeshLight : public Light {
 
 		Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const override;
 
+		Real PDF_Li(const ScatterEvent &_event) const override;
+
 		Spectrum L(const ScatterEvent &_event) const override;
 
 		Real Area() const override;
@@ -53,6 +55,8 @@ class TriangleLight : public Light {
 		Spectrum Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override;
 
 		Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const override;
+
+		Real PDF_Li(const ScatterEvent &_event) const override;
 
 		Spectrum L(const ScatterEvent &_event) const override;
 

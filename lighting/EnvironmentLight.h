@@ -22,7 +22,11 @@ class EnvironmentLight : public Light {
 
 		Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const override;
 
+		Real PDF_Li(const ScatterEvent &_event) const override;
+
 		Spectrum Le(const Ray &_r) const override;
+
+		Spectrum L(const ScatterEvent &_event) const override;
 
 		Real Area() const override;
 

@@ -125,34 +125,20 @@ int main() {
 	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
 	light.emission = &blckInpt1.outputSockets[0];
 	light.intensity = 160;
-	scene.AddObject(&lightMesh);
-	//
-	//Material lightMat2;
-	//ai.Import("../content/SideLight.obj");
-	//ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
-	//TriangleMesh lightMesh2;
-	//lightMesh2.material = &lightMat2;
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[1], &lightMesh2);
-	//MeshLight light2(&lightMesh2);
-	//sg::ScalarInput temp(10000);
-	//sg::BlackbodyInput blckInpt(&temp.outputSockets[0]);
-	//light2.emission = &blckInpt.outputSockets[0];
-	//light2.intensity = 250;
-	//scene.AddLight(&light2);
-	//scene.AddObject(&lightMesh2);
+	//scene.AddObject(&lightMesh);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	envMap.LoadImageFile("..\\content\\quarry_01_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*-.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
 
-	//PowerLightSampler lightSampler(scene);
-	ManyLightSampler lightSampler(scene);
+	PowerLightSampler lightSampler(scene);
+	//ManyLightSampler lightSampler(scene);
 	scene.lightSampler = &lightSampler;
 	scene.Commit();
 
@@ -186,7 +172,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 64;
+	renderDirective.spp = 16;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

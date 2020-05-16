@@ -1,5 +1,5 @@
 /*
-----	Sam Warren 2019	----
+----	Sam Warren 2019-2020	----
 	Single include header for foundational mathematics; all functions are inlined.
 	SSE supported for 32-bit float type; changing numerical precision type
 	from float will disable SSE.
@@ -31,10 +31,10 @@ typedef bounds<Real> Bounds;
 typedef affine3<Real> Affine3;
 
 constexpr Real PI = 3.14159265358979323846264338;
-constexpr Real PI2 = 2. * PI;
-constexpr Real INV_PI = 1. / PI;
-constexpr Real INV_PI2 = 1. / (2. * PI);
-constexpr Real INV_PI4 = 1. / (4. * PI);
+constexpr Real PI2 = (Real)2 * PI;
+constexpr Real INV_PI = (Real)1 / PI;
+constexpr Real INV_PI2 = (Real)1 / ((Real)2 * PI);
+constexpr Real INV_PI4 = (Real)1 / ((Real)4 * PI);
 constexpr Real E_NUM = 2.718281828459045;
 constexpr Real MAX_REAL = std::numeric_limits<Real>::max();
 constexpr Real MIN_REAL = std::numeric_limits<Real>::min();

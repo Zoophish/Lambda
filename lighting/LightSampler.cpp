@@ -15,6 +15,10 @@ Light *PowerLightSampler::Sample(const ScatterEvent &_event, Sampler &_sampler, 
 	return scene->lights[i];
 }
 
+Real PowerLightSampler::Pdf(const ScatterEvent &_event, const Light *_light) const {
+	return _light->Power() * invTotalPower;
+}
+
 void PowerLightSampler::Commit() {
 	if (scene) {
 		if (scene->envLight) {
@@ -24,10 +28,13 @@ void PowerLightSampler::Commit() {
 		}
 		const unsigned size = scene->lights.size();
 		std::unique_ptr<Real[]> importances(new Real[size]);
+		Real totalPower = 0;
 		for (unsigned i = 0; i < size; ++i) {
 			importances[i] = scene->lights[i]->Power();
+			totalPower += importances[i];
 		}
 		lightDistribution = Distribution::Piecewise1D(&importances[0], size);
+		invTotalPower = (Real)1 / totalPower;
 	}
 	else std::cout << std::endl << "WARNING: No scene given to light sampler.";
 }

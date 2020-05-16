@@ -57,8 +57,21 @@ Real EnvironmentLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) con
 	return 0;
 }
 
+Real EnvironmentLight::PDF_Li(const ScatterEvent &_event) const {
+	const Real theta = maths::SphericalTheta(_event.wi) - offset.y;
+	const Real phi = maths::SphericalPhi(_event.wi) - offset.x;
+	const Real sinTheta = std::sin(theta);
+	if (sinTheta == 0) return 0;
+	const Vec3 wiOffset = maths::SphericalDirection(sinTheta, std::cos(theta), phi);
+	return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / ((Real)2 * PI * PI * sinTheta);
+}
+
 Spectrum EnvironmentLight::Le(const Ray &_r) const {
 	return Le(_r.d);
+}
+
+Spectrum EnvironmentLight::L(const ScatterEvent &_event) const {
+	return Le(_event.wi);
 }
 
 Real EnvironmentLight::Area() const {
