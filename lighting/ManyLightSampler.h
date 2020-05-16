@@ -123,11 +123,6 @@ class ManyLightSampler : public LightSampler {
 		*/
 		static Real ImportanceMeasure(const ScatterEvent &_event, LightNode *_node);
 
-		/*
-			
-		*/
-		Real SplitMeasure(LightNode *_node) const;
-
 		Light *PickLight(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const;
 };
 

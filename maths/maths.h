@@ -30,15 +30,19 @@ typedef vec2<Real> Vec2;
 typedef bounds<Real> Bounds;
 typedef affine3<Real> Affine3;
 
-#define PI 3.14159265358979323846264338
-#define PI2 2. * PI
-#define INV_PI 1. / PI
-#define INV_PI2 1. / (2. * PI)
-#define INV_PI4 1. / (4. * PI)
-#define E_NUM 2.718281828459045
-#define MAX_REAL std::numeric_limits<Real>::max()
-#define MIN_REAL std::numeric_limits<Real>::min()
-#define BITFLAG(_i) 1 << _i
+constexpr Real PI = 3.14159265358979323846264338;
+constexpr Real PI2 = 2. * PI;
+constexpr Real INV_PI = 1. / PI;
+constexpr Real INV_PI2 = 1. / (2. * PI);
+constexpr Real INV_PI4 = 1. / (4. * PI);
+constexpr Real E_NUM = 2.718281828459045;
+constexpr Real MAX_REAL = std::numeric_limits<Real>::max();
+constexpr Real MIN_REAL = std::numeric_limits<Real>::min();
+
+template<class T>
+constexpr T BITFLAG(const T _i) {
+	return (T)1 << _i;
+}
 
 namespace maths {
 

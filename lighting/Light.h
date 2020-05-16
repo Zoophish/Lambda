@@ -40,11 +40,18 @@ class Light {
 		}
 
 		/*
-			Importance heuristics.
+			Power per square unit.
 		*/
 		virtual Real Irradiance() const = 0;
+
+		/*
+			Surface area of light.
+		*/
 		virtual Real Area() const = 0;
 		
+		/*
+			Total power of light.
+		*/
 		Real Power() const {
 			return Irradiance() * Area();
 		}

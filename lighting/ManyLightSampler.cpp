@@ -243,7 +243,7 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 	for (unsigned i = 0; i < triangleLights.size(); ++i) lights.push_back(&triangleLights[i]);
 
 	//Add remaining from _lights to lights vector
-	//for (auto l : lightList) lights.push_back(l);
+	for (auto l : lightList) lights.push_back(l);
 
 	//Initialise root
 	root.reset(new LightNode);
@@ -275,10 +275,6 @@ Real ManyLightSampler::ImportanceMeasure(const ScatterEvent &_event, LightNode *
 	return (std::cos(std::max(thetaI - thetaU, (Real)0)) * E) / (d2) * (thetaDash < _node->orientationCone.thetaE ? std::cos(thetaDash) : 0);
 }
 
-Real ManyLightSampler::SplitMeasure(LightNode *_node) const {
-	return 0;
-}
-
 Light *ManyLightSampler::PickLight(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const {
 	if (_node->IsLeaf()) {
 		Real lpdf = 1;
@@ -292,13 +288,11 @@ Light *ManyLightSampler::PickLight(const ScatterEvent &_event, Real _epsilon, Li
 		const Real PL = IL / (IL + IR);
 		const Real PR = 1 - PL;
 		if (_epsilon < PL) {
-			//_epsilon = _epsilon * (IL + IR) / IL;
 			_epsilon /= PL;
 			*_pdf *= PL;
 			return PickLight(_event, _epsilon, _node->children[0], _pdf);
 		}
 		else {
-			//_epsilon = (_epsilon * (IL + IR) - IL) / IR;
 			_epsilon = (_epsilon - PL) / PR;
 			*_pdf *= PR;
 			return PickLight(_event, _epsilon, _node->children[1], _pdf);
