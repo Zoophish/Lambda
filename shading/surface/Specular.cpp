@@ -23,13 +23,13 @@ Spectrum FresnelBSDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_p
 		const Real cosTheta = std::abs(_event.wiL.y);
 		_pdf = fr;
 		_event.hit->point += _event.hit->normalG * (entering ? SURFACE_EPSILON : -SURFACE_EPSILON);
-		return (*albedoSocket)->GetAsSpectrum(_event) * fr / cosTheta; //Remove fr term and make pdf = 1?
+		return (*albedoSocket)->GetAsSpectrum(_event) * fr / cosTheta;
 	}
 	else {
 		_pdf = (Real)1 - fr;
 		const bool refract = Refract(_event.woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT, &_event.wiL);
-		Spectrum ft = (*albedoSocket)->GetAsSpectrum(_event) * _pdf;
-		if (refract) ft *= (etaI * etaI) / (etaT * etaT);
+		Spectrum ft = (*albedoSocket)->GetAsSpectrum(_event);// *_pdf;
+		//if (refract) ft *= (etaI * etaI) / (etaT * etaT);
 		const Real cosTheta = std::abs(_event.wiL.y);
 		_event.wi = _event.ToWorld(_event.wiL);
 		const bool goIn = entering ? (refract ? true : false) : (refract ? false : true);

@@ -85,8 +85,7 @@ class vec3 {
 		inline T Magnitude() const { return std::sqrt(x * x + y * y + z * z); }
 
 		inline vec3<T> Normalised() const {
-			const T inv = (T)1 / Magnitude();
-			return *this * inv;
+			return *this / Magnitude();
 		}
 };
 
@@ -170,8 +169,7 @@ class alignas(16) vec3<float> {
 		}
 
 		inline vec3<float> Normalised() const {
-			const float inv = 1.f / Magnitude();
-			return *this * inv;
+			return *this / Magnitude();
 		}
 
 		protected:

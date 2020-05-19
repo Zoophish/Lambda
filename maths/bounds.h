@@ -33,6 +33,10 @@ class bounds {
 			return min + (max - min) * (T).5;
 		}
 
+		inline T DiagonalLength() const {
+			return (max - min).Magnitude();
+		}
+
 		inline vec3<T> Offset(const vec3<T> &_p) const {
 			const vec3<T> o = _p - min;
 			const vec3<T> d = max - min;
@@ -71,6 +75,10 @@ class alignas(16) bounds<float> {
 
 		inline vec3<float> Center() const {
 			return min + (max - min) * .5f;
+		}
+
+		inline float DiagonalLength() const {
+			return (max - min).Magnitude();
 		}
 
 		inline vec3<float> Offset(const vec3<float> &_p) const {

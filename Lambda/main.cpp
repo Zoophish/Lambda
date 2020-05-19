@@ -39,6 +39,7 @@ int main() {
 	Texture checker; checker.LoadImageFile("../content/checker.jpg"); checker.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	BeckmannDistribution d;
 	FresnelDielectric fres(2.5);
+	//FresnelConductor fresc()
 
 	MemoryArena graphArena;
 	namespace sg = ShaderGraph;
@@ -63,7 +64,7 @@ int main() {
 
 	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(.1);
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001));
-	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
+	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.5);
 	sg::OrenNayarBRDFNode *mat = graphArena.New<sg::OrenNayarBRDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::OrenNayarBRDFNode *mat2 = graphArena.New<sg::OrenNayarBRDFNode>(&gridNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::OrenNayarBTDFNode *matT = graphArena.New<sg::OrenNayarBTDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
@@ -71,20 +72,23 @@ int main() {
 	sg::SpecularBRDFNode *specMat = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
 
 
-	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &mathsNode->outputSockets[0], &d, &fres);
+	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0], &d, &fres);
 
-	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &mat->outputSockets[0], &whiteNode->outputSockets[0]);
+	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &mat->outputSockets[0], &checkerNoise->outputSockets[0]);
 
 	Real volC[3] = { 5, 3, 4 };
 	Spectrum volS = Spectrum::FromRGB(volC) * .5;
 
-	Medium *med = new HomogeneousMedium(Spectrum(2), Spectrum(40));
+	Medium *med = new HomogeneousMedium(Spectrum(2), Spectrum(0));
 	HenyeyGreenstein *phase = new HenyeyGreenstein;
 	phase->g = -.2;
 	med->phase = phase;
 
 	Material material;
 	material.bxdf = mat;
+
+	Material glass_material;
+	glass_material.bxdf = fresMat;
 
 	Material material2;
 	material2.bxdf = mat2;
@@ -95,6 +99,7 @@ int main() {
 	for (auto &it : resources.objectPool.pool) {
 		//Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
 		//if (m) {
+			
 			it.second->material = &material;
 			//it.second->material->bxdf = matT;
 			//it.second->material->mediaBoundary.interior = nullptr;
@@ -125,14 +130,14 @@ int main() {
 	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
 	light.emission = &blckInpt1.outputSockets[0];
 	light.intensity = 160;
-	//scene.AddObject(&lightMesh);
+	scene.AddObject(&lightMesh);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("..\\content\\quarry_01_2k.hdr");
+	envMap.LoadImageFile("..\\content\\autumn_park_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*-.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
@@ -150,8 +155,10 @@ int main() {
 	HaltonSampler sampler;
 	sampler.sampleShifter = &sampleShifter;
 
+	Film film(600, 800);
+
 	CircularAperture aperture2(.05);
-	ThinLensCamera cam(Vec3(0, 2, 10), 512, 800, 10, &aperture2);
+	ThinLensCamera cam(Vec3(0, 2, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
 	aperture2.size = .03;
 	aperture2.sampler = &sampler;
 	cam.focalLength = 10;
@@ -163,7 +170,6 @@ int main() {
 	PathIntegrator pathIntegrator(&sampler);
 	VolumetricPathIntegrator volPathIntegrator(&sampler);
 	NormalPass normalPass(&sampler);
-	Film film(512, 800);
 
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
@@ -172,7 +178,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 16;
+	renderDirective.spp = 32;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

@@ -46,4 +46,12 @@ namespace BergeData {
 	extern const Real RGBIllum2SpectBlue[nRGB2SpectSamples];
 }
 
+namespace MaterialData {
+	static const unsigned nCopperSamples = 56;
+
+	extern const Real CopperWavelengths[nCopperSamples];
+	extern const Real CopperN[nCopperSamples];
+	extern const Real CopperK[nCopperSamples];
+}
+
 LAMBDA_END
