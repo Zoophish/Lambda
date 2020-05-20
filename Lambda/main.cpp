@@ -100,7 +100,7 @@ int main() {
 		//Material *m = MaterialImport::GetMaterial(ai2.scene, &resources, it.first);
 		//if (m) {
 			
-			it.second->material = &material;
+			it.second->material = &glass_material;
 			//it.second->material->bxdf = matT;
 			//it.second->material->mediaBoundary.interior = nullptr;
 			scene.AddObject(it.second);
@@ -130,14 +130,14 @@ int main() {
 	sg::BlackbodyInput blckInpt1(&temp1.outputSockets[0]);
 	light.emission = &blckInpt1.outputSockets[0];
 	light.intensity = 160;
-	scene.AddObject(&lightMesh);
+	//scene.AddObject(&lightMesh);
 
 	//Make environment lighting.
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
 	envMap.LoadImageFile("..\\content\\autumn_park_2k.hdr");
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*-.5, 0);
 	scene.AddLight(&ibl);
 	scene.envLight = &ibl;
@@ -178,7 +178,7 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 32;
+	renderDirective.spp = 8;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 

@@ -11,8 +11,6 @@ class Scene;
 
 class Light {
 	public:
-		//TO SELF: Should be specific to EnvironmentLight but is a temporary circular dependancy issue fix.
-		Real radius;
 
 		/*
 			Samples an incident direction light may arrive on.

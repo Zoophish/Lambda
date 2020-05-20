@@ -156,7 +156,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 			}
 		}
 		else {
-			if (bounces == 0) L += _scene.envLight->Le(r) * beta; //Beta is not always 1 here (due to vol attenuation)
+			if (bounces == 0) L += ((Light*)_scene.envLight)->Le(r) * beta; //Beta is not always 1 here (due to vol attenuation)
 			break;
 		}
 	}

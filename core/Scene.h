@@ -20,6 +20,8 @@
 
 LAMBDA_BEGIN
 
+class EnvironmentLight;
+
 class Scene {
 	protected:
 		RTCScene scene;
@@ -28,7 +30,7 @@ class Scene {
 		RTCDevice device;
 		std::vector<Object*> objects; //Root(s) of object tree.
 		std::vector<Light*> lights;
-		Light* envLight;
+		EnvironmentLight* envLight;
 		LightSampler *lightSampler;
 
 		bool hasVolumes;

@@ -8,9 +8,9 @@
 #include <maths/maths.h>
 #include <core/Ray.h>
 
-#define SURFACE_EPSILON 1e-6
-
 LAMBDA_BEGIN
+
+constexpr Real SURFACE_EPSILON = 1e-6;
 
 class BxDF;
 class Scene;
@@ -18,7 +18,7 @@ class Medium;
 
 struct ScatterEvent {
 	Vec3 wo, wi, woL, wiL;
-	Real eta = 1;
+	Real eta = 1.001;
 	bool mediumInteraction = false;
 	RayHit *hit;
 	Medium *medium = nullptr;
@@ -48,16 +48,29 @@ inline Vec3 Reflect(const Vec3 &_w, const Vec3 &_n) {
 	return _w - _n * 2 * maths::Dot(_n, _w);
 }
 
-inline bool Refract(const Vec3 &_w, const Vec3 &_n, const Real _eta, Vec3 *_wr) {
-	const Real cosThetaI = maths::Dot(_w, _n);
-	const Real sin2ThetaI = std::max((Real)0, (Real)1 - cosThetaI * cosThetaI);
-	const Real sin2ThetaT = _eta * _eta * sin2ThetaI;
-	if (sin2ThetaT >= 1) { //TIR
-		*_wr = Vec3(-1, 1, -1) * _w;
-		return false;
-	}
-	const Real cosThetaT = std::sqrt(1 - sin2ThetaT);
-	*_wr = -_w * _eta + _n * (_eta * cosThetaI - cosThetaT);
+//nline bool Refract(const Vec3 &_w, const Vec3 &_n, const Real _eta, Vec3 *_wr) {
+//	const Real cosThetaI = maths::Dot(_w, _n);
+//	const Real sin2ThetaI = std::max((Real)0, (Real)1 - cosThetaI * cosThetaI);
+//	const Real sin2ThetaT = _eta * _eta * sin2ThetaI;
+//	if (sin2ThetaT >= 1) { //TIR
+//		*_wr = Vec3(-1, 1, -1) * _w;
+//		return false;
+//	}
+//	const Real cosThetaT = std::sqrt(1 - sin2ThetaT);
+//	*_wr = _w * -_eta + _n * (_eta * cosThetaI - cosThetaT);
+//	return true;
+//
+//
+
+inline bool Refract(const Vec3 &wi, const Vec3 &n, Real eta, Vec3 *wt) {
+	Real cosThetaI = maths::Dot(n, wi);
+	Real sin2ThetaI = std::max(0.f, 1.f - cosThetaI * cosThetaI);
+	Real sin2ThetaT = eta * eta * sin2ThetaI;
+	if (sin2ThetaT >= 1) return false;
+
+	Real cosThetaT = std::sqrt(1 - sin2ThetaT);
+
+	*wt = -wi * eta + n * (eta * cosThetaI - cosThetaT);
 	return true;
 }
 

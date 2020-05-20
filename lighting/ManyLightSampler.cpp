@@ -1,14 +1,9 @@
 #pragma once
 #include <lighting/MeshLight.h>
+#include <lighting/EnvironmentLight.h>
 #include "ManyLightSampler.h"
 
 LAMBDA_BEGIN
-
-static inline bool HasInfiniteBounds(const Bounds &_bounds) {
-	const bool c1 = std::isinf(_bounds.min.x) || std::isinf(_bounds.min.y) || std::isinf(_bounds.min.z);
-	const bool c2 = std::isinf(_bounds.max.x) || std::isinf(_bounds.max.y) || std::isinf(_bounds.max.z);
-	return c1 || c2;
-}
 
 ManyLightSampler::ManyLightSampler(const Real _threshold) : threshold(_threshold), root(nullptr) {}
 
@@ -21,7 +16,7 @@ Light *ManyLightSampler::Sample(const ScatterEvent &_event, Sampler &_sampler, R
 }
 
 Real ManyLightSampler::Pdf(const ScatterEvent &_event, const Light *_light) const {
-	if (HasInfiniteBounds(_light->GetBounds())) return 0;
+	if (_light == infiniteLight) return 0;
 	auto tl = triangleLights.find({ _light, _event.hit->primId });	//If is a mesh light, it will replace pointer with triangle light's
 	if (tl != triangleLights.end()) _light = &tl->second;
 	const std::pair<LightNode *, unsigned> &nodeRef = lightNodeDistributionMap.at(_light);
@@ -172,13 +167,13 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 		_node->orientationCone = OrientationCone::Union(_node->orientationCone, OrientationCone::MakeCone(lights[i + _node->firstLightIndex]->GetDirection()));
 	}
 
-	std::unique_ptr<Bucket> leftBucket(new Bucket), rightBucket(new Bucket);	//Stored on heap to prevent recursion overflow
+	Bucket leftBucket, rightBucket;
 	Real minCost = INFINITY;
 	unsigned bucketIndex = 0;
 	int splitAxis = -1;
 
 	for (int i = 0; i < 3; ++i) {
-		if (SplitAxis(_node, i, &minCost, &bucketIndex, leftBucket.get(), rightBucket.get()))
+		if (SplitAxis(_node, i, &minCost, &bucketIndex, &leftBucket, &rightBucket))
 			splitAxis = i;
 	}
 
@@ -203,9 +198,9 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				_node,
 				_node->firstLightIndex,
 				leftNumLights,
-				leftBucket->bounds,
-				leftBucket->cone,
-				leftBucket->totalPower,
+				leftBucket.bounds,
+				leftBucket.cone,
+				leftBucket.totalPower,
 				0	//Variance (to do)
 			};
 			_node->children[1] = new LightNode {	//Right
@@ -213,9 +208,9 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				_node,
 				pivot,
 				rightNumLights,
-				rightBucket->bounds,
-				rightBucket->cone,
-				rightBucket->totalPower,
+				rightBucket.bounds,
+				rightBucket.cone,
+				rightBucket.totalPower,
 				0	//Variance (to do)
 			};
 			RecursiveBuild(_node->children[0]);
@@ -230,11 +225,20 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 	std::list<Light *> lightList;
 	std::copy(_lights.begin(), _lights.end(), std::back_inserter(lightList));
 
-	//Filter out infinite lights
+	//Filter out infinite light(s)
 	auto l = lightList.begin();
 	while (l != lightList.end()) {
-		if (HasInfiniteBounds((*l)->GetBounds())) {
-			infiniteLights.push_back(*l);
+		EnvironmentLight *envLight = dynamic_cast<EnvironmentLight *>(*l);
+		if (envLight) {
+			infiniteLight = envLight;
+			infiniteNode.reset(new LightNode{
+				{nullptr, nullptr},
+				nullptr,
+				0, 1,
+				envLight->bounds,
+				{{0,-1,0}, PI, PI},
+				0
+			});
 			l = lightList.erase(l);
 		}
 		else ++l;
@@ -331,6 +335,7 @@ Real ManyLightSampler::RecursivePDF(const ScatterEvent &_event, const LightNode 
 		return pdfs[side];
 	}
 	else if (_node->parent) return RecursivePDF(_event, _node->parent, _node);
+	return 1;	//Shouldn't happen
 }
 
 LAMBDA_END

@@ -12,7 +12,8 @@ class EnvironmentLight : public Light {
 	public:
 		Vec2 offset;
 		Real intensity = 1;
-		//Real radius;
+		Real radius;
+		Bounds bounds;
 
 		EnvironmentLight();
 

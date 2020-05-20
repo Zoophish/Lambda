@@ -83,7 +83,7 @@ Real EnvironmentLight::Irradiance() const {
 }
 
 Bounds EnvironmentLight::GetBounds() const {
-	return { {-INFINITY,-INFINITY,-INFINITY}, {INFINITY, INFINITY,INFINITY} };
+	return bounds;
 }
 
 Vec3 EnvironmentLight::GetDirection() const {

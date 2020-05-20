@@ -25,7 +25,7 @@ Spectrum DirectLightingIntegrator::Li(Ray _ray, const Scene &_scene) const {
 			return Li(Ray(hit.point + _ray.d * .0001, _ray.d), _scene);
 		}
 	}
-	return _scene.envLight->Le(_ray);
+	return ((Light*)_scene.envLight)->Le(_ray);
 }
 
 LAMBDA_END

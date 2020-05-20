@@ -11,29 +11,35 @@ Spectrum FresnelBSDF::f(const ScatterEvent &_event) const {
 	return Spectrum(0);
 }
 
+static inline Vec3 FaceForward(const Vec3 &_n, const Vec3 &_v) {
+	return (maths::Dot(_n, _v) < (Real)0) ? -_n : _n;
+}
+
 Spectrum FresnelBSDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	const bool entering = _event.woL.y > 0;
+
 	const Real ior = (*iorSocket)->GetAs<Real>(_event);
-	const Real etaI = entering ? _event.eta : ior;
-	const Real etaT = entering ? ior : _event.eta;
-	const Real fr = Fresnel::FrDielectric(_event.woL.y, etaI, etaT);
+	
+	const Real fr = Fresnel::FrDielectric(ior, _event.eta, 1);
 	if (_sampler.Get1D() < fr) {
 		_event.wiL = Vec3(-_event.woL.x, _event.woL.y, -_event.woL.z);
 		_event.wi = _event.ToWorld(_event.wiL);
 		const Real cosTheta = std::abs(_event.wiL.y);
-		_pdf = fr;
 		_event.hit->point += _event.hit->normalG * (entering ? SURFACE_EPSILON : -SURFACE_EPSILON);
+		_pdf = fr;
 		return (*albedoSocket)->GetAsSpectrum(_event) * fr / cosTheta;
 	}
 	else {
-		_pdf = (Real)1 - fr;
-		const bool refract = Refract(_event.woL, Vec3(0, 1, 0) * (entering ? 1 : -1), etaI / etaT, &_event.wiL);
-		Spectrum ft = (*albedoSocket)->GetAsSpectrum(_event);// *_pdf;
-		//if (refract) ft *= (etaI * etaI) / (etaT * etaT);
+		const Real etaI = _event.eta = entering ? ior : 1;
+		const Real etaT = entering ? 1 : ior;
+		const bool refract = Refract(_event.woL, FaceForward(Vec3(0, 1, 0), _event.woL), etaI / etaT, &_event.wiL);
+		if (!refract) return 0;
+		Spectrum ft = (*albedoSocket)->GetAsSpectrum(_event) * (1 - fr);
+		if (refract) ft *= (etaI * etaI) / (etaT * etaT);
 		const Real cosTheta = std::abs(_event.wiL.y);
 		_event.wi = _event.ToWorld(_event.wiL);
-		const bool goIn = entering ? (refract ? true : false) : (refract ? false : true);
-		_event.hit->point += _event.hit->normalG * (goIn ? -SURFACE_EPSILON * 1.2 : SURFACE_EPSILON * 1.2);
+		_event.hit->point += _event.hit->normalG * (entering ? -SURFACE_EPSILON : SURFACE_EPSILON);
+		_pdf = (Real)1 - fr;
 		return ft / cosTheta;
 	}
 }

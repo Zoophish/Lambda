@@ -29,6 +29,11 @@ class bounds {
 			return (s.x * s.y + s.y * s.z + s.x * s.z) * (T)2;
 		}
 
+		inline T MaxLength() const {
+			const vec3<T> box = max - min;
+			return std::max(std::max(box.x, box.y), box.z);
+		}
+
 		inline vec3<T> Center() const {
 			return min + (max - min) * (T).5;
 		}
@@ -71,6 +76,11 @@ class alignas(16) bounds<float> {
 		inline float SurfaceArea() const {
 			const vec3<float> s = max - min;
 			return (s.x * s.y + s.y * s.z + s.x * s.z) * 2.f;
+		}
+
+		inline float MaxLength() const {
+			const vec3<float> box = max - min;
+			return std::max(std::max(box.x, box.y), box.z);
 		}
 
 		inline vec3<float> Center() const {

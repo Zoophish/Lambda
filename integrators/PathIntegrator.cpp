@@ -49,7 +49,7 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 				r.d = event.wi;
 				scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex (also the bxdf light sample)
 				if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scatter light contribution
-					if (const Light *nl = scatterIntersect ? hit.object->material->light : _scene.envLight) {	//Check a light was hit or infinite light is present
+					if (const Light *nl = scatterIntersect ? hit.object->material->light : (Light*)_scene.envLight) {	//Check a light was hit or infinite light is present
 
 						if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
 						lightPDF = lightDistPdf * nl->PDF_Li(event);
@@ -80,7 +80,7 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 			}
 		}
 		else {
-			if (bounces == 0) L += _scene.envLight->Le(r); //Beta is always 1 here also.
+			if (bounces == 0) L += ((Light*)_scene.envLight)->Le(r); //Beta is always 1 here also.
 			break;
 		}
 	}

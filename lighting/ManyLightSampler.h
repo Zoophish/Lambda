@@ -92,7 +92,9 @@ class ManyLightSampler : public LightSampler {
 
 		static constexpr unsigned numBuckets = 12;
 		std::unordered_map<TriangleLightKey, TriangleLight, pair_hash> triangleLights;	//Edge case to triangle light from Light ptr and primitive index
-		std::vector<Light *> infiniteLights, lights;	//Keep infinite lights separate from finite lights for convenience when sampling
+		std::vector<Light *> lights;	//Keep infinite lights separate from finite lights for convenience when sampling
+		Light *infiniteLight;
+		std::unique_ptr<LightNode> infiniteNode;
 		std::unordered_map<unsigned, Distribution::Piecewise1D> leafDistributions;	//First light index of leaf node 
 		std::unordered_map<const Light *, std::pair<LightNode *, unsigned>> lightNodeDistributionMap;	//Required to quickly find *any* light's leaf node and position in leaf distribution.
 		std::unique_ptr<LightNode> root;	//Root node of light tree
