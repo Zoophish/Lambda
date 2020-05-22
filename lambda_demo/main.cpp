@@ -52,7 +52,7 @@ int main() {
 	Texture white(1, 1, Colour(1, 1, 1));
 	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid;
-	grid.LoadImageFile("content/uv_grid.png");
+	grid.LoadImageFile("demo_content/uv_grid.png");
 	grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
 
 	//Use a memory arena for the shader graph (optional)
@@ -134,7 +134,7 @@ int main() {
 
 	//Import an asset using an AssetImporter object
 	AssetImporter ai;
-	ai.Import("content/lucy.obj");
+	ai.Import("demo_content/lucy.obj");
 
 	//Push the mesh objects to the resource manager...
 	ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
@@ -149,7 +149,7 @@ int main() {
 	scene.hasVolumes = true;
 
 	//Import another asset file
-	ai.Import("content/Backdrop.obj");
+	ai.Import("demo_content/Backdrop.obj");
 
 	//You can manually make a new mesh object that isn't owned...
 	TriangleMesh plane;
@@ -161,7 +161,7 @@ int main() {
 	scene.AddObject(&plane);
 
 	//Setup a mesh light in a similar way
-	ai.Import("content/SpiralLight.obj");
+	ai.Import("demo_content/SpiralLight.obj");
 	TriangleMesh lightMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
 	lightMesh.smoothNormals = false;
@@ -192,7 +192,7 @@ int main() {
 	//Make environment lighting
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("content/autumn_park_2k.hdr");
+	envMap.LoadImageFile("demo_content/autumn_park_2k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = .1;
@@ -212,7 +212,7 @@ int main() {
 	HaltonSampler sampler;
 	//...and provide a sample shifter to the sampler
 	Texture blueNoise;
-	blueNoise.LoadImageFile("content/HDR_RGBA_7.png");
+	blueNoise.LoadImageFile("demo_content/HDR_RGBA_7.png");
 	SampleShifter sampleShifter(&blueNoise);
 	//Change the starting dimension to one that is more likely to show up as aliasing
 	sampleShifter.maskDimensionStart = 3;

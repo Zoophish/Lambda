@@ -1,7 +1,0 @@
-autum_park_2k.hdr courtesy of HDRIHaven.com under CC0 License
-
-lucy.obj courtesy of the Stanford 3D Scanning Repository
-
-HDR_RGBA_7.png courtesy of 'MomentsInGraphics.de' by Christoph Peters under CC0 License
-
-SpiralLight.obj, uv_grid.png and Backdrop.obj by Sam Warren
