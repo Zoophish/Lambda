@@ -32,7 +32,7 @@ class Camera {
 		/*
 			Returns a ray for film-plane coordinates, _u and _v.
 		*/
-		virtual Ray GenerateRay(const Real _u, const Real _v) const = 0;
+		virtual Ray GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const = 0;
 
 	protected:
 		Vec3 xHat, yHat, zHat;
@@ -48,7 +48,7 @@ class PinholeCamera : public Camera {
 		/*
 			Returns a ray for film-plane coordinates, _u and _v.
 		*/
-		Ray GenerateRay(const Real _u, const Real _v) const override;
+		Ray GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const override;
 };
 
 
@@ -63,7 +63,7 @@ class ThinLensCamera : public Camera {
 		/*
 			Returns a ray for film-plane coordinates, _u and _v.
 		*/
-		Ray GenerateRay(const Real _u, const Real _v) const override;
+		Ray GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const override;
 };
 
 
@@ -77,7 +77,7 @@ class SphericalCamera : public Camera {
 		/*
 			Returns a ray for film-plane coordinates, _u and _v.
 		*/
-		Ray GenerateRay(const Real _u, const Real _v) const override;
+		Ray GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const override;
 };
 
 LAMBDA_END

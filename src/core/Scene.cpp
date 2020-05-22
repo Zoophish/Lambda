@@ -83,6 +83,11 @@ bool Scene::RayEscapes(const Ray &_ray) const {
 	return eRay.tfar != -INFINITY;
 }
 
+void Scene::AddLight(Light *_light) {
+	if (EnvironmentLight *l = dynamic_cast<EnvironmentLight *>(_light)) envLight = l;
+	lights.push_back(_light);
+}
+
 void Scene::AddObject(Object *_obj, const bool _addLight) {
 	_obj->Commit(device);
 	rtcAttachGeometryByID(scene, _obj->geometry, objects.size());

@@ -7,10 +7,10 @@
 #include <shading/graph/GraphInputs.h>
 #include <iostream>
 
-//Formats supported by stb_image.
-#define IMAGE_FORMATS { "png", "jpg", "jpeg", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" }
-
 LAMBDA_BEGIN
+
+//Formats supported by stb_image.
+constexpr const char *const imageFormats[] = { "png", "jpg", "jpeg", "tga", "bmp", "psd", "gif", "hdr", "pic", "pnm" };
 
 namespace MaterialImport {
 
@@ -51,7 +51,6 @@ namespace MaterialImport {
 
 
 		const char* GetFormat(const aiTexture *_aiTexture) {
-			static const char *const imageFormats[] = IMAGE_FORMATS;
 			static constexpr unsigned s = sizeof(imageFormats) / sizeof(char*);
 			for (unsigned i = 0; i < s; ++i) {
 				if (_aiTexture->CheckFormat(imageFormats[i]))
@@ -157,7 +156,7 @@ namespace MaterialImport {
 				return _texPool->Find(path.C_Str());
 			}
 			else {
-				GetaiType<texType>::type tmp;
+				typename GetaiType<texType>::type tmp;
 				constexpr MatKey matKey = MatchaiTextureType(texType);
 				if (_aiMaterial->Get(matKey.c, matKey.i1, matKey.i2, tmp) == aiReturn_SUCCESS) {
 					Texture *tex = new Texture(1, 1, aiTypeToColour(tmp));
@@ -288,7 +287,7 @@ namespace MaterialImport {
 			aiString aiS;
 			if (_aiMat->GetTexture(type, 0, &aiS) == aiReturn_SUCCESS) return true;
 			const MatKey matKey = MatchaiTextureType(type);
-			GetaiType<type>::type tmp;
+			typename GetaiType<type>::type tmp;
 			if (_aiMat->Get(matKey.c, matKey.i1, matKey.i2, tmp) == aiReturn_SUCCESS) return true;
 			return false;
 		}

@@ -32,7 +32,7 @@ void Camera::SetFov(const Real _fov) {
 
 PinholeCamera::PinholeCamera(const Vec3 &_origin, const Real _x, const Real _y) : Camera(_origin, _x, _y) {}
 
-Ray PinholeCamera::GenerateRay(const Real _u, const Real _v) const {
+Ray PinholeCamera::GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const {
 	const Vec3 p = origin + xHat * (_u * -tanFov2 + tanFov) + yHat * (_v * -tanFov2 * aspect + tanFov * aspect) + zHat;
 	return Ray(origin, (p - origin).Normalised());
 }
@@ -44,10 +44,9 @@ ThinLensCamera::ThinLensCamera(const Vec3 &_origin, const Real _x, const Real _y
 	aperture = _aperture;
 }
 
-Ray ThinLensCamera::GenerateRay(const Real _u, const Real _v) const {
+Ray ThinLensCamera::GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const {
 	const Vec3 fp = origin + (xHat * (_u * -tanFov2 + tanFov) + yHat * (_v * -tanFov2 * aspect + tanFov * aspect) + zHat) * focalLength;
-	Real pdf;
-	const Vec2 ap = aperture ? aperture->Sample_p(&pdf) : Vec2(0, 0);
+	const Vec2 ap = aperture ? aperture->Sample_p(_sampler) : Vec2(0, 0);
 	const Vec3 o = origin + xHat * ap.x + yHat * ap.y;
 	return Ray(o, (fp - o).Normalised());
 }
@@ -58,7 +57,7 @@ SphericalCamera::SphericalCamera(const Vec3 &_origin) : Camera(_origin) {
 	origin = _origin;
 }
 
-Ray SphericalCamera::GenerateRay(const Real _u, const Real _v) const {
+Ray SphericalCamera::GenerateRay(const Real _u, const Real _v, Sampler &_sampler) const {
 	const Real phi = PI2 * _u + offsetPhi;
 	const Real theta = PI * _v + offsetTheta;
 	const Vec3 d = maths::SphericalDirection(std::sin(theta), std::cos(theta), phi).Normalised();

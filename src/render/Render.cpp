@@ -45,7 +45,7 @@ void TileRenderers::UniformSpp(const RenderTile *_tile) {
 			for (unsigned i = 0; i < _tile->spp; ++i) {
 				const Real u = xi * ((Real)x + _tile->integrator->sampler->Get1D() - .5);
 				const Real v = yi * ((Real)y + _tile->integrator->sampler->Get1D() - .5);
-				const Ray r = _tile->camera->GenerateRay(u, v);
+				const Ray r = _tile->camera->GenerateRay(u, v, *_tile->sampler);
 				const Spectrum sample = _tile->integrator->Li(r, *_tile->scene);
 				_tile->film->AddSample(sample, x, y);
 				_tile->integrator->sampler->NextSample();
@@ -75,7 +75,7 @@ void TileRenderers::MaxSpp(const RenderTile *_tile) {
 						for (unsigned i = 0; i < jump; ++i) {
 							const Real u = xi * ((Real)x + _tile->integrator->sampler->Get1D() - .5);
 							const Real v = yi * ((Real)y + _tile->integrator->sampler->Get1D() - .5);
-							const Ray r = _tile->camera->GenerateRay(u, v);
+							const Ray r = _tile->camera->GenerateRay(u, v, *_tile->sampler);
 							const Spectrum sample = _tile->integrator->Li(r, *_tile->scene);
 							_tile->film->AddSample(sample, x, y);
 							_tile->integrator->sampler->NextSample();

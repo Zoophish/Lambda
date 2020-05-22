@@ -12,11 +12,19 @@ ManyLightSampler::ManyLightSampler(const Scene &_scene, const Real _threshold) :
 }
 
 Light *ManyLightSampler::Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const {
-	return PickLight(_event, _sampler.Get1D(), root.get(), _pdf);
+	Real epsilon = _sampler.Get1D();
+	const Real pTree = treePower / (infPower + treePower);
+	if (epsilon < pTree) {
+		epsilon /= pTree;
+		*_pdf *= pTree;
+		return PickLight(_event, _sampler.Get1D(), root.get(), _pdf);
+	}
+	*_pdf *= 1 - pTree;
+	return infiniteLight;
 }
 
 Real ManyLightSampler::Pdf(const ScatterEvent &_event, const Light *_light) const {
-	if (_light == infiniteLight) return 0;
+	if (_light == infiniteLight) return infPower / (infPower + treePower);
 	auto tl = triangleLights.find({ _light, _event.hit->primId });	//If is a mesh light, it will replace pointer with triangle light's
 	if (tl != triangleLights.end()) _light = &tl->second;
 	const std::pair<LightNode *, unsigned> &nodeRef = lightNodeDistributionMap.at(_light);
@@ -26,6 +34,8 @@ Real ManyLightSampler::Pdf(const ScatterEvent &_event, const Light *_light) cons
 void ManyLightSampler::Commit() {
 	std::cout << std::endl << "Building light tree...";
 	InitLights(scene->lights);
+	treePower = 0;
+	infPower = infiniteLight->Power() * .1;
 	RecursiveBuild(root.get());
 	std::cout << std::endl << "Done.";
 }
@@ -35,7 +45,7 @@ ManyLightSampler::OrientationCone ManyLightSampler::OrientationCone::MakeCone(co
 }
 
 ManyLightSampler::OrientationCone ManyLightSampler::OrientationCone::Union(const OrientationCone &_a, const OrientationCone &_b) {
-	if(_b.thetaO > _a.thetaO) std::swap(*const_cast<OrientationCone*>(&_a), *const_cast<OrientationCone *>(&_b));
+	if (_b.thetaO > _a.thetaO) std::swap(*const_cast<OrientationCone *>(&_a), *const_cast<OrientationCone *>(&_b));
 	const Real thetaE = std::max(_a.thetaE, _b.thetaE);
 	const Real thetaD = std::acos(maths::Clamp(maths::Dot(_a.axis, _b.axis), (Real)0, (Real)1));	//Angle between two axes
 	if (std::min(thetaD + _b.thetaO, (Real)PI) <= _a.thetaO)
@@ -102,6 +112,7 @@ void ManyLightSampler::InitLeaf(LightNode *_node) {
 	for (unsigned i = 0; i < _node->numLights; ++i) {
 		d[i] = lights[_node->firstLightIndex + i]->Power();
 		lightNodeDistributionMap[lights[_node->firstLightIndex + i]] = { _node, i };	//Add it to light map
+		treePower += d[i];	//Accumulate tree power
 	}
 	leafDistributions[_node->firstLightIndex] = Distribution::Piecewise1D(&d[0], _node->numLights);
 	_node->children[0] = _node->children[1] = nullptr;
@@ -193,7 +204,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 		const unsigned rightNumLights = _node->numLights - leftNumLights;
 
 		if (leftNumLights != 0 && rightNumLights != 0) {
-			_node->children[0] = new LightNode {	//Left
+			_node->children[0] = new LightNode{	//Left
 				{nullptr, nullptr},
 				_node,
 				_node->firstLightIndex,
@@ -203,7 +214,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				leftBucket.totalPower,
 				0	//Variance (to do)
 			};
-			_node->children[1] = new LightNode {	//Right
+			_node->children[1] = new LightNode{	//Right
 				{nullptr, nullptr},
 				_node,
 				pivot,
@@ -231,14 +242,6 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 		EnvironmentLight *envLight = dynamic_cast<EnvironmentLight *>(*l);
 		if (envLight) {
 			infiniteLight = envLight;
-			infiniteNode.reset(new LightNode{
-				{nullptr, nullptr},
-				nullptr,
-				0, 1,
-				envLight->bounds,
-				{{0,-1,0}, PI, PI},
-				0
-			});
 			l = lightList.erase(l);
 		}
 		else ++l;

@@ -9,13 +9,12 @@ LAMBDA_BEGIN
 
 class Aperture {
 	public:
-		Sampler *sampler;
 		Real size;
 
 		/*
 			Samples and returns a point on the aperture plane.
 		*/
-		virtual Vec2 Sample_p(Real *_pdf = nullptr) const = 0;
+		virtual Vec2 Sample_p(Sampler &_sampler, Real *_pdf = nullptr) const = 0;
 };
 
 class BladeAperture : public Aperture {
@@ -27,7 +26,7 @@ class BladeAperture : public Aperture {
 		/*
 			Samples and returns a point in the aperture polygon.
 		*/
-		Vec2 Sample_p(Real *_pdf = nullptr) const override;
+		Vec2 Sample_p(Sampler &_sampler, Real *_pdf = nullptr) const override;
 };
 
 class CircularAperture : public Aperture {
@@ -37,17 +36,17 @@ class CircularAperture : public Aperture {
 		/*
 			Samples and returns a point on the aperture disk.
 		*/
-		Vec2 Sample_p(Real *_pdf = nullptr) const override;
+		Vec2 Sample_p(Sampler &_sampler, Real *_pdf = nullptr) const override;
 };
 
 class MaskedAperture : public Aperture {
 	public:
-		MaskedAperture(Texture *_mask, Sampler *_sampler, const Real _size = 1);
+		MaskedAperture(Texture *_mask, const Real _size = 1);
 
 		/*
 			Samples and returns a point (proportional to mask) on the aperture plane.
 		*/
-		Vec2 Sample_p(Real *_pdf = nullptr) const override;
+		Vec2 Sample_p(Sampler &_sampler, Real *_pdf = nullptr) const override;
 
 	protected:
 		Texture *mask;

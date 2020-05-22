@@ -74,9 +74,7 @@ class Scene {
 			Explicitly adds _light to the lighting distribution without adding
 			intersectable geometry.
 		*/
-		inline void AddLight(Light *_light) {
-			lights.push_back(_light);
-		}
+		void AddLight(Light *_light);
 
 		/*
 			Commits changes to _obj's geometry and adds to scene geometry.

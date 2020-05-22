@@ -2,9 +2,9 @@
 #include <iostream>
 #include "Texture.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "third_party\stb_image_write.h"
+#include <stb_image/stb_image_write.h>
 #define STB_IMAGE_IMPLEMENTATION    
-#include "third_party\stb_image.h"
+#include <stb_image/stb_image.h>
 
 /*
 	-------- Saving Utility Functions --------
