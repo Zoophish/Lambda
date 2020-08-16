@@ -107,4 +107,6 @@ void texture_t<Colour>::LoadFromMemory(const void *_src, const int _size, const 
 	stbi_image_free(data);
 }
 
+
+
 LAMBDA_END

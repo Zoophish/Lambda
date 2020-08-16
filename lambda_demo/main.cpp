@@ -226,7 +226,7 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	//Make a film that can be rendered to
-	Film film(512, 512);
+	Film film(1600, 1200);
 
 	//Construct a camera with a circular aperture of size .03 world units
 	CircularAperture aperture2(0.07);

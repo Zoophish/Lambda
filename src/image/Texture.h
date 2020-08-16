@@ -141,6 +141,10 @@ class texture_t {
 				return GetPixelUVNearest(_u, _v);
 			}
 		}
+
+		inline void *GetData() {
+			return (void *)&pixels[0];
+		}
 };
 
 
@@ -256,6 +260,10 @@ class texture_t<Colour> {
 			default:
 				return GetPixelUVNearest(_u, _v);
 			}
+		}
+
+		inline void *GetData() {
+			return (void *)&pixels[0];
 		}
 
 		static bool GetFileInfo(const char *_path, int *_width, int *_height, int *_channels);
