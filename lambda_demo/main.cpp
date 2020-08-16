@@ -94,9 +94,9 @@ int main() {
 	sg::Converter::ScalarToColour *scalarToColour = graphArena.New<sg::Converter::ScalarToColour>(&octaveNoise->outputSockets[0]);
 
 	//Setup some more scalar values for shading
-	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(2);
+	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(1.2);
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::ScalarInput *roughnessNode = graphArena.New<sg::ScalarInput>(.04);
+	sg::ScalarInput *roughnessNode = graphArena.New<sg::ScalarInput>(.55);
 
 	//You can also make 2D and 3D vector nodes...
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001 ));
@@ -114,7 +114,7 @@ int main() {
 
 	//You can mix BxDFs using a scalar socket
 	sg::ScalarInput *mixFactor = graphArena.New<sg::ScalarInput>(.65);
-	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &diffuse->outputSockets[0], &valueNoise->outputSockets[0]);
+	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresBSDF->outputSockets[0], &diffuse->outputSockets[0], &valueNoise->outputSockets[0]);
 
 	//Setup a volumetric medium
 	const Spectrum sigmaA = Spectrum(20);
@@ -126,7 +126,7 @@ int main() {
 
 	//Shading property objects are kept in material objects
 	Material diffuse_material;
-	diffuse_material.bxdf = diffuse;
+	diffuse_material.bxdf = microfacetBRDF;
 	diffuse_material.BuildSocketMap();
 
 	Material glass_material;
@@ -228,12 +228,13 @@ int main() {
 	//Make a film that can be rendered to
 	Film film(1600, 1200);
 
+
 	//Construct a camera with a circular aperture of size .03 world units
-	CircularAperture aperture2(0.07);
+	CircularAperture aperture2(0.09);
 	ThinLensCamera cam(Vec3(0, 3, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
 	//Set focus to 10 units infront of camera
 	cam.focalLength = 10;
-	cam.SetFov(.15);
+	cam.SetFov(.33);
 	cam.SetRotation(-PI, -PI*.065);
 
 	//Make some integrators and provide them a sampler
@@ -255,8 +256,8 @@ int main() {
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
 
-	//std::cout << std::endl << "Render at what spp?";
-	//std::cin >> renderDirective.spp;
+	std::cout << std::endl << "Render at what spp?";
+	std::cin >> renderDirective.spp;
 
 	Texture albedoPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 	Texture normalPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
@@ -283,21 +284,18 @@ int main() {
 	std::cout << std::endl << "TIME: " << elapsed_seconds.count();
 
 	//Make an RGB texture tha can be saved / displayed as an image
-	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	//Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
+	//Denoise the render with OIDN
 	PostProcessing::Denoise denoiser;
 	denoiser.SetData(&colourPass, &albedoPass, &normalPass);
-	denoiser.Process(&tex);
-
-	//Convert the film to an RGB image
-	//film.ToRGBTexture(&tex);
+	//Put the denoised image on colourPass
+	denoiser.Process(&colourPass);
 
 	//Save to file - gamma=true, alpha=false
 	//Different image formats can be used by changing the postfix
-	tex.SaveToImageFile("out.png", true, false);
-	albedoPass.SaveToImageFile("albedoPass.png", true, false);
-	normalPass.SaveToImageFile("normalPass.png", false, false);
-	colourPass.SaveToImageFile("colourPass.png", true, false);
+	colourPass.SaveToImageFile("demo_render.png", true, false);
+
 	system("pause");
 	return 0;
 }

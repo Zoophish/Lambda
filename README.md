@@ -12,6 +12,7 @@ A high performance physically-based renderer written in C++ as a project in my s
 - Volumetric rendering
 - Path integrator with multiple importance sampling
 - Utlilty integrators: direct lighting, normals, depth
+- Denoising via Intel Open Image Denoise
 - Mesh lights, infinite/environment lights, mesh portals
 - Pinhole, thin lens and spherical/equirectangular camera models
 - Arbitrary camera aperture shapes
@@ -32,6 +33,7 @@ A high performance physically-based renderer written in C++ as a project in my s
 ## Third Party Dependencies
 - Embree3 (https://www.embree.org/)
 - Assimp (http://www.assimp.org/)
+- Open Image Denoise (https://www.openimagedenoise.org/)
 
 ## Other Third Party Libraries
 - stb_image & stb_image_write included in repository (https://github.com/nothings/stb)

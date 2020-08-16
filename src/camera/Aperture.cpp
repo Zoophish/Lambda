@@ -27,22 +27,22 @@ Vec2 CircularAperture::Sample_p(Sampler &_sampler, Real *_pdf) const {
 }
 
 MaskedAperture::MaskedAperture(Texture *_mask, const Real _size) {
-	mask = _mask;
-	InitDistribution();
+	InitDistribution(_mask);
 }
 
 Vec2 MaskedAperture::Sample_p(Sampler &_sampler, Real *_pdf) const {
-	return maskDistribution.SampleContinuous(_sampler.Get2D(), _pdf) * size - Vec2(size * .5, size * .5);
+	Real pdf;
+	return maskDistribution.SampleContinuous(_sampler.Get2D(), &pdf) * size - Vec2(size * .5, size * .5);
 }
 
-void MaskedAperture::InitDistribution() {
-	const unsigned w = mask->GetWidth(), h = mask->GetHeight();
+void MaskedAperture::InitDistribution(Texture *_mask) {
+	const unsigned w = _mask->GetWidth(), h = _mask->GetHeight();
 	std::unique_ptr<Real[]> img(new Real[w * h]);
 	for (unsigned y = 0; y < h; ++y) {
 		const Real vp = (Real)y / (Real)h;
 		for (unsigned x = 0; x < w; ++x) {
 			Real up = (Real)x / (Real)w;
-			img[x + y * w] = std::abs(mask->GetPixelUV(up, vp).r);
+			img[x + y * w] = std::abs(_mask->GetPixelUV(up, vp).r);
 		}
 	}
 	maskDistribution = Distribution::Piecewise2D(img.get(), w, h);

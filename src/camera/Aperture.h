@@ -49,13 +49,12 @@ class MaskedAperture : public Aperture {
 		Vec2 Sample_p(Sampler &_sampler, Real *_pdf = nullptr) const override;
 
 	protected:
-		Texture *mask;
 		Distribution::Piecewise2D maskDistribution;
 		
 		/*
-			Generates sampling distibution for importnace sampling of aperture mask.
+			Generates sampling distibution for importance sampling of aperture mask.
 		*/
-		void InitDistribution();
+		void InitDistribution(Texture *_mask);
 };
 
 LAMBDA_END

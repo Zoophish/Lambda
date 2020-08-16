@@ -56,9 +56,11 @@ namespace PostProcessing {
 		const char *errorMessage;
 		if (device.getError(errorMessage) != oidn::Error::None)
 			std::cout << "Error: " << errorMessage << std::endl;
+		std::cout << std::endl << "Denoising...";
 		filter.execute();
 		if (device.getError(errorMessage) != oidn::Error::None)
-			std::cout << "Error: " << errorMessage << std::endl;
+			std::cout << std::endl << "Error: " << errorMessage;
+		else std::cout << std::endl << "Denoised.";
 	}
 
 }
