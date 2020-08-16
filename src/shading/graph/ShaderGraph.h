@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include <cassert>
+#include <stack>
 #include <utility/Delegate.h>
 #include <core/Spectrum.h>
 #include "../ScatterEvent.h"
@@ -10,7 +11,6 @@
 
 
 /*
-	VERY IMPORTANT macro!
 	If enabled, attempted use off null input sockets will throw a runtime error.
 	Turn this off for release.
 */
@@ -39,7 +39,7 @@ using NodeDelegate = ConstDelegate<void, const ScatterEvent &, void *>;
 
 #define MAKE_SOCKET_CALLBACK(_func) NodeDelegate::FromFunction<std::remove_reference<decltype(*this)>::type, (_func)>(this)
 
-#define MAKE_SOCKET(_type, _callback, _tag) {	(_type), MAKE_SOCKET_CALLBACK(_callback), (_tag)	}
+#define MAKE_SOCKET(_type, _callback, _tag) {	(_type), MAKE_SOCKET_CALLBACK(_callback), nullptr, (_tag)	}
 
 #define MAKE_INPUT_SOCKET(_type, _socketPtr, _tag) {	(_type), (_socketPtr), (_tag)	};
 
@@ -69,11 +69,12 @@ template<> constexpr char const *getSocketTag<Vec3> = "Vector3";
 template<> constexpr char const *getSocketTag<Colour> = "RGB";
 template<> constexpr char const *getSocketTag<Spectrum> = "Spectrum";
 
-
+class Node;
 
 struct Socket {
 	SocketType socketType = SocketType::TYPE_NULL;
 	NodeDelegate callback;
+	Node *node = nullptr;
 	std::string tag;
 
 	/*
@@ -165,6 +166,16 @@ struct SocketRef {
 	void operator=(Socket *_rhs);
 };
 
+
+bool Connect(SocketRef &_socketRef, const Socket &_socket);
+
+void Disconnect(SocketRef &_socketRef);
+
+/*
+	Forward declaration for begin() & end().
+*/
+class GraphIterator;
+
 class Node {
 	public:
 		const std::string nodeTag;
@@ -172,17 +183,40 @@ class Node {
 		const std::unique_ptr<SocketRef[]> inputSockets;
 		const std::unique_ptr<Socket[]> outputSockets;
 
-		Node(const unsigned _numIn, const unsigned _numOut, const std::string &_nodeTag = "node tag") :
-			nodeTag(_nodeTag),
-			numIn(_numIn), numOut(_numOut),
-			inputSockets(new SocketRef[_numIn]),
-			outputSockets(new Socket[_numOut]) {}
+		Node(const unsigned _numIn, const unsigned _numOut, const std::string &_nodeTag = "node tag");
 
+		Node(const Node &_node);
+
+		GraphIterator begin();
+
+		GraphIterator end();
 };
 
-bool Connect(SocketRef &_socketRef, const Socket &_socket);
+/*
+	Visits every node connected to the root (front) node at least once.
+*/
+class GraphIterator : public std::iterator<std::forward_iterator_tag, Node> {
+	public:
+		GraphIterator(Node *_root);
 
-void Disconnect(SocketRef &_socketRef);
+		GraphIterator(const GraphIterator &_it);
+
+		GraphIterator &operator++();
+
+		GraphIterator operator++(int);
+
+		bool operator==(const GraphIterator &_rhs) const;
+
+		bool operator!=(const GraphIterator &_rhs) const;
+
+		Node &operator*();
+
+	private:
+		Node *p;
+		std::stack<Node *> stack;
+
+		void MakeStack(std::stack<Node *> &_stack, Node *_node);
+};
 
 SG_END
 

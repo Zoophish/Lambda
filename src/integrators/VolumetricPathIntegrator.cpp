@@ -38,9 +38,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 			}
 
-			if (event.medium) {
-				beta *= event.medium->Sample(r, *sampler, event);
-			}
+			if (event.medium) beta *= event.medium->Sample(r, *sampler, event);
 			else event.mediumInteraction = false;
 
 			if (!event.mediumInteraction) {
@@ -51,7 +49,8 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
 					Spectrum Ld(0);
 					Real scatteringPDF, lightPDF;
-					Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);
+					Spectrum f, Li = l->Sample_Li(event, sampler, lightPDF);	//Solid angle PDF
+					lightPDF *= lightDistPdf;	//True pdf of light
 					if (lightPDF > 0 && !Li.IsBlack()) {	//Add light sample contribution
 						f = hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
 						scatteringPDF = hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
@@ -62,7 +61,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					}
 					f = hit.object->material->bxdf->Sample_f(event, *sampler, scatteringPDF);
 					f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL.
-					lightPDF = l->PDF_Li(event, *sampler);	//Evaluated before hit is altered to next path vertex
+
 					r.o = hit.point;
 					r.d = event.wi;
 					event.medium = hit.object->material->mediaBoundary.GetMedium(event.wi, hit.normalG);	//Evaluate any medium we are going into before we get new hit
@@ -70,22 +69,19 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex and potential light contribution
 
 					if (scatteringPDF > 0 && !f.IsBlack()) {	//Add bsdf-scattering light contribution. NOTE TO SELF: if we do bsdf sampling first, could use hit.point for light sampling
-						if (lightPDF > 0) {
+						if (const Light *nl = scatterIntersect ? hit.object->material->light : (Light *)_scene.envLight) {
+							if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
+							lightPDF = lightDistPdf * nl->PDF_Li(event);
 							Li = Spectrum(0);
+							if (scatterIntersect) Li = nl->L(event);
+							else Li = nl->Le(r);	//Special case for infinite lights
 							const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-							if (scatterIntersect) {
-								if (hit.object->material->light == l)
-									Li = hit.object->material->light->L(event);
-							}
-							else {
-								Li = l->Le(r);
-							}
 							if (!Li.IsBlack()) Ld += Li * f * weight / scatteringPDF;
 						}
 					}
 					else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
 
-					L += beta * Ld / lightDistPdf;
+					L += beta * Ld;
 					beta *= f / scatteringPDF;
 				}
 				else {
@@ -104,6 +100,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				Spectrum Ld(0);
 				Real scatteringPDF, lightPDF;
 				Spectrum p, Li = l->Sample_Li(event, sampler, lightPDF);
+				lightPDF *= lightDistPdf;	//True pdf of light
 				if (lightPDF > 0 && !Li.IsBlack()) {
 					scatteringPDF = event.medium->phase->p(event.wo, event.wi);
 					p = Spectrum(scatteringPDF);
@@ -114,38 +111,32 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 				scatteringPDF = event.medium->phase->Sample_p(event.wo, &event.wi, *sampler);
 				p = scatteringPDF;
-				lightPDF = l->PDF_Li(event, *sampler);
 
 				r.o = hit.point;
 				r.d = event.wi;
 
 				Spectrum Tr(1);
 				Medium *med = event.medium;
-				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, med, &Tr);	//Direct lighting from phase scatter
+				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, med, &Tr);	//Direct lighting from phase scatter (skips through media)
 
 				if (scatteringPDF > 0) {	//Add phase-scattering light contribution
-					if (lightPDF > 0) {
+					if (const Light *nl = scatterIntersect ? hit.object->material->light : (Light *)_scene.envLight) {
+						if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
+						lightPDF = lightDistPdf * nl->PDF_Li(event);
 						Li = Spectrum(0);
+						if (scatterIntersect) Li = nl->L(event);
+						else Li = nl->Le(r);	//Special case for infinite lights
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-						if (scatterIntersect) {
-							if (hit.object->material->light == l) Li = hit.object->material->light->L(event);
-						}
-						else {
-							Li = l->Le(r);
-						}
 						if (!Li.IsBlack()) Ld += Li * Tr * weight / scatteringPDF;
 					}
 				}
  				else break;
-				
-				scatteringPDF = event.medium->phase->Sample_p(event.wo, &event.wi, *sampler);	//Sample phase for next path vertex
-				p = Spectrum(scatteringPDF);
 
 				r.o = scatterPoint;
 				r.d = event.wi;
-				scatterIntersect = _scene.Intersect(r, hit);	//Next path vertex
+				scatterIntersect = _scene.Intersect(r, hit);	//Next path vertex (doesn't skip through media)
 
-				L += beta * Ld / lightDistPdf;
+				L += beta * Ld;
 				//p is equal to the scattering pdf, so beta *= p / scatteringPDF is redundant
 			}
 

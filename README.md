@@ -5,7 +5,7 @@ A high performance physically-based renderer written in C++ as a project in my s
 - Triangulated mesh geometry
 - Graph based shading system
 - Geometry instancing
-- Many lights sampling
+- Spatial and directional sampling of many lights
 - PBRT-style unbiased spectral rendering
 - Fresnel, specular & mix BSDFs
 - Microfacet BSDFs: Beckmann-Spizzichino, Towbridge-Reitz/GGX
@@ -37,19 +37,19 @@ A high performance physically-based renderer written in C++ as a project in my s
 - stb_image & stb_image_write included in repository (https://github.com/nothings/stb)
 
  **Future goals**
- - Sobol' sampler
- - Light portals (projected)
- - Spatial importance sampling of lights
+ - Sobol' sampler with Owen scrambling
+ - Path guiding
  - Packet-tracing on albedo and look-dev integrators
  - Tonemapping post-process
  - Utility integrators (depth, normal, albedo, etc)
- - Bidirectional path-integrator
+ - Deep compositing AOVs
+ - Bidirectional pathtracing integrator
  - Realistic camera model with lens and sensor profiles
  - Camera chromatic aberration
  - Parameterised Hair BSDF (Bitterli, Chiang - 2016)
  - Virtual-displacement mapping
  - Animated rendering
- - Massive-scene optimisation (LOD, occlusion of insignificant object groups)
+ - Massive-scene optimisation (occlusion of insignificant object groups, asset caching)
  - Light-pass rendering
  - Floating origin chunk instantiation for planetary scale rendering
  - Physical-atmosphere approximation with clouds

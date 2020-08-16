@@ -37,4 +37,15 @@ class NormalPass : public UtilityIntegrator {
 		Colour P(const Ray &_ray, const Scene &_scene) const override;
 };
 
+
+
+class AlbedoPass : public UtilityIntegrator {
+	public:
+		Integrator *clone() const override;
+
+		AlbedoPass(Sampler *_sampler);
+
+		Colour P(const Ray &_ray, const Scene &_scene) const override;
+};
+
 LAMBDA_END

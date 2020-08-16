@@ -36,7 +36,7 @@ void ManyLightSampler::Commit() {
 	InitLights(scene->lights);
 	treePower = 0;
 	infPower = infiniteLight->Power() * .1;
-	RecursiveBuild(root.get());
+	if(lights.size() > 0) RecursiveBuild(root.get());
 	std::cout << std::endl << "Done.";
 }
 
@@ -269,19 +269,21 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 	for (auto l : lightList) lights.push_back(l);
 
 	//Initialise root
-	root.reset(new LightNode);
-	root->parent = nullptr;
-	root->numLights = lights.size();
-	root->firstLightIndex = 0;
-	root->bounds = lights[0]->GetBounds();
-	root->totalPower = 0;
-	root->clusterVariance = 0;
-	root->orientationCone = OrientationCone::MakeCone(lights[0]->GetDirection());
-	root->children[0] = root->children[1] = nullptr;
-	for (unsigned i = 0; i < root->numLights; ++i) {
-		root->bounds = maths::Union(root->bounds, lights[i]->GetBounds());
-		root->orientationCone = OrientationCone::Union(root->orientationCone, OrientationCone::MakeCone(lights[i]->GetDirection()));
-		root->totalPower += lights[i]->Power();
+	if (lights.size() > 0) {
+		root.reset(new LightNode);
+		root->parent = nullptr;
+		root->numLights = lights.size();
+		root->firstLightIndex = 0;
+		root->bounds = lights[0]->GetBounds();
+		root->totalPower = 0;
+		root->clusterVariance = 0;
+		root->orientationCone = OrientationCone::MakeCone(lights[0]->GetDirection());
+		root->children[0] = root->children[1] = nullptr;
+		for (unsigned i = 0; i < root->numLights; ++i) {
+			root->bounds = maths::Union(root->bounds, lights[i]->GetBounds());
+			root->orientationCone = OrientationCone::Union(root->orientationCone, OrientationCone::MakeCone(lights[i]->GetDirection()));
+			root->totalPower += lights[i]->Power();
+		}
 	}
 }
 

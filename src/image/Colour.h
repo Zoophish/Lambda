@@ -148,4 +148,12 @@ struct alignas(16) Colour {
 	#endif
 };
 
+struct Colour3f {
+	float r, g, b;
+
+	Colour3f(float *_rgb) {
+		memcpy(this, _rgb, sizeof(float) * 3);
+	}
+};
+
 LAMBDA_END

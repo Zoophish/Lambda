@@ -8,7 +8,7 @@ void OMPMosaicRenderer::Render() const {
 	int p = 0;
 	std::cout << std::endl;
 	omp_set_num_threads(nThreads);
-	#pragma omp parallel for
+	#pragma omp parallel for// schedule(dynamic)
 	for (int i = 0; i < s; ++i) {
 		tileRenderer(&mosaic.tiles[i]);
 		const Real pt = 100.f * (Real)i / (Real)s;

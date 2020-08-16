@@ -4,7 +4,7 @@ LAMBDA_BEGIN
 
 Real Fresnel::FrDielectric(Real _cosThetaI, Real _etaI, Real _etaT) {
 	_cosThetaI = maths::Clamp(_cosThetaI, (Real)-1, (Real)1);
-	if (_cosThetaI > 0) {
+	if (_cosThetaI < 0) {
 		std::swap(_etaI, _etaT);
 		_cosThetaI = std::abs(_cosThetaI);
 	}
@@ -14,8 +14,8 @@ Real Fresnel::FrDielectric(Real _cosThetaI, Real _etaI, Real _etaT) {
 		return 1;
 	}
 	const Real cosThetaT = std::sqrt(std::max((Real)0, 1 - sinThetaT * sinThetaT));
-	const Real rPara = ((_etaT * _cosThetaI) - (_etaI * cosThetaT)) / ((_etaT * _cosThetaI) + (_etaI * cosThetaT));
-	const Real rPerp = ((_etaI * _cosThetaI) - (_etaT * cosThetaT)) / ((_etaI * _cosThetaI) + (_etaT * cosThetaT));
+	const Real rPara = (_etaT * _cosThetaI - _etaI * cosThetaT) / (_etaT * _cosThetaI + _etaI * cosThetaT);
+	const Real rPerp = (_etaI * _cosThetaI - _etaT * cosThetaT) / (_etaI * _cosThetaI + _etaT * cosThetaT);
 	return (rPara * rPara + rPerp * rPerp) * (Real).5;
 }
 

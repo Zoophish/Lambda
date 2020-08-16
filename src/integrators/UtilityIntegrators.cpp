@@ -1,3 +1,5 @@
+#pragma once
+#include <lighting/EnvironmentLight.h>
 #include "UtilityIntegrators.h"
 
 LAMBDA_BEGIN
@@ -48,6 +50,33 @@ Colour NormalPass::P(const Ray &_ray, const Scene &_scene) const {
 		return Colour(n.x * .5 + .5, n.y * .5 + 1, n.z * .5 + .5);
 	}
 	return Colour(0, 0, 0);
+}
+
+
+
+Integrator *AlbedoPass::clone() const {
+	return new AlbedoPass(*this);
+}
+
+AlbedoPass::AlbedoPass(Sampler *_sampler) {
+	sampler = _sampler;
+}
+
+Colour AlbedoPass::P(const Ray &_ray, const Scene &_scene) const {
+	RayHit hit;
+	if (_scene.Intersect(_ray, hit)) {
+		if (ShaderGraph::Socket *albedoSocket = hit.object->material->GetSocket("albedo")) {
+			ScatterEvent event;
+			event.hit = &hit;
+			return albedoSocket->GetAs<Colour>(event);
+		}
+	}
+	else {
+		const Spectrum bck = _scene.envLight->Le(_ray.d);
+		Real c[3];
+		bck.ToRGB(c);
+		return Colour(c);
+	}
 }
 
 LAMBDA_END

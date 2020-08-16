@@ -18,8 +18,10 @@ void Scene::SetFlags(const RTCSceneFlags _flags) {
 void Scene::Commit(const RTCBuildQuality _buildQuality) {
 	rtcSetSceneBuildQuality(scene, _buildQuality);
 	rtcCommitScene(scene);
-	envLight->bounds = GetBounds();
-	envLight->radius = envLight->bounds.MaxLength();
+	if (envLight) {
+		envLight->bounds = GetBounds();
+		envLight->radius = envLight->bounds.MaxLength();
+	}
 	lightSampler->Commit();
 }
 

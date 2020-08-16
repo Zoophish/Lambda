@@ -18,11 +18,9 @@ class Integrator {
 
 		Spectrum EstimateDirect(ScatterEvent &_event, const Scene &_scene, const Light &_light) const;
 
-		//bool IntersectTr(const Scene &_scene, Ray &_ray, RayHit &_hit, Spectrum *_tr) const;
-
 	protected:
 		static inline Real PowerHeuristic(int nf, Real fPdf, int ng, Real gPdf) {
-			Real f = nf * fPdf, g = ng * gPdf;
+			const Real f = nf * fPdf, g = ng * gPdf;
 			return (f * f) / (f * f + g * g);
 		}
 };

@@ -6,7 +6,7 @@ LAMBDA_BEGIN
 
 struct FilmPixel {
 	Spectrum spectrum = Spectrum(0);
-	unsigned nSamples = 1;
+	unsigned nSamples = 0;
 
 	inline void ToRGB(Colour *_rgb) const {
 		spectrum.ToRGB((Real*)_rgb);
@@ -34,6 +34,11 @@ class Film {
 			the corresponding RGB counterparts divided by the sample count.
 		*/
 		void ToRGBTexture(Texture *_output) const;
+
+		/*
+			Clear the film. Resets all pixels samples to black. E.g. so it can be used again.
+		*/
+		void Clear();
 };
 
 LAMBDA_END

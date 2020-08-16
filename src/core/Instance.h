@@ -9,7 +9,7 @@ class InstanceProxy {
 
 		/*
 			Commits iObject to the instance and builds the internal accelleration stucture.
-				- Must be called before Instances are committed to a scene.
+				- Must be called before instances are committed to a scene.
 		*/
 		inline void Commit(const RTCDevice &_device) {
 			iScene = rtcNewScene(_device);

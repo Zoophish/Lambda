@@ -10,6 +10,7 @@ It briefly runs over:
 	- Render setup
 	- Saving render output
 */
+#pragma once
 #include <assets/AssetImporter.h>
 #include <shading/graph/GraphInputs.h>
 #include <shading/graph/GraphBxDF.h>
@@ -33,6 +34,7 @@ It briefly runs over:
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
 #include <image/processing/ToneMap.h>
+#include <image/processing/Denoise.h>
 #include <shading/media/HomogeneousMedium.h>
 #include <shading/media/HenyeyGreenstein.h>
 #include <lighting/ManyLightSampler.h>
@@ -63,6 +65,7 @@ int main() {
 
 	//Setup some colour input nodes
 	sg::RGBInput *whiteNode = graphArena.New<sg::RGBInput>(Colour(1, 1, 1));
+	sg::RGBInput *redNode = graphArena.New<sg::RGBInput>(Colour(1, .1, .05));
 	sg::RGBInput *greenNode = graphArena.New<sg::RGBInput>(Colour(.1, 1, .1));
 
 	//Setup some texture nodes
@@ -92,7 +95,7 @@ int main() {
 
 	//Setup some more scalar values for shading
 	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(2);
-	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.5);
+	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
 	sg::ScalarInput *roughnessNode = graphArena.New<sg::ScalarInput>(.04);
 
 	//You can also make 2D and 3D vector nodes...
@@ -103,34 +106,37 @@ int main() {
 	FresnelDielectric fres(2.5);
 
 	//Example of various BxDF nodes...
-	sg::OrenNayarBRDFNode *diffuse = graphArena.New<sg::OrenNayarBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[0]);
+	sg::OrenNayarBRDFNode *diffuse = graphArena.New<sg::OrenNayarBRDFNode>(&redNode->outputSockets[0], &sigmaNode->outputSockets[0]);
 	sg::OrenNayarBRDFNode *diffuse2 = graphArena.New<sg::OrenNayarBRDFNode>(&gridNode->outputSockets[0], &sigmaNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresBSDF = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::SpecularBRDFNode *specBRDF = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
-	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &roughnessNode->outputSockets[0], &d, &fres);
+	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&redNode->outputSockets[0], &roughnessNode->outputSockets[0], &d, &fres);
 
 	//You can mix BxDFs using a scalar socket
 	sg::ScalarInput *mixFactor = graphArena.New<sg::ScalarInput>(.65);
-	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &diffuse->outputSockets[0], &mixFactor->outputSockets[0]);
+	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&microfacetBRDF->outputSockets[0], &diffuse->outputSockets[0], &valueNoise->outputSockets[0]);
 
 	//Setup a volumetric medium
-	const Spectrum sigmaA = Spectrum(.1);
-	const Spectrum sigmaS = Spectrum(0);
+	const Spectrum sigmaA = Spectrum(20);
+	const Spectrum sigmaS = Spectrum(35);
 	std::unique_ptr<Medium> med(new HomogeneousMedium(sigmaA, sigmaS));
 	std::unique_ptr<HenyeyGreenstein> phase(new HenyeyGreenstein);
-	phase->g = -.2;
+	phase->g = 0;
 	med->phase = phase.get();
 
 	//Shading property objects are kept in material objects
 	Material diffuse_material;
-	diffuse_material.bxdf = mixMat;
+	diffuse_material.bxdf = diffuse;
+	diffuse_material.BuildSocketMap();
 
 	Material glass_material;
 	glass_material.bxdf = fresBSDF;
 	glass_material.mediaBoundary.interior = med.get();
+	glass_material.BuildSocketMap();
 
 	Material diffuse_material2;
 	diffuse_material2.bxdf = diffuse2;
+	diffuse_material2.BuildSocketMap();
 
 	//Import an asset using an AssetImporter object
 	AssetImporter ai;
@@ -172,6 +178,7 @@ int main() {
 	//The mesh will need a material still
 	Material light_material;
 	lightMesh.material = &light_material;
+	light_material.BuildSocketMap();
 
 	//Construct a light from the light mesh.
 	//The light will automatically be assigned the material of the mesh object.
@@ -187,7 +194,7 @@ int main() {
 	light.intensity = 160;
 
 	//Add it to the scene - the associated light object will be added to scene.lights automatically
-	scene.AddObject(&lightMesh);
+	//scene.AddObject(&lightMesh);
 
 	//Make environment lighting
 	Texture envMap;
@@ -195,14 +202,14 @@ int main() {
 	envMap.LoadImageFile("demo_content/autumn_park_2k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = .1;
+	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*-.5, 0);
 
 	//Add it to scene's lights
 	scene.AddLight(&ibl);
 
 	//Setup a light sampler
-	ManyLightSampler lightSampler(scene);
+	PowerLightSampler lightSampler(scene);
 	scene.lightSampler = &lightSampler;
 
 	//Commit all changes to scene so it can be renderered
@@ -219,21 +226,22 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	//Make a film that can be rendered to
-	Film film(600, 800);
+	Film film(512, 512);
 
 	//Construct a camera with a circular aperture of size .03 world units
-	CircularAperture aperture2(.03);
-	ThinLensCamera cam(Vec3(0, 2, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
+	CircularAperture aperture2(0.07);
+	ThinLensCamera cam(Vec3(0, 3, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
 	//Set focus to 10 units infront of camera
 	cam.focalLength = 10;
 	cam.SetFov(.15);
-	cam.SetRotation(-PI, -PI*.035);
+	cam.SetRotation(-PI, -PI*.065);
 
 	//Make some integrators and provide them a sampler
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 	VolumetricPathIntegrator volPathIntegrator(&sampler);
-	NormalPass normalPass(&sampler);
+	AlbedoPass albedoRdr(&sampler);
+	NormalPass normalRdr(&sampler);
 
 	//Make a render directive which encapsulates rendering properties
 	RenderDirective renderDirective;
@@ -243,28 +251,53 @@ int main() {
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
-	renderDirective.spp = 64;
+	renderDirective.spp = 1;
 	renderDirective.tileSizeX = 32;
 	renderDirective.tileSizeY = 32;
+
+	//std::cout << std::endl << "Render at what spp?";
+	//std::cin >> renderDirective.spp;
+
+	Texture albedoPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	Texture normalPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	Texture colourPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
 	//Render the render directive using a renderer and a tile renderer
 	AsyncMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
 	auto start = std::chrono::system_clock::now();
 	rdr.Render();
+	film.ToRGBTexture(&colourPass);
+	film.Clear();
+	renderDirective.integrator = &albedoRdr;
+	rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
+	rdr.Render();
+	film.ToRGBTexture(&albedoPass);
+	film.Clear();
+	renderDirective.integrator = &normalRdr;
+	rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
+	rdr.Render();
+	film.ToRGBTexture(&normalPass);
 	auto end = std::chrono::system_clock::now();
 	//Display render time
 	std::chrono::duration<double> elapsed_seconds = end - start;
 	std::cout << std::endl << "TIME: " << elapsed_seconds.count();
 
 	//Make an RGB texture tha can be saved / displayed as an image
-	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour());
+	Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+
+	PostProcessing::Denoise denoiser;
+	denoiser.SetData(&colourPass, &albedoPass, &normalPass);
+	denoiser.Process(&tex);
 
 	//Convert the film to an RGB image
-	film.ToRGBTexture(&tex);
+	//film.ToRGBTexture(&tex);
 
 	//Save to file - gamma=true, alpha=false
 	//Different image formats can be used by changing the postfix
 	tex.SaveToImageFile("out.png", true, false);
+	albedoPass.SaveToImageFile("albedoPass.png", true, false);
+	normalPass.SaveToImageFile("normalPass.png", false, false);
+	colourPass.SaveToImageFile("colourPass.png", true, false);
 	system("pause");
 	return 0;
 }

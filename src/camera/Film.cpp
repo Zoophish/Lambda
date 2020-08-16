@@ -26,4 +26,10 @@ void Film::ToRGBTexture(Texture *_output) const {
 	else std::cout << std::endl << "Output texture size does not match film size.";
 }
 
+void Film::Clear() {
+	for (unsigned i = 0; i < filmData.GetWidth() * filmData.GetHeight(); ++i) {
+		filmData[i] = { Spectrum(0), 0 };
+	}
+}
+
 LAMBDA_END

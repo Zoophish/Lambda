@@ -10,6 +10,8 @@
 
 #pragma once
 #include <algorithm>
+#include <memory>
+#include <vector>
 #include <maths/maths.h>
 #include "Colour.h"
 #include "TextureEncoding.h"
@@ -59,6 +61,17 @@ class texture_t {
 
 		texture_t<Format>(const unsigned _width = 1, const unsigned _height = 1, const Format & _c = Format()) {
 			Resize(_width, _height, _c);
+		}
+
+		template<class Format2>
+		texture_t<Format>(const texture_t<Format2> &_texture) {
+			if (width > _texture.width && height > _texture.height) {
+				for (unsigned y = 0; y < width; ++y) {
+					for (unsigned x = 0; x < width; ++x) {
+						SetPixelCoord(x, y, Format(&_texture.GetPixelCoord(x, y)));
+					}
+				}
+			}
 		}
 
 		static texture_t Copy(const texture_t &_texture) {
@@ -138,7 +151,7 @@ template<>
 class texture_t<Colour> {
 	private:
 		unsigned width, height;
-		std::unique_ptr<Colour[]> pixels;
+		std::vector<Colour> pixels;
 		size_t(*Order)(const unsigned, const unsigned, const unsigned, const unsigned) = TextureEncoding::ScanlineRowOrder;
 
 		void ParseData(float *_data, const int _channels);
@@ -168,10 +181,21 @@ class texture_t<Colour> {
 			Resize(_width, _height, _c);
 		}
 
+		template<class Format2>
+		texture_t(const texture_t<Format2> &_texture) {
+			if (width > _texture.width && height > _texture.height) {
+				for (unsigned y = 0; y < width; ++y) {
+					for (unsigned x = 0; x < width; ++x) {
+						SetPixelCoord(x, y, Colour(&_texture.GetPixelCoord(x, y)));
+					}
+				}
+			}
+		}
+
 		static texture_t Copy(const texture_t &_texture) {
 			texture_t copy(_texture.width, _texture.height);
 			copy.Order = _texture.Order;
-			memcpy(copy.pixels.get(), _texture.pixels.get(), sizeof(Colour) * _texture.width * _texture.height);
+			memcpy(&copy.pixels[0], &copy.pixels[0], sizeof(Colour) * _texture.width * _texture.height);
 			return copy;
 		}
 
@@ -185,7 +209,8 @@ class texture_t<Colour> {
 		inline void Resize(const unsigned _width, const unsigned _height, const Colour &_c = Colour()) {
 			width = _width;
 			height = _height;
-			pixels.reset(new Colour[width * height]);
+			//pixels.reset(new Colour[width * height]);
+			pixels.resize(width * height);
 			std::fill_n(&pixels[0], width * height, _c);
 		}
 
