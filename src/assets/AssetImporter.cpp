@@ -2,6 +2,8 @@
 
 LAMBDA_BEGIN
 
+constexpr int DEFAULT_IMPORT_FLAGS = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_GenNormals | aiProcess_CalcTangentSpace | aiProcess_ImproveCacheLocality;
+
 AssetImporter::AssetImporter() {
 	scene = nullptr;
 }

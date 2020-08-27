@@ -69,8 +69,8 @@ namespace MaterialImport {
 
 		inline void SetEncoder(Texture *_target, const int _w, const int _h) {
 			if (IsPowerOf2(_w) && IsPowerOf2(_h)) {
-				if (_w == _h) _target->SetEncoder(EncoderMode::ENCODE_HILBERT);
-				else _target->SetEncoder(EncoderMode::ENCODE_MORTON);
+				//if (_w == _h) _target->SetEncoder(EncoderMode::ENCODE_HILBERT);
+				//else _target->SetEncoder(EncoderMode::ENCODE_MORTON);
 			}
 		}
 

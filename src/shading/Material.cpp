@@ -25,6 +25,7 @@ ShaderGraph::Socket *Material::GetSocket(const std::string &_key) const {
 Material::Material() {
 	bxdf = nullptr;
 	light = nullptr;
+	socketMap.reserve(4);
 }
 
 LAMBDA_END

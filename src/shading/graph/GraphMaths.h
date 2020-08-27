@@ -15,11 +15,11 @@ namespace Maths {
 		POWER,
 	};
 
-	class ScalarMaths : public Node {
+	class ScalarMathsNode : public Node {
 		public:
 			ScalarOperatorType operatorType;
 	
-			ScalarMaths(ScalarOperatorType _operatorType = ScalarOperatorType::ADD, Socket *_valueA = nullptr, Socket *_valueB = nullptr);
+			ScalarMathsNode(ScalarOperatorType _operatorType = ScalarOperatorType::ADD, Socket *_valueA = nullptr, Socket *_valueB = nullptr);
 	
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 	};
@@ -33,11 +33,11 @@ namespace Maths {
 		DIVIDE,
 	};
 
-	class VectorMaths : public Node {
+	class VectorMathsNode : public Node {
 		public:
 			VectorOperatorType operatorType;
 
-			VectorMaths(VectorOperatorType _operatorType = VectorOperatorType::ADD, Socket *_valueA = nullptr, Socket *_valueB = nullptr);
+			VectorMathsNode(VectorOperatorType _operatorType = VectorOperatorType::ADD, Socket *_valueA = nullptr, Socket *_valueB = nullptr);
 
 			void GetVec3(const ScatterEvent &_event, void *_out) const;
 	};

@@ -13,8 +13,6 @@
 
 LAMBDA_BEGIN
 
-constexpr int DEFAULT_IMPORT_FLAGS = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_GenNormals | aiProcess_ImproveCacheLocality;
-
 enum ImportOptions : uint8_t {
 	IMP_ALL = 15,
 	IMP_MESHES = 1,

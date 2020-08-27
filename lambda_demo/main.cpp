@@ -84,7 +84,7 @@ int main() {
 	//Some scalar input nodes...
 	sg::ScalarInput *scalarInput = graphArena.New<sg::ScalarInput>(.02);
 	//.. that can be manipulated with mathematical nodes
-	sg::Maths::ScalarMaths *mathsNode = graphArena.New<sg::Maths::ScalarMaths>(sg::Maths::ScalarOperatorType::MULTIPLY);
+	sg::Maths::ScalarMathsNode *mathsNode = graphArena.New<sg::Maths::ScalarMathsNode>(sg::Maths::ScalarOperatorType::MULTIPLY);
 
 	//It's safer to connect sockets with ShaderGraph::Connect()...
 	sg::Connect(mathsNode->inputSockets[0], scalarInput->outputSockets[0]);
@@ -96,7 +96,7 @@ int main() {
 	//Setup some more scalar values for shading
 	sg::ScalarInput *sigmaNode = graphArena.New<sg::ScalarInput>(1.2);
 	sg::ScalarInput *iorNode = graphArena.New<sg::ScalarInput>(1.3);
-	sg::ScalarInput *roughnessNode = graphArena.New<sg::ScalarInput>(.55);
+	sg::ScalarInput *roughnessNode = graphArena.New<sg::ScalarInput>(.85);
 
 	//You can also make 2D and 3D vector nodes...
 	sg::Vec2Input *sigma2Node = graphArena.New<sg::Vec2Input>(Vec2(.1, .001 ));
@@ -105,9 +105,14 @@ int main() {
 	BeckmannDistribution d;
 	FresnelDielectric fres(2.5);
 
+	sg::Maths::ScalarMathsNode *invert = graphArena.New<sg::Maths::ScalarMathsNode>(sg::Maths::ScalarOperatorType::SUBTRACT);
+	sg::ScalarInput *noOne = graphArena.New<sg::ScalarInput>(1);
+	sg::Connect(invert->inputSockets[0], noOne->outputSockets[0]);
+	sg::Connect(invert->inputSockets[1], voronoiNoise->outputSockets[0]);
+
 	//Example of various BxDF nodes...
 	sg::OrenNayarBRDFNode *diffuse = graphArena.New<sg::OrenNayarBRDFNode>(&redNode->outputSockets[0], &sigmaNode->outputSockets[0]);
-	sg::OrenNayarBRDFNode *diffuse2 = graphArena.New<sg::OrenNayarBRDFNode>(&gridNode->outputSockets[0], &sigmaNode->outputSockets[0]);
+	sg::OrenNayarBRDFNode *diffuse2 = graphArena.New<sg::OrenNayarBRDFNode>(&invert->outputSockets[0], &sigmaNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresBSDF = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::SpecularBRDFNode *specBRDF = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&redNode->outputSockets[0], &roughnessNode->outputSockets[0], &d, &fres);
@@ -125,8 +130,12 @@ int main() {
 	med->phase = phase.get();
 
 	//Shading property objects are kept in material objects
+	Texture boxTex; boxTex.LoadImageFile("demo_content/box_tex.png"); boxTex.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	sg::ImageTextureInput *box_tex_node = graphArena.New<sg::ImageTextureInput>(&boxTex);
+	sg::OrenNayarBRDFNode *box_diffuse = graphArena.New<sg::OrenNayarBRDFNode>(&box_tex_node->outputSockets[0], &sigmaNode->outputSockets[0]);
+
 	Material diffuse_material;
-	diffuse_material.bxdf = microfacetBRDF;
+	diffuse_material.bxdf = box_diffuse;
 	diffuse_material.BuildSocketMap();
 
 	Material glass_material;
@@ -140,10 +149,10 @@ int main() {
 
 	//Import an asset using an AssetImporter object
 	AssetImporter ai;
-	ai.Import("demo_content/lucy.obj");
+	ai.Import("demo_content/box_empty.obj");
 
 	//Push the mesh objects to the resource manager...
-	ai.PushToResourceManager(&resources, ImportOptions::IMP_MESHES);
+	ai.PushToResourceManager(&resources, (ImportOptions)(IMP_MESHES | IMP_TEXTURES | IMP_MATERIALS));
 
 	//...and add all the meshes from that asset
 	for (auto &it : resources.objectPool.pool) {
@@ -152,10 +161,10 @@ int main() {
 	}
 
 	//Let the integrators know if there are volumetrics in the scene
-	scene.hasVolumes = true;
+	scene.hasVolumes = false;
 
 	//Import another asset file
-	ai.Import("demo_content/Backdrop.obj");
+	ai.Import("demo_content/lucy.obj");
 
 	//You can manually make a new mesh object that isn't owned...
 	TriangleMesh plane;
@@ -167,7 +176,7 @@ int main() {
 	scene.AddObject(&plane);
 
 	//Setup a mesh light in a similar way
-	ai.Import("demo_content/SpiralLight.obj");
+	ai.Import("../content/SpiralLight.obj");
 	TriangleMesh lightMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
 	lightMesh.smoothNormals = false;
@@ -194,7 +203,7 @@ int main() {
 	light.intensity = 160;
 
 	//Add it to the scene - the associated light object will be added to scene.lights automatically
-	//scene.AddObject(&lightMesh);
+	scene.AddObject(&lightMesh);
 
 	//Make environment lighting
 	Texture envMap;
@@ -202,14 +211,15 @@ int main() {
 	envMap.LoadImageFile("demo_content/autumn_park_2k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*-.5, 0);
 
 	//Add it to scene's lights
 	scene.AddLight(&ibl);
 
 	//Setup a light sampler
-	PowerLightSampler lightSampler(scene);
+	ManyLightSampler lightSampler(scene);
+	//PowerLightSampler lightSampler(scene);
 	scene.lightSampler = &lightSampler;
 
 	//Commit all changes to scene so it can be renderered
@@ -230,12 +240,12 @@ int main() {
 
 
 	//Construct a camera with a circular aperture of size .03 world units
-	CircularAperture aperture2(0.09);
-	ThinLensCamera cam(Vec3(0, 3, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
+	CircularAperture aperture2(0.00);
+	ThinLensCamera cam(Vec3(0, 1, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
 	//Set focus to 10 units infront of camera
 	cam.focalLength = 10;
-	cam.SetFov(.33);
-	cam.SetRotation(-PI, -PI*.065);
+	cam.SetFov(.32);
+	cam.SetRotation(PI, 0);
 
 	//Make some integrators and provide them a sampler
 	DirectLightingIntegrator directIntegrator(&sampler);
@@ -264,20 +274,20 @@ int main() {
 	Texture colourPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
 	//Render the render directive using a renderer and a tile renderer
-	AsyncMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
+	OMPMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
 	auto start = std::chrono::system_clock::now();
 	rdr.Render();
 	film.ToRGBTexture(&colourPass);
-	film.Clear();
-	renderDirective.integrator = &albedoRdr;
-	rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
-	rdr.Render();
-	film.ToRGBTexture(&albedoPass);
-	film.Clear();
-	renderDirective.integrator = &normalRdr;
-	rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
-	rdr.Render();
-	film.ToRGBTexture(&normalPass);
+	//film.Clear();
+	//renderDirective.integrator = &albedoRdr;
+	//rdr = OMPMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
+	//rdr.Render();
+	//film.ToRGBTexture(&albedoPass);
+	//film.Clear();
+	//renderDirective.integrator = &normalRdr;
+	//rdr = OMPMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
+	//rdr.Render();
+	//film.ToRGBTexture(&normalPass);
 	auto end = std::chrono::system_clock::now();
 	//Display render time
 	std::chrono::duration<double> elapsed_seconds = end - start;
@@ -287,10 +297,10 @@ int main() {
 	//Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
 	//Denoise the render with OIDN
-	PostProcessing::Denoise denoiser;
-	denoiser.SetData(&colourPass, &albedoPass, &normalPass);
+	//PostProcessing::Denoise denoiser;
+	//denoiser.SetData(&colourPass, &albedoPass, &normalPass);
 	//Put the denoised image on colourPass
-	denoiser.Process(&colourPass);
+	//denoiser.Process(&colourPass);
 
 	//Save to file - gamma=true, alpha=false
 	//Different image formats can be used by changing the postfix

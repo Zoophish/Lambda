@@ -4,4 +4,4 @@ lucy.obj courtesy of the Stanford 3D Scanning Repository
 
 HDR_RGBA_7.png courtesy of 'MomentsInGraphics.de' by Christoph Peters under CC0 License
 
-SpiralLight.obj, uv_grid.png and Backdrop.obj by Sam Warren
+All other assets by Sam Warren

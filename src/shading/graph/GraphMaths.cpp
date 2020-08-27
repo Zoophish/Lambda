@@ -5,14 +5,14 @@ SG_BEGIN
 
 namespace Maths {
 
-	ScalarMaths::ScalarMaths(ScalarOperatorType _operatorType, Socket *_valueA, Socket *_valueB) : Node(2, 1, "Maths") {
+	ScalarMathsNode::ScalarMathsNode(ScalarOperatorType _operatorType, Socket *_valueA, Socket *_valueB) : Node(2, 1, "Maths") {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _valueA, "Scalar");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _valueB, "Scalar");
-		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &ScalarMaths::GetScalar, "Scalar");
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &ScalarMathsNode::GetScalar, "Scalar");
 		operatorType = _operatorType;
 	}
 
-	void ScalarMaths::GetScalar(const ScatterEvent &_event, void *_out) const {
+	void ScalarMathsNode::GetScalar(const ScatterEvent &_event, void *_out) const {
 		ASSERT_INPUTS(inputSockets[0] && inputSockets[1]);
 		switch (operatorType) {
 		case ScalarOperatorType::ADD:
@@ -32,14 +32,14 @@ namespace Maths {
 
 
 
-	VectorMaths::VectorMaths(VectorOperatorType _operatorType, Socket *_valueA, Socket *_valueB) : Node(2, 1, "Vector Maths") {
+	VectorMathsNode::VectorMathsNode(VectorOperatorType _operatorType, Socket *_valueA, Socket *_valueB) : Node(2, 1, "Vector Maths") {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_VEC3, _valueA, "Vector");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_VEC3, _valueB, "Vector");
-		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_VEC3, &VectorMaths::GetVec3, "Vector");
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_VEC3, &VectorMathsNode::GetVec3, "Vector");
 		operatorType = _operatorType;
 	}
 
-	void VectorMaths::GetVec3(const ScatterEvent &_event, void *_out) const {
+	void VectorMathsNode::GetVec3(const ScatterEvent &_event, void *_out) const {
 		ASSERT_INPUTS(inputSockets[0] && inputSockets[1]);
 		switch (operatorType) {
 		case VectorOperatorType::ADD:

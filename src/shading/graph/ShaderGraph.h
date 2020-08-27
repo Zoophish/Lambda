@@ -9,17 +9,15 @@
 #include <image/Texture.h>
 
 
-
 /*
-	If enabled, attempted use off null input sockets will throw a runtime error.
-	Turn this off for release.
+	Check for null sockets or empty callbacks.
 */
-#define SG_USE_ASSERTS
-
-#ifdef SG_USE_ASSERTS
+#ifdef _DEBUG
 	#define ASSERT_INPUTS(_condition) assert((_condition) && "Attempted use of null inputs.")
+	#define ASSERT_CALLBACK(_callback) assert((_callback) && "Bad node - no callback")
 #else
 	#define ASSERT_INPUTS(_condition)
+	#define ASSERT_CALLBACK(_callback)
 #endif
 
 
@@ -78,76 +76,172 @@ struct Socket {
 	std::string tag;
 
 	/*
-		Methods kept inline for higher chance of expansion to reduce
-		function calls (very frequently called when rendering).
+		Methods are kept inline for higher chance of expansion.
 	*/
 
 	template<class T> inline T GetAs(const ScatterEvent &_event) {
-		static_assert(false, "GetAs(): Invalid type - type needs specialised GetAs() method.");
+		static_assert(false, "GetAs(): Invalid template - not specialised.");
 	}
 
+	/*
+		A to B conversions
+	*/
+
 	template<> inline Real GetAs<Real>(const ScatterEvent &_event) {
-		if (callback && socketType == SocketType::TYPE_SCALAR) {
+		ASSERT_CALLBACK(callback);
+		switch (socketType) {
+		case SocketType::TYPE_SCALAR:
+		{
 			Real r;
 			callback(_event, &r);
 			return r;
+		}
+		case SocketType::TYPE_COLOUR:
+		{
+			Colour c;
+			callback(_event, &c);
+			return c.r * (Real).3 + c.g * (Real).59 + c.b * (Real).11;
+		}
+		case SocketType::TYPE_VEC2:
+		{
+			Vec2 v;
+			callback(_event, &v);
+			return (v.x + v.y) * (Real).5;
+		}
+		case SocketType::TYPE_VEC3:
+		{
+			Vec3 v;
+			callback(_event, &v);
+			return (v.x + v.y + v.z) * (Real).333333333333;
+		}
+		case SocketType::TYPE_SPECTRUM:
+		{
+			Spectrum s;
+			callback(_event, &s);
+			return s.y();
+		}
+		default:
+			return 0;
 		}
 		return 0;
 	}
 
 	template<> inline Colour GetAs<Colour>(const ScatterEvent &_event) {
-		if (callback.operator bool() && socketType == SocketType::TYPE_COLOUR) {
+		ASSERT_CALLBACK(callback);
+		switch(socketType) {
+		case SocketType::TYPE_COLOUR:
+		{
 			Colour c;
 			callback(_event, &c);
 			return c;
 		}
-		return Colour(1, 0, 1);
+		case SocketType::TYPE_SCALAR:
+		{
+			Real r;
+			callback(_event, &r);
+			return Colour(r);
+		}
+		case SocketType::TYPE_SPECTRUM:
+		{
+			Spectrum s;
+			callback(_event, &s);
+			Colour c;
+			s.ToRGB(&c.r);
+			return c;
+		}
+		case SocketType::TYPE_VEC3:
+		{
+			Vec3 v;
+			callback(_event, &v);
+			return Colour(v.x, v.y, v.z);
+		}
+		case SocketType::TYPE_VEC2:
+		{
+			Vec2 v;
+			callback(_event, &v);
+			return Colour((v.x + v.y) * (Real).5);
+		}
+		default:
+			return Colour(1, 0, 1);
+			}
 	}
 
 	template<> inline Vec2 GetAs<Vec2>(const ScatterEvent &_event) {
-		if (callback.operator bool() && socketType == SocketType::TYPE_VEC2) {
+		ASSERT_CALLBACK(callback);
+		switch (socketType) {
+		case SocketType::TYPE_VEC2:
+		{
 			Vec2 v;
 			callback(_event, &v);
 			return v;
 		}
-		return Vec2(0, 0);
+		case SocketType::TYPE_VEC3:
+		{
+			Vec3 v;
+			callback(_event, &v);
+			return Vec2(v.x, v.y);
+		}
+		case SocketType::TYPE_SCALAR:
+		{
+			Real r;
+			callback(_event, &r);
+			return Vec2(r, r);
+		}
+		default:
+			return Vec2(0, 0);
+		}
 	}
 
 	template<> inline Vec3 GetAs<Vec3>(const ScatterEvent &_event) {
-		if (callback.operator bool() && socketType == SocketType::TYPE_VEC3) {
+		ASSERT_CALLBACK(callback);
+		switch (socketType) {
+		case SocketType::TYPE_VEC3:
+		{
 			Vec3 v;
 			callback(_event, &v);
 			return v;
 		}
-		return Vec3(0, 0);
+		case SocketType::TYPE_VEC2:
+		{
+			Vec2 v;
+			callback(_event, &v);
+			return Vec3(v.x, v.y, 0);
+		}
+		case SocketType::TYPE_SCALAR:
+		{
+			Real r;
+			callback(_event, &r);
+			return Vec3(r, r, r);
+		}
+		default:
+			return Vec3(0, 0, 0);
+		}
 	}
 
 	template<> inline BxDF *GetAs<BxDF *>(const ScatterEvent &_event) {
-		if (callback && socketType == SocketType::TYPE_BXDF) {
+		ASSERT_CALLBACK(callback);
+		if (socketType == SocketType::TYPE_BXDF) {
 			BxDF *v = nullptr;
 			BxDF **vRef = &v;
 			callback(_event, vRef);
 			return v;
 		}
-		return nullptr;
+		else return nullptr;
 	}
 
 	inline Spectrum GetAsSpectrum(const ScatterEvent &_event, const SpectrumType _type = SpectrumType::Reflectance) {
-		const Vec2 uv = maths::Fract(_event.hit->uvCoords);
+		ASSERT_CALLBACK(callback);
 		switch (socketType) {
 		case SocketType::TYPE_COLOUR:
 			return Spectrum::FromRGB((Real *) &GetAs<Colour>(_event), _type);
 		case SocketType::TYPE_SCALAR:
 			return Spectrum(GetAs<Real>(_event));
 		case SocketType::TYPE_SPECTRUM:
-		{
-			if (callback.operator bool() && socketType == SocketType::TYPE_SPECTRUM) {
-				Spectrum out;
-				callback(_event, &out);
-				return out;
+			{
+				Spectrum s;
+				callback(_event, &s);
+				return s;
 			}
-			return Spectrum(0);
-		}
 		default:
 			return Spectrum(0);
 		}
@@ -163,11 +257,17 @@ struct SocketRef {
 		return static_cast<bool>(socket);
 	}
 
+	template<class T> inline T GetAs(const ScatterEvent &_event) {
+		return socket->GetAs<T>(_event);
+	}
+
 	void operator=(Socket *_rhs);
 };
 
 
 bool Connect(SocketRef &_socketRef, const Socket &_socket);
+
+bool Connect(const Socket &_socket, SocketRef &_socketRef);
 
 void Disconnect(SocketRef &_socketRef);
 

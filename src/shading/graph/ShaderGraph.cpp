@@ -23,6 +23,10 @@ bool Connect(SocketRef &_socketRef, const Socket &_socket) {
 	return false;
 }
 
+bool Connect(const Socket &_socket, SocketRef &_socketRef) {
+	return Connect(_socketRef, _socket);
+}
+
 void Disconnect(SocketRef &_socketRef) {
 	_socketRef.socket = nullptr;
 }
