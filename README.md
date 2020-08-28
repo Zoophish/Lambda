@@ -24,15 +24,15 @@ A high performance physically-based renderer written in C++ as a project in my s
 
 ![Transparency in materials (leaves).](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucyinnature.png)
 
-![Denosing example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/cornell_outside.jpg)
+![Denosing example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/cornell_outside.jpg = 512x512)
 
-![Passes example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/passes.jpg)
+![Passes example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/passes.jpg = 600x800)
 
 ![Blackbody lamps and MixBSDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucy_blackbody.png)
 
-![Volumetric Scattering](https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png)
+![Volumetric Scattering](https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png = 640x350)
 
-![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png)
+![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png = 512x512)
 
 ## Third Party Dependencies
 - Embree3 (https://www.embree.org/)
