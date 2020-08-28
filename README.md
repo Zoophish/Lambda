@@ -24,15 +24,15 @@ A high performance physically-based renderer written in C++ as a project in my s
 
 ![Transparency in materials (leaves).](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucyinnature.png)
 
-![Denosing example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/cornell_outside.jpg = 512x512)
+![Denosing example](src=https://github.com/Zoophish/Lambda/blob/master/repo_resources/cornell_outside.jpg width="512" height="512")
 
-![Passes example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/passes.jpg = 600x800)
+![Passes example](src=https://github.com/Zoophish/Lambda/blob/master/repo_resources/passes.jpg width="600" height="800")
 
 ![Blackbody lamps and MixBSDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucy_blackbody.png)
 
-![Volumetric Scattering](https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png = 640x350)
+![Volumetric Scattering](src=https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png width="640" height="350")
 
-![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png = 512x512)
+![Ocean render test @400spp](src=https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png width="512" height="512")
 
 ## Third Party Dependencies
 - Embree3 (https://www.embree.org/)
