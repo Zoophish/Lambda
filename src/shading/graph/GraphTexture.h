@@ -86,6 +86,15 @@ namespace Textures {
 			Real Get3D(Vec3 _point) const override;
 	};
 
+
+
+	class BackgroundNode : public Node {
+		public:
+			BackgroundNode(Socket *_image = nullptr, Socket *_offset = nullptr);
+
+			void GetColour(const ScatterEvent &_event, void *_out) const;
+	};
+
 }
 
 SG_END

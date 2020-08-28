@@ -24,6 +24,10 @@ A high performance physically-based renderer written in C++ as a project in my s
 
 ![Transparency in materials (leaves).](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucyinnature.png)
 
+![Denosing example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/cornell_outside.jpg)
+
+![Passes example](https://github.com/Zoophish/Lambda/blob/master/repo_resources/passes.jpg)
+
 ![Blackbody lamps and MixBSDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucy_blackbody.png)
 
 ![Volumetric Scattering](https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png)

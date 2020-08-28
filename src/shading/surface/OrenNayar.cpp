@@ -26,15 +26,15 @@ Spectrum OrenNayarBRDF::f(const ScatterEvent &_event) const {
 	return albedoSpec * INV_PI * oN;
 }
 
-Spectrum OrenNayarBRDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
-	_event.wiL = Sampling::SampleCosineHemisphere(_sampler.Get2D());
-	const bool isInside = _event.woL.y < 0;
-	if (isInside) _event.wiL.y *= -1;
-	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
-	_event.wi = _event.ToWorld(_event.wiL);
-	_event.hit->point += _event.hit->normalG * (isInside ? -SURFACE_EPSILON : SURFACE_EPSILON);
-	return f(_event);
-}
+//Spectrum OrenNayarBRDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
+//	_event.wiL = Sampling::SampleCosineHemisphere(_sampler.Get2D());
+//	const bool isInside = _event.woL.y < 0;
+//	if (isInside) _event.wiL.y *= -1;
+//	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
+//	_event.wi = _event.ToWorld(_event.wiL);
+//	_event.hit->point += _event.hit->normalG * (isInside ? -SURFACE_EPSILON : SURFACE_EPSILON);
+//	return f(_event);
+//}
 
 
 

@@ -54,7 +54,7 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event) const {
 	const Real distSq = _event.hit->tFar * _event.hit->tFar;
 	Real triArea;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[_event.hit->primId], &triArea);
-	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for doubles sided
+	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for double sided
 	return triPdf * distSq / (cosTheta * triArea);
 }
 

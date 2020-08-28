@@ -218,6 +218,27 @@ namespace Textures {
 		return std::sqrt(minDist2);
 	}
 
+
+
+	BackgroundNode::BackgroundNode(Socket *_image, Socket *_offset) : Node(2, 1, "Background") {
+		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _image, "Background");
+		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_VEC2, _offset, "Offset");
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_COLOUR, &BackgroundNode::GetColour, "Colour");
+	}
+
+	void BackgroundNode::GetColour(const ScatterEvent &_event, void *_out) const {
+		const Vec3 &w = _event.wi;
+		const Vec2 offset = inputSockets[1].GetAs<Vec2>(_event);
+		const Vec2 fakeUv = {
+			(maths::SphericalPhi(w) - offset.x) * INV_PI2,
+			(maths::SphericalTheta(w) - offset.y) * INV_PI
+		};
+		const Vec2 realUv = _event.hit->uvCoords;
+		_event.hit->uvCoords = maths::Fract(fakeUv);	//Bit of a hack
+		*reinterpret_cast<Colour *>(_out) = inputSockets[0].GetAs<Colour>(_event);
+		_event.hit->uvCoords = realUv;
+	}
+
 }
 
 SG_END

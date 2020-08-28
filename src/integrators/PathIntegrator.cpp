@@ -23,7 +23,7 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 	for (int bounces = 0; bounces < maxBounces; ++bounces) {
 		if (bounces == 0 ? _scene.Intersect(r, hit) : scatterIntersect) {
 			
-			if (bounces == 0 && hit.object->material->light) L += hit.object->material->light->L(event); //Beta is always 1 here, so it is excluded from the product.
+			if (bounces == 0 && hit.object->material && hit.object->material->light) L += hit.object->material->light->L(event); //Beta is always 1 here, so it is excluded from the product.
 
 			if (hit.object->material && hit.object->material->bxdf) {
 				event.SurfaceLocalise();
@@ -38,13 +38,13 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 					f = hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
 					scatteringPDF = hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
 					if (!f.IsBlack() && scatteringPDF > 0) {
-						const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
+						const Real weight = PowerHeuristic(lightPDF, scatteringPDF);
 						Ld += Li * f * weight / lightPDF;
 					}
 				}
 				f = hit.object->material->bxdf->Sample_f(event, *sampler, scatteringPDF);
 				f *= std::abs(event.wiL.y);	//This must follow previous line to allow computation of wiL
-				
+
 				r.o = hit.point;
 				r.d = event.wi;
 				scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex (also the bxdf light sample)
@@ -52,11 +52,11 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 					if (const Light *nl = scatterIntersect ? hit.object->material->light : (Light*)_scene.envLight) {	//Check a light was hit or infinite light is present
 
 						if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
-						lightPDF = lightDistPdf * nl->PDF_Li(event);
+						lightPDF = lightDistPdf * nl->PDF_Li(event);	//Full light pdf
 						Li = Spectrum(0);
 						if (scatterIntersect) Li = nl->L(event);
 						else Li = nl->Le(r);	//Special case for infinite lights
-						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
+						const Real weight = PowerHeuristic(scatteringPDF, lightPDF);
 						if (!Li.IsBlack()) Ld += Li * f * weight / scatteringPDF;
 
 					}

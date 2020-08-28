@@ -11,7 +11,7 @@ class OrenNayarBRDF : public BxDF {
 
 		Spectrum f(const ScatterEvent &_event) const override;
 
-		Spectrum Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
+		//Spectrum Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const override;
 };
 
 

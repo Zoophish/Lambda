@@ -23,6 +23,10 @@ class Integrator {
 			const Real f = nf * fPdf, g = ng * gPdf;
 			return (f * f) / (f * f + g * g);
 		}
+
+		static inline Real PowerHeuristic(const Real _fPdf, const Real _gPdf) {
+			return (_fPdf * _fPdf) / (_fPdf * _fPdf + _gPdf * _gPdf);
+		}
 };
 
 LAMBDA_END
