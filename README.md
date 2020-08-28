@@ -30,9 +30,10 @@ A high performance physically-based renderer written in C++ as a project in my s
 
 ![Blackbody lamps and MixBSDF](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucy_blackbody.png)
 
-![Volumetric Scattering](src=https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png width="640" height="350")
+![Volumetric Scattering](https://github.com/Zoophish/Lambda/blob/master/repo_resources/volumetric_dragon.png width="640" height="350")
 
-![Ocean render test @400spp](src=https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png width="512" height="512")
+![Ocean render test @400spp](https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png width="512" height="512")
+<img src="https://github.com/Zoophish/Lambda/blob/master/repo_resources/ocean_2.png" width="512" height="512">
 
 ## Third Party Dependencies
 - Embree3 (https://www.embree.org/)
