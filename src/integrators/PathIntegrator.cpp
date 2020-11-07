@@ -26,9 +26,10 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 			if (bounces == 0 && hit.object->material && hit.object->material->light) L += hit.object->material->light->L(event); //Beta is always 1 here, so it is excluded from the product.
 
 			if (hit.object->material && hit.object->material->bxdf) {
-				event.SurfaceLocalise();
-				event.wo = -r.d;
-				Real lightDistPdf = 1;	//Probability of choosing dicrete light
+				event.wo = -r.d;	//Compute wo before SurfaceLocalise()
+				event.SurfaceLocalise();	//Calculate tangent space wo and wi
+
+				Real lightDistPdf = 1;	//Probability of choosing dicrete light (line below)
 				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
 				Spectrum Ld(0);
 				Real scatteringPDF, lightPDF;
@@ -53,11 +54,10 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 
 						if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
 						lightPDF = lightDistPdf * nl->PDF_Li(event);	//Full light pdf
-						Li = Spectrum(0);
 						if (scatterIntersect) Li = nl->L(event);
 						else Li = nl->Le(r);	//Special case for infinite lights
 						const Real weight = PowerHeuristic(scatteringPDF, lightPDF);
-						if (!Li.IsBlack()) Ld += Li * f * weight / scatteringPDF;
+						if (!Li.IsBlack() && lightPDF > 0) Ld += Li * f * weight / scatteringPDF;
 
 					}
 				}
@@ -80,7 +80,7 @@ Spectrum PathIntegrator::Li(Ray r, const Scene &_scene) const {
 			}
 		}
 		else {
-			if (bounces == 0) L += ((Light*)_scene.envLight)->Le(r); //Beta is always 1 here also.
+			if (bounces == 0 && _scene.envLight) L += ((Light*)_scene.envLight)->Le(r); //Beta is always 1 here also.
 			break;
 		}
 	}

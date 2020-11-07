@@ -21,6 +21,10 @@ class affine3 {
 			xfm = maths::identityXfm<T>;
 		}
 
+		affine3(const T *_xfm) {
+			memcpy(&xfm, _xfm, sizeof(T) * 12);
+		}
+
 		affine3(const vec3<T> &_a, const vec3<T> &_b, const vec3<T> &_c, const vec3<T> &_p = vec3<T>(0, 0, 0)) {
 			memcpy(&xfm[0], &_a, sizeof(T) * 3);
 			memcpy(&xfm[3], &_b, sizeof(T) * 3);
@@ -32,7 +36,19 @@ class affine3 {
 		inline T &operator[](const unsigned _rhs) { return xfm[_rhs]; }
 
 		inline vec3<T> operator*(const vec3<T> &_rhs) const {
+			return vec3<T>(&xfm[0]) * _rhs.x + vec3<T>(&xfm[3]) * _rhs.y + vec3<T>(&xfm[6]) * _rhs.z + vec3<T>(&xfm[9]);
+		}
+
+		inline vec3<T> TransformPoint(const vec3<T> &_rhs) const {
+			return *this * _rhs;
+		}
+
+		inline vec3<T> TransformVector(const vec3<T> &_rhs) const {
 			return vec3<T>(&xfm[0]) * _rhs.x + vec3<T>(&xfm[3]) * _rhs.y + vec3<T>(&xfm[6]) * _rhs.z;
+		}
+
+		inline vec3<T> TransformNormal(const vec3<T> &_rhs) const {
+			return (vec3<T>(&xfm[0]) * _rhs.x + vec3<T>(&xfm[3]) * _rhs.y + vec3<T>(&xfm[6]) * _rhs.z).Normalised();
 		}
 
 		inline affine3<T> operator*(const affine3<T> &_rhs) const {
@@ -52,6 +68,10 @@ class affine3 {
 			return affine3<T>(a, b, c, p);
 		}
 
+		inline bool IsIdentity() const {
+			return xfm == maths::identityXfm<T>;
+		}
+
 		static inline affine3<T> GetRotationX(const T _theta) {
 			const T sinTheta = std::sin(_theta);
 			const T cosTheta = std::sqrt(1 - sinTheta * sinTheta);
@@ -68,6 +88,6 @@ class affine3 {
 			return affine3<T>(vec3<T>(cosTheta, -sinTheta, 0), vec3<T>(sinTheta, cosTheta, 0), vec3<T>(0, 0, 1));
 		}
 
-	protected:
+	private:
 		std::array<T, 12> xfm;
 };

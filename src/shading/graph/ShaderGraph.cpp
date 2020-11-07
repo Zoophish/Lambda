@@ -6,21 +6,14 @@ LAMBDA_BEGIN
 SG_BEGIN
 
 void SocketRef::operator=(Socket *_rhs) {
-	if (_rhs->socketType == socketType)
-		socket = _rhs;
-	else
-		throw std::runtime_error("Lambda::ShaderGraph::SocketRef::operator=() - socket types do not match.");
+	socket = _rhs;
 }
 
 
 
 bool Connect(SocketRef &_socketRef, const Socket &_socket) {
-	if (_socketRef.socketType == _socket.socketType) {
-		_socketRef.socket = (Socket *)&_socket;
-		return true;
-	}
-	throw std::runtime_error("Lambda::ShaderGraph::Connect() - socket types do not match.");
-	return false;
+	_socketRef.socket = (Socket *)&_socket;
+	return true;
 }
 
 bool Connect(const Socket &_socket, SocketRef &_socketRef) {

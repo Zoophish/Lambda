@@ -9,7 +9,7 @@ Spectrum BxDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) con
 	if (_event.woL.y < 0) _event.wiL.y *= -1;
 	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
 	_event.wi = _event.ToWorld(_event.wiL);
-	_event.hit->point += _event.hit->normalG * SURFACE_EPSILON;
+	_event.hit->point += _event.hit->normalG * SURFACE_EPSILON *_event.sidedness;
 	return f(_event);
 }
 

@@ -1,25 +1,26 @@
 # Lambda
-A high performance physically-based renderer written in C++ as a project in my spare time.
+A high performance physically-based renderer written in C++.
 
 ## Features
 - Triangulated mesh geometry
-- Graph based shading system
+- Graph based shading language
 - Geometry instancing
-- Spatial and directional sampling of many lights
+- Many lights sampling
 - PBRT-style unbiased spectral rendering
-- Fresnel, specular & mix BSDFs
-- Microfacet BSDFs: Beckmann-Spizzichino, Towbridge-Reitz/GGX
-- Volumetric rendering
+- Numerous BSDF models: Lambertian, Fresnel, specular, mix
+- Microfacet BSDFs: Oren-Nayar, Beckmann-Spizzichino, Towbridge-Reitz/GGX
+- Volumes
 - Path integrator with multiple importance sampling
-- Utlilty integrators: direct lighting, normals, depth
+- Pass Rendering: direct lighting, normals, depth, albedo, arbitrary textures
 - Denoising via Intel Open Image Denoise
-- Mesh lights, infinite/environment lights, mesh portals
+- Mesh lights/portals, infinite/environment lights, spotlights, point lights
 - Pinhole, thin lens and spherical/equirectangular camera models
 - Arbitrary camera aperture shapes
 - Quasi-random sequence sampling with blue noise dithering
-- Simple 3D asset importer
-- Scanline, Hilbert and Morton texture encoding
+- Simple 3D asset importer via Assimp
+- Texture encoding optimisation
 - Multithreaded rendering
+- Embree raytracing acceleration
 - SSE support accross the program
 
 ![Transparency in materials (leaves).](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucyinnature.png)

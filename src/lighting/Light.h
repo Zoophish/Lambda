@@ -43,7 +43,7 @@ class Light {
 		}
 
 		/*
-			Power per square unit.
+			Power per unit area.
 		*/
 		virtual Real Irradiance() const = 0;
 
@@ -72,11 +72,17 @@ class Light {
 		/*
 			Special scene intersection functions for direct lighting that account for volumetric
 			beam transmittance.
-			_scene.hasVolumes must be true to account for beam transmittance, _Tr.
-
-			Returns true if there is mutual visibility between _p1 and _p2
+			- Returns true if there is mutual visibility between _p1 and _p2
+			- _scene.hasVolumes must be true to account for beam transmittance, _Tr.
+			- Conveniently stores the new wi direction in _event to prevent duplicate computation
 		*/
 		static bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEvent &_event, const Scene &_scene, Sampler &_sampler, Spectrum *_Tr = nullptr);
+
+		/*
+			See MutualVisibility().
+			Version of MutualVisibility() that accounts for correct transmittance between points that aren't intersectable.
+		*/
+		static bool PointMutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEvent &_event, const Scene &_scene, Sampler &_sampler, Spectrum *_Tr = nullptr);
 
 		/*
 			Returns true if ray, _r, escapes the scene.

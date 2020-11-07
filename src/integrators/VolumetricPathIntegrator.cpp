@@ -43,8 +43,9 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 
 			if (!event.mediumInteraction) {
 				if (hit.object->material && hit.object->material->bxdf) {
-					event.SurfaceLocalise();
-					event.wo = -r.d;
+					event.wo = -r.d;	//Compute wo before SurfaceLocalise()
+					event.SurfaceLocalise();	//Calculate tangent space wo and wi
+
 					Real lightDistPdf = 1;
 					const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
 					Spectrum Ld(0);
@@ -76,7 +77,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 							if (scatterIntersect) Li = nl->L(event);
 							else Li = nl->Le(r);	//Special case for infinite lights
 							const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-							if (!Li.IsBlack()) Ld += Li * f * weight / scatteringPDF;
+							if (!Li.IsBlack() && lightPDF > 0) Ld += Li * f * weight / scatteringPDF;
 						}
 					}
 					else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
@@ -127,7 +128,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 						if (scatterIntersect) Li = nl->L(event);
 						else Li = nl->Le(r);	//Special case for infinite lights
 						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-						if (!Li.IsBlack()) Ld += Li * Tr * weight / scatteringPDF;
+						if (!Li.IsBlack() && lightPDF > 0) Ld += Li * Tr * weight / scatteringPDF;
 					}
 				}
  				else break;

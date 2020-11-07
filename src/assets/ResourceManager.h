@@ -45,7 +45,7 @@ struct ResourceManager {
 		ResourcePool<Object> objectPool;
 		ResourcePool<Texture> texturePool;
 		ResourcePool<Material> materialPool;
-		ResourcePool<SceneNode> graphPool;
+		//ResourcePool<SceneNode> graphPool;
 		ResourcePool<InstanceProxy> proxyPool;
 };
 

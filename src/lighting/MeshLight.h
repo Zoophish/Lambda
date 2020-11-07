@@ -43,7 +43,7 @@ class MeshLight : public Light {
 };
 
 /*
-	Required for primitive sampling of mesh lights.
+	Required for primitive tree sampling of mesh lights.
 */
 class TriangleLight : public Light {
 	public:

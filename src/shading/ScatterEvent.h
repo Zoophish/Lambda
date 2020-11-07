@@ -10,7 +10,7 @@
 
 LAMBDA_BEGIN
 
-constexpr Real SURFACE_EPSILON = 1e-6;
+constexpr Real SURFACE_EPSILON = 1e-5;
 
 class BxDF;
 class Scene;
@@ -19,22 +19,24 @@ class Medium;
 struct ScatterEvent {
 	Vec3 wo, wi, woL, wiL;
 	Real eta = 1.001;
+	int sidedness = 1;	//1 = same side as normal, else = -1
 	bool mediumInteraction = false;
 	RayHit *hit;
 	Medium *medium = nullptr;
 	const Scene *scene;
 
 	inline Vec3 ToLocal(const Vec3 &_v) const {
-		return maths::ToSpace(_v, hit->tangent, hit->normalS, hit->bitangent);
+		return maths::WorldToLocal(_v, hit->tangent, hit->normalS, hit->bitangent);
 	}
 	
 	inline Vec3 ToWorld(const Vec3 &_v) const {
-		if(hit) return maths::FromSpace(_v, hit->tangent, hit->normalS, hit->bitangent);
+		if(hit) return maths::LocalToWorld(_v, hit->tangent, hit->normalS, hit->bitangent);
 	}
 
 	inline void SurfaceLocalise() {
 		woL = ToLocal(wo);
 		wiL = ToLocal(wi);
+		sidedness = (woL.y > 0) ? 1 : -1;
 	}
 };
 

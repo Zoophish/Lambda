@@ -29,7 +29,7 @@ It briefly runs over:
 #include <core/Instance.h>
 #include <lighting/MeshLight.h>
 #include <lighting/EnvironmentLight.h>
-#include <lighting/Portal.h>
+#include <lighting/PointLight.h>
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
@@ -42,6 +42,8 @@ It briefly runs over:
 using namespace lambda;
 
 int main() {
+	//Spectrum::Init();
+
 	//Owns all 3D asset data
 	ResourceManager resources;
 
@@ -54,7 +56,7 @@ int main() {
 	Texture white(1, 1, Colour(1, 1, 1));
 	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid;
-	grid.LoadImageFile("demo_content/uv_grid.png");
+	grid.LoadImageFile("demo_content/box_tex.png");
 	grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
 
 	//Use a memory arena for the shader graph (optional)
@@ -112,7 +114,6 @@ int main() {
 
 	//Example of various BxDF nodes...
 	sg::OrenNayarBRDFNode *diffuse = graphArena.New<sg::OrenNayarBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[0]);
-	sg::OrenNayarBRDFNode *diffuse2 = graphArena.New<sg::OrenNayarBRDFNode>(&whiteNode->outputSockets[0], &sigmaNode->outputSockets[0]);
 	sg::FresnelBSDFNode *fresBSDF = graphArena.New<sg::FresnelBSDFNode>(&whiteNode->outputSockets[0], &iorNode->outputSockets[0]);
 	sg::SpecularBRDFNode *specBRDF = graphArena.New<sg::SpecularBRDFNode>(&whiteNode->outputSockets[0], &fres);
 
@@ -121,8 +122,8 @@ int main() {
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresBSDF->outputSockets[0], &diffuse->outputSockets[0], &valueNoise->outputSockets[0]);
 
 	//Setup a volumetric medium
-	const Spectrum sigmaA = Spectrum(20);
-	const Spectrum sigmaS = Spectrum(35);
+	const Spectrum sigmaA = Spectrum(10);
+	const Spectrum sigmaS = Spectrum(15);
 	std::unique_ptr<Medium> med(new HomogeneousMedium(sigmaA, sigmaS));
 	std::unique_ptr<HenyeyGreenstein> phase(new HenyeyGreenstein);
 	phase->g = 0;
@@ -133,9 +134,10 @@ int main() {
 	sg::ImageTextureInput *box_tex_node = graphArena.New<sg::ImageTextureInput>(&boxTex);
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &roughnessNode->outputSockets[0], &d, &fres);
 	sg::LambertianBRDFNode *box_diffuse = graphArena.New<sg::LambertianBRDFNode>(&box_tex_node->outputSockets[0]);// &sigmaNode->outputSockets[0]);
+	sg::OrenNayarBRDFNode *box_diffuse2 = graphArena.New<sg::OrenNayarBRDFNode>(&box_tex_node->outputSockets[0], &sigmaNode->outputSockets[0]);
 
 	Material diffuse_material;
-	diffuse_material.bxdf = box_diffuse;
+	diffuse_material.bxdf = diffuse;
 	diffuse_material.BuildSocketMap();
 
 	Material glass_material;
@@ -144,43 +146,63 @@ int main() {
 	glass_material.BuildSocketMap();
 
 	Material diffuse_material2;
-	diffuse_material2.bxdf = diffuse2;
+	diffuse_material2.bxdf = box_diffuse2;
 	diffuse_material2.BuildSocketMap();
+
+	Material volume_scatter_material;
+	volume_scatter_material.mediaBoundary.interior = med.get();
+
 
 	//Import an asset using an AssetImporter object
 	AssetImporter ai;
-	ai.Import("../content/box_empty.obj");
+	ai.Import("../content/lucy.obj");
 
 	//Push the mesh objects to the resource manager...
 	ai.PushToResourceManager(&resources, (ImportOptions)(IMP_MESHES));
 
 	//...and add all the meshes from that asset
 	for (auto &it : resources.objectPool.pool) {
-		it.second->material = &diffuse_material;
-		dynamic_cast<TriangleMesh *>(it.second)->smoothNormals = true;
+		//it.second->material = MaterialImport::GetMaterial(ai.scene, &resources, it.first);
+		it.second->material = &volume_scatter_material;
 		scene.AddObject(it.second);
 	}
 
+	//InstanceProxy proxy(resources.objectPool.pool["lucy_1"]);
+	//proxy.Commit(scene.device);
+	//Instance lucyInstance(&proxy);
+	//lucyInstance.material = &diffuse_material;
+	//lucyInstance.SetEulerAngles({0,0,0});
+	//lucyInstance.Commit(scene.device);
+	//scene.AddObject(&lucyInstance);
+
 	//Let the integrators know if there are volumetrics in the scene
-	scene.hasVolumes = false;
+	scene.hasVolumes = true;
 
 	//Import another asset file
-	ai.Import("../content/lucy.obj");
+	ai.Import("../content/box_empty.obj");
 
 	//You can manually make a new mesh object that isn't owned...
 	TriangleMesh plane;
 	//...and then manually load vertex data into from Assimp scene class
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
 	plane.material = &diffuse_material2;
+	plane.smoothNormals = false;
 	
 	//Add it to the scene
 	scene.AddObject(&plane);
 
 	//Setup a mesh light in a similar way
-	ai.Import("../content/box_light.obj");
+	ai.Import("../content/box_light_2.obj");
 	TriangleMesh lightMesh;
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &lightMesh);
 	lightMesh.smoothNormals = false;
+
+	ai.Import("../content/box_bounds.obj");
+	TriangleMesh boundsMesh;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &boundsMesh);
+	boundsMesh.material = &volume_scatter_material;
+
+	//scene.AddObject(&boundsMesh);
 
 	//Release the asset importer to save some memory
 	ai.Release();
@@ -192,7 +214,9 @@ int main() {
 
 	//Construct a light from the light mesh.
 	//The light will automatically be assigned the material of the mesh object.
-	MeshLight light(&lightMesh);
+	//MeshLight light(&lightMesh);
+	PointLight light;
+	light.position = { .6,1.5,0 };
 
 	//Setup the light's emission using a shader graph...
 	sg::ScalarInput *temp1 = graphArena.New<sg::ScalarInput>(3500);
@@ -201,9 +225,10 @@ int main() {
 	//Set the lights emission socket to the blackbody output socket
 	light.emission = &blckInpt1->outputSockets[0];
 	//Give the light an intensity (will be shader graph compatible in future)
-	light.intensity = 400;
+	light.intensity = 2;
 
 	//Add it to the scene - the associated light object will be added to scene.lights automatically
+	scene.AddLight(&light);
 	//scene.AddObject(&lightMesh);
 
 	//Make environment lighting
@@ -212,14 +237,14 @@ int main() {
 	envMap.LoadImageFile("demo_content/autumn_park_2k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = .8;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*-.5, 0);
 
 	//Add it to scene's lights
 	scene.AddLight(&ibl);
 
 	//Setup a light sampler
-	//ManyLightSampler lightSampler(scene);
+	//ManyLightSampler lightSampler(scene, .1, false);
 	PowerLightSampler lightSampler(scene);
 	scene.lightSampler = &lightSampler;
 
@@ -259,7 +284,7 @@ int main() {
 	RenderDirective renderDirective;
 	renderDirective.scene = &scene;
 	renderDirective.camera = &cam;
-	renderDirective.integrator = &pathIntegrator;
+	renderDirective.integrator = &volPathIntegrator;
 	renderDirective.film = &film;
 	renderDirective.sampler = &sampler;
 	renderDirective.sampleShifter = &sampleShifter;
@@ -280,15 +305,15 @@ int main() {
 	rdr.Render();
 	film.ToRGBTexture(&colourPass);
 	film.Clear();
-	renderDirective.integrator = &albedoRdr;
-	rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
-	rdr.Render();
-	film.ToRGBTexture(&albedoPass);
-	film.Clear();
-	renderDirective.integrator = &normalRdr;
-	rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
-	rdr.Render();
-	film.ToRGBTexture(&normalPass);
+	//renderDirective.integrator = &albedoRdr;
+	//rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
+	//rdr.Render();
+	//film.ToRGBTexture(&albedoPass);
+	//film.Clear();
+	//renderDirective.integrator = &normalRdr;
+	//rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
+	//rdr.Render();
+	//film.ToRGBTexture(&normalPass);
 	auto end = std::chrono::system_clock::now();
 	//Display render time
 	std::chrono::duration<double> elapsed_seconds = end - start;
@@ -297,16 +322,16 @@ int main() {
 	//Make an RGB texture tha can be saved / displayed as an image
 	//Texture tex(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
-	//Denoise the render with OIDN
-	PostProcessing::Denoise denoiser;
-	denoiser.SetData(&colourPass, &albedoPass, &normalPass);
-	//Put the denoised image on colourPass
-	denoiser.Process(&colourPass);
+	////Denoise the render with OIDN
+	//PostProcessing::Denoise denoiser;
+	//denoiser.SetData(&colourPass, &albedoPass, &normalPass);
+	////Put the denoised image on colourPass
+	//denoiser.Process(&colourPass);
 
 	//Save to file - gamma=true, alpha=false
 	//Different image formats can be used by changing the postfix
 	colourPass.SaveToImageFile("demo_render.png", true, false);
-	normalPass.SaveToImageFile("normals.png", false, false);
+	//normalPass.SaveToImageFile("normals.png", false, false);
 
 	system("pause");
 	return 0;

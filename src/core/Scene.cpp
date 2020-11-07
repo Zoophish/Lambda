@@ -52,10 +52,27 @@ bool Scene::IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, S
 			return true;
 		}
 		_med = _hit.object->material->mediaBoundary.GetMedium(_r.d, _hit.normalG);
-		_r.o = _hit.point + _hit.normalG *(maths::Dot(_hit.normalG, _r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
+		_r.o = _hit.point + _hit.normalG * (maths::Dot(_hit.normalG, _r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
 	}
 	//if (_med) _Tr = 0;
-	_hit.tFar = tFar;
+	return false;
+}
+
+bool Scene::IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr, const Real _maxT) const {
+	Real tFar = 0;
+	while (Intersect(_r, _hit)) {
+		tFar += _hit.tFar;
+		bool terminate = tFar > _maxT;
+		if (terminate) tFar -= _maxT - tFar;	//Important for point lights as no intersection will stop the ray
+		if ((bool)_med && _Tr) *_Tr *= _med->Tr(_r, _hit.tFar, _sampler);
+		if (terminate || _hit.object->material->bxdf || _hit.object->material->light) {
+			_hit.tFar = tFar;
+			return true;
+		}
+		_med = _hit.object->material->mediaBoundary.GetMedium(_r.d, _hit.normalG);
+		_r.o = _hit.point + _hit.normalG * (maths::Dot(_hit.normalG, _r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
+	}
+	//if (_med) _Tr = 0;
 	return false;
 }
 

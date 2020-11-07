@@ -12,14 +12,14 @@ MeshLight::MeshLight(TriangleMesh *_mesh) {
 	Speed up intersections when no volumes are present.
 */
 static inline bool Intersect(const Ray &_ray, RayHit &_hit, const Scene &_scene, Sampler &_sampler, Medium *_med) {
-	return _scene.hasVolumes ? _scene.IntersectTr(_ray, _hit, _sampler, _med) : _scene.Intersect(_ray, _hit);
+	return _scene.hasVolumes ? _scene.IntersectTr(_ray, _hit, _sampler, _med, nullptr) : _scene.Intersect(_ray, _hit);
 }
 
 Spectrum MeshLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 	const Vec2 u = _sampler->Get2D();
 	const Vec3 pL = mesh->SamplePoint(mesh->triangles[i], u);
-	const Vec3 pS = _event.hit->point + _event.hit->normalG * 1e-5;
+	const Vec3 pS = _event.hit->point + _event.hit->normalG * SURFACE_EPSILON * _event.sidedness;
 	Spectrum Tr(1);
 	if (MutualVisibility(pS, pL, _event, *_event.scene, *_sampler, &Tr)) {
 		Real triArea;
@@ -29,7 +29,7 @@ Spectrum MeshLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pd
 		if (denom > 0) {
 			_event.wiL = _event.ToLocal(_event.wi);
 			_pdf *= maths::DistSq(_event.hit->point, pL) / denom;
-			return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity * INV_PI;
+			return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * Tr * intensity * INV_PI;
 		}
 	}
 	_pdf = 0;
@@ -38,7 +38,7 @@ Spectrum MeshLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pd
 
 Real MeshLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	RayHit hit;
-	const Ray r(_event.hit->point + _event.hit->normalG * 1e-5, _event.wi);
+	const Ray r(_event.hit->point + _event.hit->normalG * SURFACE_EPSILON * _event.sidedness, _event.wi);
 	if (!Intersect(r, hit, *_event.scene, _sampler, _event.medium)) return 0;
 	if (hit.object->material->light != this) return 0;
 	Real triArea;
@@ -50,6 +50,7 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 }
 
 Real MeshLight::PDF_Li(const ScatterEvent &_event) const {
+	if (maths::Dot(_event.wi, _event.hit->normalG) > 0) return 0;	//One sided, _event info is incomplete at this stage so dot must be used
 	const Real triPdf = triDistribution.PDF(_event.hit->primId);
 	const Real distSq = _event.hit->tFar * _event.hit->tFar;
 	Real triArea;
@@ -100,7 +101,7 @@ TriangleLight::TriangleLight(MeshLight *_meshLight, const size_t _i) {
 
 Spectrum TriangleLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const Vec3 pL = meshLight->mesh->SamplePoint(meshLight->mesh->triangles[triIndex], _sampler->Get2D());
-	const Vec3 pS = _event.hit->point + _event.hit->normalG * 1e-5;
+	const Vec3 pS = _event.hit->point + _event.hit->normalG * SURFACE_EPSILON * _event.sidedness;
 	Spectrum Tr(1);
 	if (MutualVisibility(pS, pL, _event, *_event.scene, *_sampler, &Tr)) {
 		Real triArea;
@@ -122,6 +123,7 @@ Real TriangleLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const 
 }
 
 Real TriangleLight::PDF_Li(const ScatterEvent &_event) const {
+	if (maths::Dot(_event.wi, _event.hit->normalG) > 0) return 0;	//One sided, _event info is incomplete at this stage so dot must be used
 	const Real distSq = _event.hit->tFar * _event.hit->tFar;
 	Real triArea;
 	meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[_event.hit->primId], &triArea);

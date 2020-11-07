@@ -261,6 +261,10 @@ struct SocketRef {
 		return socket->GetAs<T>(_event);
 	}
 
+	inline Spectrum GetAsSpectrum(const ScatterEvent &_event) {
+		return socket->GetAsSpectrum(_event);
+	}
+
 	void operator=(Socket *_rhs);
 };
 

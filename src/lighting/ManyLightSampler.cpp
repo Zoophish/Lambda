@@ -5,21 +5,23 @@
 
 LAMBDA_BEGIN
 
-ManyLightSampler::ManyLightSampler(const Real _threshold) : threshold(_threshold), root(nullptr) {}
+ManyLightSampler::ManyLightSampler(const Real _splitThreshold, const bool _useSplits) :
+	splitThreshold(_splitThreshold), useSplits(_useSplits), root(nullptr) {}
 
-ManyLightSampler::ManyLightSampler(const Scene &_scene, const Real _threshold) : LightSampler(&_scene) {
-	threshold = _threshold;
+ManyLightSampler::ManyLightSampler(const Scene &_scene, const Real _splitThreshold, const bool _useSplits) : LightSampler(&_scene) {
+	splitThreshold = _splitThreshold;
+	useSplits = _useSplits;
 }
 
 Light *ManyLightSampler::Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const {
 	Real epsilon = _sampler.Get1D();
 	const Real pTree = treePower / (infPower + treePower);
-	if (epsilon < pTree) {
+	if (epsilon < pTree) {	//Sample tree
 		epsilon /= pTree;
 		*_pdf *= pTree;
 		return PickLight(_event, _sampler.Get1D(), root.get(), _pdf);
 	}
-	*_pdf *= 1 - pTree;
+	*_pdf *= 1 - pTree;	//Sample infinite light (replace *= with =) ?
 	return infiniteLight;
 }
 
@@ -40,8 +42,8 @@ void ManyLightSampler::Commit() {
 	std::cout << std::endl << "Done.";
 }
 
-ManyLightSampler::OrientationCone ManyLightSampler::OrientationCone::MakeCone(const Vec3 &_axis, const Real _thetaO, const Real thetaE) {
-	return { _axis, 0, PI / (Real)2 };
+ManyLightSampler::OrientationCone ManyLightSampler::OrientationCone::MakeCone(const Vec3 &_axis, const Real _thetaO, const Real _thetaE) {
+	return { _axis, _thetaO, _thetaE };
 }
 
 ManyLightSampler::OrientationCone ManyLightSampler::OrientationCone::Union(const OrientationCone &_a, const OrientationCone &_b) {
@@ -88,23 +90,35 @@ Real ManyLightSampler::SAOH(LightNode &_P, const Bucket &_R, const Bucket &_L, c
 }
 
 Real ManyLightSampler::PowerVariance(LightNode *_node) const {
-	std::unique_ptr<Real[]> powers(new Real[_node->numLights]);
+	return PowerVariance(_node->firstLightIndex, _node->numLights);
+}
+
+Real ManyLightSampler::PowerVariance(const unsigned _firstLightIndex, const unsigned _numLights) const {
+	std::unique_ptr<Real[]> powers(new Real[_numLights]);
 	Real mean = 0;
-	for (unsigned i = 0; i < _node->numLights; ++i) {
-		powers[i] = lights[i + _node->firstLightIndex]->Power();
+	for (unsigned i = 0; i < _numLights; ++i) {
+		powers[i] = lights[i + _firstLightIndex]->Power();
 		mean += powers[i];
 	}
-	mean /= (Real)_node->numLights;
+	mean /= (Real)_numLights;
 	Real sum = 0;
-	for (unsigned i = 0; i < _node->numLights; ++i) {
+	for (unsigned i = 0; i < _numLights; ++i) {
 		const Real term = powers[i] - mean;
 		sum += term * term;
 	}
-	return sum / (Real)(_node->numLights - 1);
+	return sum / (Real)(_numLights - 1);
 }
 
-Real ManyLightSampler::GeometricVariance(LightNode *_node) const {
-	return 0;
+Real ManyLightSampler::GeometricVariance(LightNode *_node, const Vec3 &_point, Real *_mean) const {
+	const Real radius = std::sqrt(_node->bounds.DiagonalLength() * (Real).5);
+	const Real dist = (_node->bounds.Center() - _point).Magnitude();
+	const Real a = dist - radius;
+	const Real b = dist + radius;
+	*_mean = (Real)1 / (a * b);
+	const Real meanSquared = *_mean * *_mean;
+	const Real a3 = a * a * a;
+	const Real b3 = b * b * b;
+	return (b3 - a3) / ((Real)3 * (b - a) * a3 * b3) - meanSquared;
 }
 
 void ManyLightSampler::InitLeaf(LightNode *_node) {
@@ -212,7 +226,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				leftBucket.bounds,
 				leftBucket.cone,
 				leftBucket.totalPower,
-				0	//Variance (to do)
+				PowerVariance(_node->firstLightIndex, leftNumLights)
 			};
 			_node->children[1] = new LightNode{	//Right
 				{nullptr, nullptr},
@@ -222,7 +236,7 @@ void ManyLightSampler::RecursiveBuild(LightNode *_node) {
 				rightBucket.bounds,
 				rightBucket.cone,
 				rightBucket.totalPower,
-				0	//Variance (to do)
+				PowerVariance(pivot, rightNumLights)
 			};
 			RecursiveBuild(_node->children[0]);
 			RecursiveBuild(_node->children[1]);
@@ -247,13 +261,13 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 		else ++l;
 	}
 
-	//Filter out mesh lights and convert to triangle lights
+	//Filter out mesh lights and represent as individual triangle lights
 	l = lightList.begin();
 	while (l != lightList.end()) {
 		MeshLight *meshLight = dynamic_cast<MeshLight *>(*l);
 		if (meshLight) {
 			const TriangleMesh *mesh = &meshLight->GetMesh();
-			//triangleLights.reserve(triangleLights.size() + mesh->trianglesSize);
+			triangleLights.reserve(triangleLights.size() + mesh->trianglesSize);
 			for (size_t i = 0; i < mesh->trianglesSize; ++i) {
 				triangleLights.insert({ { meshLight, i }, TriangleLight(meshLight, i) });
 			}
@@ -276,8 +290,8 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 		root->firstLightIndex = 0;
 		root->bounds = lights[0]->GetBounds();
 		root->totalPower = 0;
-		root->clusterVariance = 0;
-		root->orientationCone = OrientationCone::MakeCone(lights[0]->GetDirection());
+		root->powerVariance = 0;
+		root->orientationCone = OrientationCone::MakeCone(lights[0]->GetDirection());	//TO SELF: Will need to account for thetaE in future
 		root->children[0] = root->children[1] = nullptr;
 		for (unsigned i = 0; i < root->numLights; ++i) {
 			root->bounds = maths::Union(root->bounds, lights[i]->GetBounds());
@@ -287,13 +301,20 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 	}
 }
 
-Real ManyLightSampler::ImportanceMeasure(const ScatterEvent &_event, LightNode *_node) {	//Optimise
+Real ManyLightSampler::ImportanceMeasure(const ScatterEvent &_event, LightNode *_node) const {	//TO SELF: Optimise
 	Vec3 delta = _node->bounds.Center() - _event.hit->point;
-	const Real d2 = maths::Dot(delta, delta);
-	const Real invD = (Real)1 / std::sqrt(d2);
+	const Real clusterDiameter = _node->bounds.DiagonalLength();
+	Real d2 = maths::Dot(delta, delta);
+	Real d = std::sqrt(d2);
+	if (!useSplits) {	//Clamp distance to half the cluster radius to prevent inaccurate importance values when centroid is very close
+		const Real halfRadius = clusterDiameter * (Real).25;
+		d = std::max(d, halfRadius);
+		d2 = d * d;
+	}
+	const Real invD = (Real)1 / d;
 	delta *= invD;
 	const Real theta = std::acos(maths::Dot(delta, _node->orientationCone.axis));
-	const Real thetaU = std::atan((_node->bounds.DiagonalLength() * (Real).5) * invD);
+	const Real thetaU = std::atan((clusterDiameter * (Real).5) * invD);
 	const Real thetaDash = std::max(theta - _node->orientationCone.thetaO - thetaU, (Real)0);
 	if (thetaDash < _node->orientationCone.thetaE) {
 		const Real E = _node->totalPower;
@@ -301,6 +322,33 @@ Real ManyLightSampler::ImportanceMeasure(const ScatterEvent &_event, LightNode *
 		return (std::cos(std::max(thetaI - thetaU, (Real)0)) * E) / d2 * std::cos(thetaDash);
 	}
 	else return 0;
+}
+
+bool ManyLightSampler::Split(const ScatterEvent &_event, LightNode *_node) const {
+	const Real &powerVariance = _node->powerVariance;
+	Real geometricMean;
+	const Real geometricVariance = GeometricVariance(_node, _event.hit->point, &geometricMean);
+	const Real geometricMean2 = geometricMean * geometricMean;
+	const Real powerMean = _node->totalPower / (Real)_node->numLights;
+	const Real powerMean2 = powerMean * powerMean;
+	const Real numLights2 = _node->numLights * _node->numLights;
+	const Real clusterVariance = (geometricVariance * powerVariance + powerVariance * geometricMean2 + powerMean2 * geometricVariance) * numLights2;
+	const Real normalisedVariance = std::sqrt(std::sqrt(	(Real)1 / ((Real)1 + std::sqrt(clusterVariance))	));	//Threshold can now be between [0, 1]
+	if (normalisedVariance < splitThreshold) return true;
+	else return false;
+}
+
+Light *ManyLightSampler::GetLights(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const {
+	//if (_node->IsLeaf()) {
+	//	Real lpdf = 1;
+	//	const unsigned i = leafDistributions.at(_node->firstLightIndex).SampleDiscrete(_epsilon, &lpdf);	//Sample light distribution of cluster
+	//	*_pdf *= lpdf;
+	//	return lights[_node->firstLightIndex + i];
+	//}
+		if (Split(_event, _node)) {
+
+		}
+	return nullptr;
 }
 
 Light *ManyLightSampler::PickLight(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const {

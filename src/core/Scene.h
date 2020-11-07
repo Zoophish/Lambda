@@ -57,7 +57,12 @@ class Scene {
 		/*
 			Queries _ray against scene geometry, ignoring pure volumes and returning beam transmittance to _Tr.
 		*/
-		bool IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr = nullptr) const;
+		bool IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr) const;
+
+		/*
+			Version of IntersectTr that will not trace past _maxT (esssential for correct transmittance towards point lights etc).
+		*/
+		bool IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, Spectrum *_Tr, const Real _maxT) const;
 
 		/*
 			Returns true if points _p1 and _p2 are mutually visible against scene geometry.
@@ -100,14 +105,6 @@ class Scene {
 			rtcGetSceneBounds(scene, &b);
 			return Bounds(Vec3(b.lower_x, b.lower_y, b.lower_z), Vec3(b.upper_x, b.upper_y, b.upper_z));
 		}
-};
-
-struct SceneNode {
-	std::string name;
-	SceneNode *parent = nullptr;
-	Affine3 xfm;
-	std::vector<Object*> objects;
-	std::vector<SceneNode> children;
 };
 
 LAMBDA_END

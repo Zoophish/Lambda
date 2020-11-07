@@ -36,9 +36,32 @@ class Transformable {
 			_child->parent = this;
 		}
 
-		//Get world-space affine transformation matrix.
+		/*
+			Get world-space affine transformation matrix
+		*/
 		inline Affine3 GetAffine() const {
 			return parent ? parent->xfm * this->xfm : xfm;
+		}
+
+		/*
+			Transforms _point by this transform
+		*/
+		inline void TransformPoint(Vec3 *_point) const {
+			*_point = xfm.TransformPoint(*_point);
+		}
+
+		/*
+			Transforms _vec by this transform, disregarding position
+		*/
+		inline void TransformVector(Vec3 *_vec) const {
+			*_vec = xfm.TransformVector(*_vec);
+		}
+
+		/*
+			Transforms _norm by this transform, disregarding position and scale
+		*/
+		inline void TransformNormal(Vec3 *_norm) const {
+			*_norm = xfm.TransformNormal(*_norm);
 		}
 
 	private:

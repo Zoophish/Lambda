@@ -13,7 +13,7 @@ MeshPortal::MeshPortal(EnvironmentLight *_parentLight, TriangleMesh *_mesh) {
 	Speed up intersections when no volumes are present.
 */
 static inline bool Intersect(const Ray &_ray, RayHit &_hit, const Scene &_scene, Sampler &_sampler, Medium *_med) {
-	return _scene.hasVolumes ? _scene.IntersectTr(_ray, _hit, _sampler, _med) : _scene.Intersect(_ray, _hit);
+	return _scene.hasVolumes ? _scene.IntersectTr(_ray, _hit, _sampler, _med, nullptr) : _scene.Intersect(_ray, _hit);
 }
 
 Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {

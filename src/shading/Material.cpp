@@ -14,7 +14,7 @@ void Material::BuildSocketMap() {
 			}
 		}
 	}
-	else std::cout << std::endl << "Could not build catalogue as BxDF is not a Node.";
+	else std::cout << std::endl << "Could not build socket map as BxDF is not a Node.";
 }
 
 ShaderGraph::Socket *Material::GetSocket(const std::string &_key) const {

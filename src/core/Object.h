@@ -15,9 +15,6 @@ class BxDF;
 class Object : public Transformable {
 	public:
 		RTCGeometry geometry;
-		//BxDF *bxdf = nullptr;
-		//Light *light = nullptr;
-		//MediaBoundary *mediaBoundary;
 		Material *material;
 		
 		Object() {}
@@ -29,10 +26,11 @@ class Object : public Transformable {
 		*/
 		inline void Hit(const RTCRayHit &_rtcHit, RayHit &_hit) const {
 			_hit.tFar = _rtcHit.ray.tfar;
+			//_hit.point = *reinterpret_cast<const Vec3*>(&_rtcHit.ray.org_x) + *reinterpret_cast<const Vec3*>(&_rtcHit.ray.dir_x) * _rtcHit.ray.tfar;
 			_hit.point.x = _rtcHit.ray.org_x + _rtcHit.ray.dir_x * _rtcHit.ray.tfar;
 			_hit.point.y = _rtcHit.ray.org_y + _rtcHit.ray.dir_y * _rtcHit.ray.tfar;
 			_hit.point.z = _rtcHit.ray.org_z + _rtcHit.ray.dir_z * _rtcHit.ray.tfar;
-			_hit.normalG = Vec3(_rtcHit.hit.Ng_x, _rtcHit.hit.Ng_y, _rtcHit.hit.Ng_z).Normalised();
+			_hit.normalG = Vec3(&_rtcHit.hit.Ng_x).Normalised();	//memcpy constructor of Vec3 faster
 			ProcessHit(_rtcHit, _hit);
 		}
 

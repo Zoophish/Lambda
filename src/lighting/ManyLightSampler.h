@@ -18,145 +18,168 @@ class TriangleLight;
 
 class ManyLightSampler : public LightSampler {
 	public:
-	Real threshold;
+		Real splitThreshold;
+		bool useSplits;
 
-	ManyLightSampler(const Real _threshold = 0.1);
+		ManyLightSampler(const Real _splitThreshold = 0.1, const bool _useSplits = true);
 
-	ManyLightSampler(const Scene &_scene, const Real _threshold = 0.1);
-
-	/*
-		Stochastically samples a good light to sample from shading event, _event.
-	*/
-	Light *Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const override;
-
-	/*
-		Probability of choosing _light via traversal.
-	*/
-	Real Pdf(const ScatterEvent &_event, const Light *_light) const override;
-
-	/*
-		Builds the light tree.
-	*/
-	void Commit() override;
-
-	private:
-	/*
-		thetaO bounds normals of lights; thetaE bounds emission profiles of lights.
-		Most light's will have an emission profile of PI/2 (180° cone) with the exception of spotlights & similar.
-		I mainly included thetaE to future-proof the sampler with emission profiles & spotlights etc.
-	*/
-	struct OrientationCone {
-		Vec3 axis = { 0,1,0 };	//Cone axis
-		Real thetaO = 0, thetaE = 0;
-
-		static OrientationCone MakeCone(const Vec3 &_axis, const Real _thetaO = 0, const Real thetaE = PI / 2.);
+		ManyLightSampler(const Scene &_scene, const Real _splitThreshold = 0.1, const bool _useSplits = true);
 
 		/*
-			Returns the union of cones _a and _b.
+			Stochastically samples a light that is suited to the shading event via a SAOH tree.
 		*/
-		static OrientationCone Union(const OrientationCone &_a, const OrientationCone &_b);
-	};
+		Light *Sample(const ScatterEvent &_event, Sampler &_sampler, Real *_pdf) const override;
 
-	struct LightNode {
-		LightNode *children[2];	//If both nullptr, it is a leaf
-		LightNode *parent;
-		unsigned firstLightIndex, numLights;
-		Bounds bounds;	//'each level of the hierarchy stores spatial and orientation bounds, as well as the energy total for all lights contained below.'
-		OrientationCone orientationCone;
-		Real totalPower, clusterVariance;	//Total power in cluster and variance of cluster
+		/*
+			Probability of choosing _light via traversal.
+		*/
+		Real Pdf(const ScatterEvent &_event, const Light *_light) const override;
 
-		~LightNode();
+		/*
+			Builds the light tree.
+		*/
+		void Commit() override;
 
-		inline bool IsLeaf() const {
-			return !children[0] && !children[1];
-		}
-	};
+	private:
+		/*
+			thetaO bounds the normals of lights; thetaE bounds the emission profiles of lights.
+			Most lights will have an emission cone of PI/2 (180° cone) with the exception of spotlights, etc.
+		*/
+		struct OrientationCone {
+			Vec3 axis = { 0,1,0 };	//Cone axis
+			Real thetaO = 0, thetaE = 0;
 
-	/*
-		Lightweight representation of a node for tree construction (PBRT-style).
-	*/
-	struct Bucket {
-		Real totalPower = 0;
-		Bounds bounds;
-		OrientationCone cone;
-	};
+			/*
+				More explicit builder than bracket initilizer
+			*/
+			static OrientationCone MakeCone(const Vec3 &_axis, const Real _thetaO = 0, const Real _thetaE = PI / (Real)2);
 
-	struct pair_hash {	//Silly stuff for being able to hash the pair
-		template<class A, class B>
-		inline size_t operator() (const std::pair<A, B> &_pair) const {
-			return std::hash<A>()(_pair.first) ^ std::hash<B>()(_pair.second);
-		}
-	};
+			/*
+				Returns the union of cones _a and _b.
+			*/
+			static OrientationCone Union(const OrientationCone &_a, const OrientationCone &_b);
+		};
 
-	typedef std::pair<const Light *, unsigned> TriangleLightKey;
+		struct LightNode {
+			LightNode *children[2];	//If both nullptr, it is a leaf
+			LightNode *parent;
+			unsigned firstLightIndex, numLights;
+			Bounds bounds;	//'each level of the hierarchy stores spatial and orientation bounds, as well as the energy total for all lights contained below.'
+			OrientationCone orientationCone;
+			Real totalPower, powerVariance;	//Total power in cluster and energy variance of cluster
 
-	static constexpr unsigned numBuckets = 12;
-	std::unordered_map<TriangleLightKey, TriangleLight, pair_hash> triangleLights;	//Edge case to triangle light from Light ptr and primitive index
-	std::vector<Light *> lights;	//Keep infinite lights separate from finite lights for convenience when sampling
-	Light *infiniteLight;
-	Real treePower, infPower;
-	std::unordered_map<unsigned, Distribution::Piecewise1D> leafDistributions;	//First light index of leaf node 
-	std::unordered_map<const Light *, std::pair<LightNode *, unsigned>> lightNodeDistributionMap;	//Required to quickly find *any* light's leaf node and position in leaf distribution.
-	std::unique_ptr<LightNode> root;	//Root node of light tree
+			~LightNode();
 
-	/*
-		Filters lights in _lights into respective containers.
-		Converts mesh lights into triangle lights.
-		Initiates root node as an unfinished leaf over all lights ready for RecursiveBuild().
-	*/
-	void InitLights(const std::vector<Light *> &_lights);
+			inline bool IsLeaf() const {
+				return !children[0] && !children[1];
+			}
+		};
 
-	/*
-		Converts _node into a leaf over range of lights and builds respective distribution.
-	*/
-	void InitLeaf(LightNode *_node);
+		/*
+			Lightweight representation of a node for tree construction (PBRT-style).
+		*/
+		struct Bucket {
+			Real totalPower = 0;
+			Bounds bounds;
+			OrientationCone cone;
+		};
 
-	/*
-		Orientation cone measure function - analagous to bounding box surface area (MArea)
-	*/
-	static Real MOmega(const OrientationCone &_cone);
+		struct pair_hash {	//Silly stuff for being able to hash the pair
+			template<class A, class B>
+			inline size_t operator() (const std::pair<A, B> &_pair) const {
+				return std::hash<A>()(_pair.first) ^ std::hash<B>()(_pair.second);
+			}
+		};
 
-	/*
-		Surface area orientation heuristic
-	*/
-	static Real SAOH(LightNode &_P, const Bucket &_R, const Bucket &_L, const unsigned _axis);
+		typedef std::pair<const Light *, unsigned> TriangleLightKey;
 
-	/*
-		Returns power variance (termed energy variance in paper) of cluster
-	*/
-	Real PowerVariance(LightNode *_node) const;
+		static constexpr unsigned numBuckets = 12;
+		std::unordered_map<TriangleLightKey, TriangleLight, pair_hash> triangleLights;	//Edge case to triangle light from Light ptr and primitive index
+		std::vector<Light *> lights;	//Keep infinite lights separate from finite lights for convenience when sampling
+		Light *infiniteLight;
+		Real treePower, infPower;
+		std::unordered_map<unsigned, Distribution::Piecewise1D> leafDistributions;	//First light index of leaf node 
+		std::unordered_map<const Light *, std::pair<LightNode *, unsigned>> lightNodeDistributionMap;	//Required to quickly find *any* light's leaf node and position in leaf distribution.
+		std::unique_ptr<LightNode> root;	//Root node of light tree
 
-	/*
-		Returns geometric variance of cluster
-	*/
-	Real GeometricVariance(LightNode *_node) const;
+		/*
+			Filters lights in _lights into respective containers.
+			Converts mesh lights into triangle lights.
+			Initiates root node as an unfinished leaf over all lights ready for RecursiveBuild().
+		*/
+		void InitLights(const std::vector<Light *> &_lights);
 
-	/*
-		Makes the best split cost along _axis of _node and stores the split in _leftBucket and _rightBucket if it beats _minCost.
-		Returns true if it beat _minCost.
-	*/
-	bool SplitAxis(LightNode *_node, const unsigned _axis, Real *_minCost, unsigned *_bucketIndex, Bucket *_leftBucket, Bucket *_rightBucket);
+		/*
+			Converts _node into a leaf over range of lights and builds respective distribution.
+		*/
+		void InitLeaf(LightNode *_node);
 
-	/*
-		Recursively splits nodes with lowest SAOH cost split.
-		Considers all axes.
-	*/
-	void RecursiveBuild(LightNode *_P);
+		/*
+			Orientation cone measure function - analagous to bounding box surface area (MArea)
+		*/
+		static Real MOmega(const OrientationCone &_cone);
 
-	/*
-		Returns the importance of node relative to scatter event. Will fail on leaf nodes.
-	*/
-	static Real ImportanceMeasure(const ScatterEvent &_event, LightNode *_node);
+		/*
+			Surface area orientation heuristic
+		*/
+		static Real SAOH(LightNode &_P, const Bucket &_R, const Bucket &_L, const unsigned _axis);
 
-	/*
-		Stochastically traverses a single branch and pulls light from leaf distribution.
-	*/
-	Light *PickLight(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const;
+		/*
+			Returns power variance (termed energy variance in paper) of cluster
+		*/
+		Real PowerVariance(LightNode *_node) const;
 
-	/*
-		Returns probability of choosing _node via backwards traversal.
-	*/
-	Real RecursivePDF(const ScatterEvent &_event, const LightNode *_node, const LightNode *_child = nullptr) const;
+		/*
+			Compute power variance from light interval
+			TO SELF: Could make compute all powers before for faster build.
+		*/
+		Real PowerVariance(const unsigned _firstLightIndex, const unsigned _numLights) const;
+
+		/*
+			Returns geometric variance of cluster:
+				We consider a bounding sphere around the node's bounding box and take the smallest
+				and largest distance to the sphere from the shading point.
+		*/
+		Real GeometricVariance(LightNode *_node, const Vec3 &_point, Real *_mean) const;
+
+		/*
+			Makes the best split cost along _axis of _node and stores the split in _leftBucket and _rightBucket if it beats _minCost.
+			Returns true if it beat _minCost.
+		*/
+		bool SplitAxis(LightNode *_node, const unsigned _axis, Real *_minCost, unsigned *_bucketIndex, Bucket *_leftBucket, Bucket *_rightBucket);
+
+		/*
+			Recursively splits nodes with lowest SAOH cost split.
+			Considers all axes.
+		*/
+		void RecursiveBuild(LightNode *_P);
+
+		/*
+			Returns the importance of node relative to scatter event. Will fail on leaf nodes.
+		*/
+		Real ImportanceMeasure(const ScatterEvent &_event, LightNode *_node) const;
+
+		/*
+			Decides whether to traverse multiple branches or stochastic traverse if
+			the split threshold is satisfied
+		*/
+		bool Split(const ScatterEvent &_event, LightNode *_node) const;
+
+		/*
+			Begins the tree sampling traversal, splitting if the split threshold is not satisfied, otherwise
+			recursively traversing a single branch.
+		*/
+		Light *GetLights(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const;
+
+		/*
+			Stochastically traverses a single branch and pulls light from leaf.
+		*/
+		Light *PickLight(const ScatterEvent &_event, Real _epsilon, LightNode *_node, Real *_pdf) const;
+
+		/*
+			Returns probability of choosing _node via backwards traversal.
+		*/
+		Real RecursivePDF(const ScatterEvent &_event, const LightNode *_node, const LightNode *_child = nullptr) const;
 };
 
 LAMBDA_END

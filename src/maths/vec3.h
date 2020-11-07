@@ -199,13 +199,23 @@ namespace maths {
 
 	//Y is up (Normal)
 	template<class T>
-	inline vec3<T> ToSpace(const vec3<T> &_v, const vec3<T> &_t, const vec3<T> &_n, const vec3<T> &_bt) {
+	inline vec3<T> WorldToLocal(const vec3<T> &_v, const vec3<T> &_t, const vec3<T> &_n, const vec3<T> &_bt) {
 		return vec3<T>(maths::Dot(_t, _v), maths::Dot(_n, _v), maths::Dot(_bt, _v));
 	}
 	template<class T>
-	inline vec3<T> FromSpace(const vec3<T> &_v, const vec3<T> &_t, const vec3<T> &_n, const vec3<T> &_bt) {
+	inline vec3<T> LocalToWorld(const vec3<T> &_v, const vec3<T> &_t, const vec3<T> &_n, const vec3<T> &_bt) {
+		return vec3<T>(
+			_t.x * _v.x + _n.x * _v.y + _bt.x * _v.z,
+			_t.y * _v.x + _n.y * _v.y + _bt.y * _v.z,
+			_t.z * _v.x + _n.z * _v.y + _bt.z * _v.z
+		);
+	}
+	#ifdef LAMBDA_VEC3_USE_SSE
+	template<>
+	inline vec3<float> LocalToWorld(const vec3<float> &_v, const vec3<float> &_t, const vec3<float> &_n, const vec3<float> &_bt) {
 		return _t * _v.x + _n * _v.y + _bt * _v.z;
 	}
+	#endif
 
 	template<class T>
 	inline vec3<T> SphericalDirection(const T _sinTheta, const T _cosTheta, const T _phi) {
