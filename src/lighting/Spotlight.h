@@ -8,12 +8,17 @@ LAMBDA_BEGIN
 class Spotlight : public Light {
 	public:
 		Real intensity, cosConeAngle, cosFalloffStart;
-		Vec3 axis;
+		Vec3 axis, position;
 		ShaderGraph::Socket *emission;
 
 		Spotlight();
 
-		Spotlight(const Vec3 &_axis, const Real _coneAngle, const Real _falloffStart);
+		Spotlight(const Vec3 &_position, const Vec3 &_axis, const Real _coneAngle, const Real _falloffStart);
+
+		/*
+			Returns intensity factor of point light from direction _w.
+		*/
+		Real Falloff(const Vec3 &_w) const;
 
 		Spectrum Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override;
 

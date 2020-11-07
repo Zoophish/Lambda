@@ -21,7 +21,7 @@ Spectrum PointLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_p
 	if (PointMutualVisibility(p, position, _event, *_event.scene, *_sampler, &Tr)) {
 		_pdf = 1;
 		const Real dist2 = maths::DistSq(position, _event.hit->point);
-		_event.wiL = _event.ToLocal(_event.wi);	//Localise the sampled direction, wi given by MutualVisibility()
+		_event.wiL = _event.ToLocal(_event.wi);	//Localise the sampled direction, wi, given by PointMutualVisibility()
 		return emission->GetAsSpectrum(_event) * Tr * intensity / dist2;
 	}
 	_pdf = 0;

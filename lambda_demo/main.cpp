@@ -30,6 +30,7 @@ It briefly runs over:
 #include <lighting/MeshLight.h>
 #include <lighting/EnvironmentLight.h>
 #include <lighting/PointLight.h>
+#include <lighting/Spotlight.h>
 #include <render/MosaicRenderer.h>
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
@@ -122,8 +123,8 @@ int main() {
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresBSDF->outputSockets[0], &diffuse->outputSockets[0], &valueNoise->outputSockets[0]);
 
 	//Setup a volumetric medium
-	const Spectrum sigmaA = Spectrum(10);
-	const Spectrum sigmaS = Spectrum(15);
+	const Spectrum sigmaA = Spectrum(.1);
+	const Spectrum sigmaS = Spectrum(.1);
 	std::unique_ptr<Medium> med(new HomogeneousMedium(sigmaA, sigmaS));
 	std::unique_ptr<HenyeyGreenstein> phase(new HenyeyGreenstein);
 	phase->g = 0;
@@ -142,7 +143,7 @@ int main() {
 
 	Material glass_material;
 	glass_material.bxdf = fresBSDF;
-	glass_material.mediaBoundary.interior = med.get();
+	//glass_material.mediaBoundary.interior = med.get();
 	glass_material.BuildSocketMap();
 
 	Material diffuse_material2;
@@ -155,7 +156,7 @@ int main() {
 
 	//Import an asset using an AssetImporter object
 	AssetImporter ai;
-	ai.Import("../content/lucy.obj");
+	ai.Import("../content/box_artifacts.obj");
 
 	//Push the mesh objects to the resource manager...
 	ai.PushToResourceManager(&resources, (ImportOptions)(IMP_MESHES));
@@ -163,7 +164,7 @@ int main() {
 	//...and add all the meshes from that asset
 	for (auto &it : resources.objectPool.pool) {
 		//it.second->material = MaterialImport::GetMaterial(ai.scene, &resources, it.first);
-		it.second->material = &volume_scatter_material;
+		it.second->material = &diffuse_material2;
 		scene.AddObject(it.second);
 	}
 
@@ -179,17 +180,17 @@ int main() {
 	scene.hasVolumes = true;
 
 	//Import another asset file
-	ai.Import("../content/box_empty.obj");
+	//ai.Import("../content/box_artifacts.obj");
 
 	//You can manually make a new mesh object that isn't owned...
-	TriangleMesh plane;
+	//TriangleMesh plane;
 	//...and then manually load vertex data into from Assimp scene class
-	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
-	plane.material = &diffuse_material2;
-	plane.smoothNormals = false;
+	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
+	//plane.material = &diffuse_material2;
+	//plane.smoothNormals = false;
 	
 	//Add it to the scene
-	scene.AddObject(&plane);
+	//scene.AddObject(&plane);
 
 	//Setup a mesh light in a similar way
 	ai.Import("../content/box_light_2.obj");
@@ -202,7 +203,7 @@ int main() {
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &boundsMesh);
 	boundsMesh.material = &volume_scatter_material;
 
-	//scene.AddObject(&boundsMesh);
+	scene.AddObject(&boundsMesh);
 
 	//Release the asset importer to save some memory
 	ai.Release();
@@ -215,8 +216,8 @@ int main() {
 	//Construct a light from the light mesh.
 	//The light will automatically be assigned the material of the mesh object.
 	//MeshLight light(&lightMesh);
-	PointLight light;
-	light.position = { .6,1.5,0 };
+	Spotlight light({ 0,1.8,0 }, {0,-1,0}, PI * .3, PI * .2);
+	light.position = { 0,1.8,0 };
 
 	//Setup the light's emission using a shader graph...
 	sg::ScalarInput *temp1 = graphArena.New<sg::ScalarInput>(3500);
@@ -225,7 +226,7 @@ int main() {
 	//Set the lights emission socket to the blackbody output socket
 	light.emission = &blckInpt1->outputSockets[0];
 	//Give the light an intensity (will be shader graph compatible in future)
-	light.intensity = 2;
+	light.intensity = 14;
 
 	//Add it to the scene - the associated light object will be added to scene.lights automatically
 	scene.AddLight(&light);
@@ -234,7 +235,7 @@ int main() {
 	//Make environment lighting
 	Texture envMap;
 	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
-	envMap.LoadImageFile("demo_content/autumn_park_2k.hdr");
+	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
 	ibl.intensity = 0;
@@ -266,7 +267,7 @@ int main() {
 
 
 	//Construct a camera with a circular aperture of size .03 world units
-	CircularAperture aperture2(0.03);
+	CircularAperture aperture2(0.0);
 	ThinLensCamera cam(Vec3(0, 1, 10), film.filmData.GetWidth(), film.filmData.GetHeight(), 10, &aperture2);
 	//Set focus to 10 units infront of camera
 	cam.focalLength = 10;

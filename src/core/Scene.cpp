@@ -63,7 +63,11 @@ bool Scene::IntersectTr(Ray _r, RayHit &_hit, Sampler &_sampler, Medium *_med, S
 	while (Intersect(_r, _hit)) {
 		tFar += _hit.tFar;
 		bool terminate = tFar > _maxT;
-		if (terminate) tFar -= _maxT - tFar;	//Important for point lights as no intersection will stop the ray
+		if (terminate) { //Important for point lights as no intersection will stop the ray
+			const Real delta = tFar - _maxT;
+			tFar -= delta;
+			_hit.tFar -= delta;
+		}	
 		if ((bool)_med && _Tr) *_Tr *= _med->Tr(_r, _hit.tFar, _sampler);
 		if (terminate || _hit.object->material->bxdf || _hit.object->material->light) {
 			_hit.tFar = tFar;
