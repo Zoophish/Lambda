@@ -19,7 +19,7 @@ static inline bool Intersect(const Ray &_ray, RayHit &_hit, const Scene &_scene,
 Spectrum MeshPortal::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 	const Vec2 u = _sampler->Get2D();
-	const Vec3 p = mesh->SamplePoint(mesh->triangles[i], u);
+	const Vec3 p = mesh->SamplePointInTriangle(mesh->triangles[i], u);
 	Spectrum Tr(1);
 	if (MutualVisibility(_event.hit->point + _event.hit->normalG * .00001, p, _event, *_event.scene, *_sampler, &Tr)) {
 		Real triArea;
@@ -54,7 +54,7 @@ Vec3 MeshPortal::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf
 	Real area;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &area);
 	*_pdf /= area;
-	return mesh->SamplePoint(mesh->triangles[i], u);
+	return mesh->SamplePointInTriangle(mesh->triangles[i], u);
 }
 
 Spectrum MeshPortal::L(const ScatterEvent &_event) const {
@@ -77,7 +77,7 @@ Bounds MeshPortal::GetBounds() const {
 }
 
 void MeshPortal::InitDistribution() {
-	const size_t ts = mesh->trianglesSize;
+	const size_t ts = mesh->numTriangles;
 	std::unique_ptr<Real[]> triAreas(new Real[ts]);
 	for (size_t i = 0; i < ts; ++i) {
 		mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triAreas[i]);

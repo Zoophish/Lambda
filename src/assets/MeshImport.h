@@ -12,12 +12,6 @@ namespace MeshImport {
 	using namespace ImportUtilities;
 
 	/*
-		Loads given UV channel, _channel, into _tMesh from the Assimp mesh, _aiMesh.
-			- Returns false if texture coordinates don't exist in _aiMesh.
-	*/
-	bool LoadUVBuffer(const aiMesh *_aiMesh, TriangleMesh *_tMesh, const unsigned _channel = 0);
-
-	/*
 		Copies main vertex attributes from the Assimp mesh, _aiMesh, into the Lambda mesh, _tMesh.
 		Vertex attributes copied:
 			- Position

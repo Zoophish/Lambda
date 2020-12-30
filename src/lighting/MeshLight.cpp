@@ -18,7 +18,7 @@ static inline bool Intersect(const Ray &_ray, RayHit &_hit, const Scene &_scene,
 Spectrum MeshLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
 	const unsigned i = triDistribution.SampleDiscrete(_sampler->Get1D(), &_pdf);
 	const Vec2 u = _sampler->Get2D();
-	const Vec3 pL = mesh->SamplePoint(mesh->triangles[i], u);
+	const Vec3 pL = mesh->SamplePointInTriangle(mesh->triangles[i], u);
 	const Vec3 pS = _event.hit->point + _event.hit->normalG * SURFACE_EPSILON * _event.sidedness;
 	Spectrum Tr(1);
 	if (MutualVisibility(pS, pL, _event, *_event.scene, *_sampler, &Tr)) {
@@ -66,8 +66,12 @@ Vec3 MeshLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf)
 	mesh->GetTriangleAreaAndNormal(&t, &area);
 	*_pdf /= area;
 	const Vec2 u = _sampler.Get2D();
-	_event.hit->uvCoords = maths::BarycentricInterpolation(mesh->uvs[t.v0], mesh->uvs[t.v1], mesh->uvs[t.v2], u.x, u.y);
-	return mesh->SamplePoint(mesh->triangles[i], u);	//Maybe add normal * epsilon?
+	_event.hit->uvCoords = maths::BarycentricInterpolation(
+		mesh->textureCoordinates[t.v0],
+		mesh->textureCoordinates[t.v1],
+		mesh->textureCoordinates[t.v2],
+		u.x, u.y);
+	return mesh->SamplePointInTriangle(mesh->triangles[i], u);	//Maybe add normal * epsilon?
 }
 
 Spectrum MeshLight::L(const ScatterEvent &_event) const {
@@ -95,7 +99,7 @@ TriangleMesh const &MeshLight::GetMesh() const {
 }
 
 void MeshLight::InitDistribution() {
-	const size_t ts = mesh->trianglesSize;
+	const size_t ts = mesh->numTriangles;
 	std::unique_ptr<Real[]> triAreas(new Real[ts]);
 	for (size_t i = 0; i < ts; ++i) {
 		mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triAreas[i]);
@@ -111,7 +115,7 @@ TriangleLight::TriangleLight(MeshLight *_meshLight, const size_t _i) {
 }
 
 Spectrum TriangleLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const {
-	const Vec3 pL = meshLight->mesh->SamplePoint(meshLight->mesh->triangles[triIndex], _sampler->Get2D());
+	const Vec3 pL = meshLight->mesh->SamplePointInTriangle(meshLight->mesh->triangles[triIndex], _sampler->Get2D());
 	const Vec3 pS = _event.hit->point + _event.hit->normalG * SURFACE_EPSILON * _event.sidedness;
 	Spectrum Tr(1);
 	if (MutualVisibility(pS, pL, _event, *_event.scene, *_sampler, &Tr)) {
@@ -148,7 +152,7 @@ Vec3 TriangleLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[triIndex], &area);
 	*_pdf = 1 / area;
 	const Vec2 u = _sampler.Get2D();
-	return mesh->SamplePoint(mesh->triangles[triIndex], u);
+	return mesh->SamplePointInTriangle(mesh->triangles[triIndex], u);
 }
 
 Spectrum TriangleLight::L(const ScatterEvent &_event) const {
@@ -168,9 +172,9 @@ Real TriangleLight::Irradiance() const {
 	ScatterEvent fakeEvent;	//TO SELF: This needs a design reconsideration in ShaderGraph
 	RayHit fakeHit;
 	fakeEvent.hit = &fakeHit;
-	const Vec2 &uv0 = meshLight->mesh->uvs[meshLight->mesh->triangles[triIndex].v0];
-	const Vec2 &uv1 = meshLight->mesh->uvs[meshLight->mesh->triangles[triIndex].v1];
-	const Vec2 &uv2 = meshLight->mesh->uvs[meshLight->mesh->triangles[triIndex].v2];
+	const Vec2 &uv0 = meshLight->mesh->textureCoordinates[meshLight->mesh->triangles[triIndex].v0];
+	const Vec2 &uv1 = meshLight->mesh->textureCoordinates[meshLight->mesh->triangles[triIndex].v1];
+	const Vec2 &uv2 = meshLight->mesh->textureCoordinates[meshLight->mesh->triangles[triIndex].v2];
 	Real irradiance = 0;
 	for (unsigned a = 0; a < samples; ++a) {
 		for (unsigned b = 0; b < samples; ++b) {

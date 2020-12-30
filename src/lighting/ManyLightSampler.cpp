@@ -267,8 +267,8 @@ void ManyLightSampler::InitLights(const std::vector<Light *> &_lights) {
 		MeshLight *meshLight = dynamic_cast<MeshLight *>(*l);
 		if (meshLight) {
 			const TriangleMesh *mesh = &meshLight->GetMesh();
-			triangleLights.reserve(triangleLights.size() + mesh->trianglesSize);
-			for (size_t i = 0; i < mesh->trianglesSize; ++i) {
+			triangleLights.reserve(triangleLights.size() + mesh->numTriangles);
+			for (size_t i = 0; i < mesh->numTriangles; ++i) {
 				triangleLights.insert({ { meshLight, i }, TriangleLight(meshLight, i) });
 			}
 			lightList.erase(l++);

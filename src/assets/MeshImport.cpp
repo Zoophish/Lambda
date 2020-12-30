@@ -4,70 +4,60 @@ LAMBDA_BEGIN
 
 namespace MeshImport {
 
-	bool LoadUVBuffer(const aiMesh *_aiMesh, TriangleMesh *_tMesh, const unsigned _channel) {
-		if (_aiMesh->HasTextureCoords(_channel)) {
-			_tMesh->hasUVs = true;
-			_tMesh->uvs.resize(_tMesh->verticesSize);
-			for (size_t i = 0; i < _tMesh->verticesSize; ++i) {
-				_tMesh->uvs[i].x = (Real)1 - _aiMesh->mTextureCoords[_channel][i].x;
-				_tMesh->uvs[i].y = (Real)1 - _aiMesh->mTextureCoords[_channel][i].y;
-			}
-			return true;
-		}
-		return false;
-	}
-
 	inline Real CheckReal(const Real _val) {
 		return std::isnan(_val) || std::isinf(_val) ? 0 : _val;
 	}
 
 	void LoadMeshVertexBuffers(const aiMesh *_aiMesh, TriangleMesh *_tMesh) {
-		//----	VERTICES	----
-		_tMesh->verticesSize = _aiMesh->mNumVertices;
-		_tMesh->trianglesSize = _aiMesh->mNumFaces;
 
-		_tMesh->vertices.resize(_tMesh->verticesSize);
-		for (size_t i = 0; i < _tMesh->verticesSize; ++i) {
+		_tMesh->AllocData(_aiMesh->mNumVertices, _aiMesh->mNumFaces);
+
+		//	Vertices
+		for (size_t i = 0; i < _tMesh->numVertices; ++i) {
 			_tMesh->vertices[i].x = _aiMesh->mVertices[i].x;
 			_tMesh->vertices[i].y = _aiMesh->mVertices[i].y;
 			_tMesh->vertices[i].z = _aiMesh->mVertices[i].z;
 		}
 
-		//----	TRIANGLES	----
-		_tMesh->triangles.resize(_tMesh->trianglesSize);
-		for (size_t i = 0; i < _tMesh->trianglesSize; ++i) {
+		//	Triangles
+		for (size_t i = 0; i < _tMesh->numTriangles; ++i) {
 			_tMesh->triangles[i].v0 = _aiMesh->mFaces[i].mIndices[0];
 			_tMesh->triangles[i].v1 = _aiMesh->mFaces[i].mIndices[1];
 			_tMesh->triangles[i].v2 = _aiMesh->mFaces[i].mIndices[2];
 		}
 
-		//----	NORMALS	----
+		//	Normals
 		if (_aiMesh->HasNormals()) {
-			_tMesh->vertexNormals.resize(_tMesh->verticesSize);
-			for (size_t i = 0; i < _tMesh->verticesSize; ++i) {
+			for (size_t i = 0; i < _tMesh->numVertices; ++i) {
 				_tMesh->vertexNormals[i].x = _aiMesh->mNormals[i].x;
 				_tMesh->vertexNormals[i].y = _aiMesh->mNormals[i].y;
 				_tMesh->vertexNormals[i].z = _aiMesh->mNormals[i].z;
 			}
 		}
 
-		//----	TANGENTS, BITANGENTS	----
+		//	Tangents and Bitangent Handednessses
 		if (_aiMesh->HasTangentsAndBitangents()) {
-			_tMesh->vertexTangents.resize(_tMesh->verticesSize);
-			_tMesh->vertexBitangents.resize(_tMesh->verticesSize);
-			for (size_t i = 0; i < _tMesh->verticesSize; ++i) {
+			for (size_t i = 0; i < _tMesh->numVertices; ++i) {
 				_tMesh->vertexTangents[i].x = CheckReal(_aiMesh->mTangents[i].x);
 				_tMesh->vertexTangents[i].y = CheckReal(_aiMesh->mTangents[i].y);
 				_tMesh->vertexTangents[i].z = CheckReal(_aiMesh->mTangents[i].z);
-				_tMesh->vertexBitangents[i].x = CheckReal(_aiMesh->mBitangents[i].x);
-				_tMesh->vertexBitangents[i].y = CheckReal(_aiMesh->mBitangents[i].y);
-				_tMesh->vertexBitangents[i].z = CheckReal(_aiMesh->mBitangents[i].z);
+				
+				const Vec3 bitangent = Vec3(CheckReal(_aiMesh->mBitangents[i].x), CheckReal(_aiMesh->mBitangents[i].y), CheckReal(_aiMesh->mBitangents[i].z));
+				const Real dot = maths::Dot(maths::Cross(_tMesh->vertexNormals[i], _tMesh->vertexTangents[i]), bitangent);
+				_tMesh->vertexTangents[i].a = (dot < (Real)0) ? (Real)-1 : (Real)1;
 			}
 		}
 		_tMesh->smoothNormals = _aiMesh->HasTangentsAndBitangents();
 
-		//----	TEXTURE COORDINATES	----
-		_tMesh->hasUVs = LoadUVBuffer(_aiMesh, _tMesh);
+		//	Texture Coordinates
+		static const int channel = 0;
+		if (_aiMesh->HasTextureCoords(channel)) {
+			_tMesh->hasUVs = true;
+			for (size_t i = 0; i < _tMesh->numVertices; ++i) {
+				_tMesh->textureCoordinates[i].x = (Real)1 - _aiMesh->mTextureCoords[channel][i].x;
+				_tMesh->textureCoordinates[i].y = (Real)1 - _aiMesh->mTextureCoords[channel][i].y;
+			}
+		}
 	}
 
 	bool LoadTransforms(const aiScene *_scene, ResourceManager *_resourceManager) {
