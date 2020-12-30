@@ -38,8 +38,67 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 			}
 
-			if (event.medium) beta *= event.medium->SampleDistance(r, *sampler, event);
-			else event.mediumInteraction = false;
+			//if (event.medium) beta *= event.medium->SampleDistance(r, *sampler, event);
+			//else event.mediumInteraction = false;
+
+			if (event.medium) {
+				Real lightPDF, lightDistPdf = 1;
+				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);	//TODO: Sample via ray segment
+				lightPDF *= lightDistPdf; //Full light pdf
+				Real lightPointPdf;
+				const Vec3 lightPoint = l->SamplePoint(*sampler, event, &lightPointPdf);
+				lightPDF *= lightPointPdf;
+
+				Spectrum Ld(0);
+
+				/*
+					Distance Generators
+				*/
+				Real distanceT, distancePDF, equiangularPDF;
+				const Spectrum trDistance = event.medium->SampleDistance(r, *sampler, event, &distanceT, &distancePDF);	//IMPORTANT: _pdf parameter may be redundant?
+				const Vec3 distancePoint = r.o + r.d * distanceT;
+				equiangularPDF = event.medium->PDFEquiangular(r, lightPoint, event.hit->tFar, (r.o - distancePoint).Magnitude());
+
+				//	NEE
+				Spectrum f;
+
+				Ray neeRay(distancePoint, (lightPoint - distancePoint).Magnitude());
+				RayHit neeHit;
+				Spectrum neeTr(1), Li;
+				Real scatterPDF;
+				lightPDF = Light::PointMutualVisibility(distancePoint, lightPoint, event, _scene, *sampler, &neeTr) ? lightPDF : 0;
+				if (lightPDF) {
+					Li = l->L(event);
+					f = event.mediumInteraction ? event.medium->phase->p(event.wo, event.wi) : hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
+					scatterPDF = event.mediumInteraction ? f[0] : hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
+					if (!f.IsBlack() && scatterPDF > 0) {
+						const Real weight = PowerHeuristic(1, lightPDF, 1, scatterPDF);
+						Ld += Li * neeTr * f * weight / lightPDF;
+					}
+				}
+
+				//	BXDF
+				f = event.mediumInteraction ? event.medium->phase->Sample_p(event.wo, &event.wi, *sampler) : hit.object->material->bxdf->Sample_f(event, *sampler, scatterPDF);
+				//scatterPDF = event.mediumInteraction ? 
+
+				r.o = hit.point;
+				r.d = event.wi;
+
+				Spectrum Tr(1);
+				Medium *med = event.medium;
+				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, med, &Tr);
+
+
+
+				/*
+					Equiangular Generators
+				*/
+				Real equiangularT;
+				const Spectrum trEquiangular = event.medium->SampleEquiangular(r, *sampler, event, lightPoint, &equiangularT, &equiangularPDF);
+				const Vec3 equiangularPoint = r.o + r.d * equiangularT;
+				distancePDF = event.medium->PDFDistance(equiangularT);
+
+			}
 
 			if (!event.mediumInteraction) {
 				if (hit.object->material && hit.object->material->bxdf) {

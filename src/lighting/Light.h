@@ -13,7 +13,7 @@ class Light {
 	public:
 
 		/*
-			Samples an incident direction light may arrive on.
+			Samples an incident direction from light to shading point.
 		*/
 		virtual Spectrum Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const = 0;
 		
@@ -26,6 +26,11 @@ class Light {
 			Pdf ray intersection under _event, given that the intersection hit THIS light (except for infinite lights).
 		*/
 		virtual Real PDF_Li(const ScatterEvent &_event) const = 0;
+
+		/*
+			Samples a point on the light (ideally proportionally to influence on shading point).
+		*/
+		virtual Vec3 SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const = 0;
 
 		/*
 			Returns radiance incoming along a ray that has escaped scene.

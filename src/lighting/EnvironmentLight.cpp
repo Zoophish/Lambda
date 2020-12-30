@@ -66,6 +66,11 @@ Real EnvironmentLight::PDF_Li(const ScatterEvent &_event) const {
 	return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / ((Real)2 * PI * PI * sinTheta);
 }
 
+Vec3 EnvironmentLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
+	//TODO
+	return Vec3(0, 0, 0);
+}
+
 Spectrum EnvironmentLight::Le(const Ray &_r) const {
 	return Le(_r.d);
 }

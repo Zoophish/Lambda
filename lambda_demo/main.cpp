@@ -123,8 +123,8 @@ int main() {
 	sg::MixBxDFNode *mixMat = graphArena.New<sg::MixBxDFNode>(&fresBSDF->outputSockets[0], &diffuse->outputSockets[0], &valueNoise->outputSockets[0]);
 
 	//Setup a volumetric medium
-	const Spectrum sigmaA = Spectrum(.1);
-	const Spectrum sigmaS = Spectrum(.1);
+	const Spectrum sigmaA = Spectrum(0);
+	const Spectrum sigmaS = Spectrum(.25);
 	std::unique_ptr<Medium> med(new HomogeneousMedium(sigmaA, sigmaS));
 	std::unique_ptr<HenyeyGreenstein> phase(new HenyeyGreenstein);
 	phase->g = 0;
@@ -180,17 +180,17 @@ int main() {
 	scene.hasVolumes = true;
 
 	//Import another asset file
-	//ai.Import("../content/box_artifacts.obj");
+	ai.Import("../content/ocean.obj");
 
 	//You can manually make a new mesh object that isn't owned...
-	//TriangleMesh plane;
+	TriangleMesh plane;
 	//...and then manually load vertex data into from Assimp scene class
-	//MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
-	//plane.material = &diffuse_material2;
-	//plane.smoothNormals = false;
+	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
+	plane.material = &glass_material;
+	plane.smoothNormals = false;
 	
 	//Add it to the scene
-	//scene.AddObject(&plane);
+	scene.AddObject(&plane);
 
 	//Setup a mesh light in a similar way
 	ai.Import("../content/box_light_2.obj");
@@ -203,7 +203,7 @@ int main() {
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &boundsMesh);
 	boundsMesh.material = &volume_scatter_material;
 
-	scene.AddObject(&boundsMesh);
+	//scene.AddObject(&boundsMesh);
 
 	//Release the asset importer to save some memory
 	ai.Release();

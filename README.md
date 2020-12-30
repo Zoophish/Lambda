@@ -9,7 +9,7 @@ A high performance physically-based renderer written in C++.
 - PBRT-style unbiased spectral rendering
 - Numerous BSDF models: Lambertian, Fresnel, specular, mix
 - Microfacet BSDFs: Oren-Nayar, Beckmann-Spizzichino, Towbridge-Reitz/GGX
-- Volumes
+- Efficient rendering of participating media
 - Path integrator with multiple importance sampling
 - Pass Rendering: direct lighting, normals, depth, albedo, arbitrary textures
 - Denoising via Intel Open Image Denoise

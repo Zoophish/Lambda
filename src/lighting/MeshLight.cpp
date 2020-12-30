@@ -59,6 +59,17 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event) const {
 	return triPdf * distSq / (cosTheta * triArea);
 }
 
+Vec3 MeshLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
+	const unsigned i = triDistribution.SampleDiscrete(_sampler.Get1D(), _pdf);
+	Real area;
+	const Triangle &t = mesh->triangles[i];
+	mesh->GetTriangleAreaAndNormal(&t, &area);
+	*_pdf /= area;
+	const Vec2 u = _sampler.Get2D();
+	_event.hit->uvCoords = maths::BarycentricInterpolation(mesh->uvs[t.v0], mesh->uvs[t.v1], mesh->uvs[t.v2], u.x, u.y);
+	return mesh->SamplePoint(mesh->triangles[i], u);	//Maybe add normal * epsilon?
+}
+
 Spectrum MeshLight::L(const ScatterEvent &_event) const {
 	return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity * INV_PI;
 }
@@ -129,6 +140,15 @@ Real TriangleLight::PDF_Li(const ScatterEvent &_event) const {
 	meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[_event.hit->primId], &triArea);
 	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for doubles sided
 	return distSq / (cosTheta * triArea);
+}
+
+Vec3 TriangleLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
+	const TriangleMesh *mesh = meshLight->mesh;
+	Real area;
+	mesh->GetTriangleAreaAndNormal(&mesh->triangles[triIndex], &area);
+	*_pdf = 1 / area;
+	const Vec2 u = _sampler.Get2D();
+	return mesh->SamplePoint(mesh->triangles[triIndex], u);
 }
 
 Spectrum TriangleLight::L(const ScatterEvent &_event) const {

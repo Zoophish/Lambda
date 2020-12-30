@@ -25,6 +25,8 @@ class EnvironmentLight : public Light {
 
 		Real PDF_Li(const ScatterEvent &_event) const override;
 
+		Vec3 SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const override;
+
 		Spectrum Le(const Ray &_r) const override;
 
 		Spectrum L(const ScatterEvent &_event) const override;

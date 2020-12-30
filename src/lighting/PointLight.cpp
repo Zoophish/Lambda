@@ -37,6 +37,11 @@ Real PointLight::PDF_Li(const ScatterEvent &_event) const {
 	return 0;
 }
 
+Vec3 PointLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
+	*_pdf = 1;
+	return position;
+}
+
 Real PointLight::Irradiance() const {
 	return intensity;
 }
