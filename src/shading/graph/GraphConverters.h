@@ -8,7 +8,7 @@ namespace Converter {
 
 	class SeparateXYZ : public Node {
 		public:
-			SeparateXYZ(Socket *_vector);
+			SeparateXYZ(Socket *_vector = nullptr);
 
 			void GetX(const ScatterEvent &_event, void *_out) const;
 
@@ -21,7 +21,7 @@ namespace Converter {
 
 	class SeparateRGBA : public Node {
 		public:
-			SeparateRGBA(Socket *_colour);
+			SeparateRGBA(Socket *_colour = nullptr);
 
 			void GetR(const ScatterEvent &_event, void *_out) const;
 
@@ -36,7 +36,7 @@ namespace Converter {
 
 	class MergeXYZ : public Node {
 		public:
-			MergeXYZ(Socket *_x, Socket *_y, Socket *_z);
+			MergeXYZ(Socket *_x = nullptr, Socket *_y = nullptr, Socket *_z = nullptr);
 
 			void GetVec3(const ScatterEvent &_event, void *_out) const;
 	};
@@ -45,7 +45,7 @@ namespace Converter {
 
 	class MergeRGBA : public Node {
 		public:
-			MergeRGBA(Socket *_r, Socket *_g, Socket *_b, Socket *_a);
+			MergeRGBA(Socket *_r = nullptr, Socket *_g = nullptr, Socket *_b = nullptr, Socket *_a = nullptr);
 
 			void GetColour(const ScatterEvent &_event, void *_out) const;
 	};

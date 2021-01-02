@@ -28,7 +28,7 @@ class Transformable {
 		}
 
 		inline void SetEulerAngles(const Vec3 &_eulers) {
-			xfm = Affine3::GetRotationX(_eulers.x) * Affine3::GetRotationY(_eulers.y) *Affine3::GetRotationZ(_eulers.z);
+			xfm = Affine3::GetRotationX(_eulers.x) * Affine3::GetRotationY(_eulers.y) * Affine3::GetRotationZ(_eulers.z);
 		}
 
 		inline void AddChild(Transformable *_child) {

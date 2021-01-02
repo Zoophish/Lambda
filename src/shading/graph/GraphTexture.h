@@ -17,7 +17,7 @@ namespace Textures {
 
 	class PerlinNoise : public Node, public Noise {
 		public:
-			PerlinNoise(const Real _scale);
+			PerlinNoise(const Real _scale = 1);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 
@@ -32,7 +32,7 @@ namespace Textures {
 		public:
 			//Real scale;
 		
-			Checker(const Real _scale);
+			Checker(const Real _scale = 1);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 
@@ -47,7 +47,7 @@ namespace Textures {
 		public:
 			//Real scale;
 
-			ValueNoise(const Real _scale);
+			ValueNoise(const Real _scale = 1);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 
@@ -64,7 +64,7 @@ namespace Textures {
 			unsigned octaves;
 			Noise *noise = nullptr;
 
-			OctaveNoise(const Real _scale, const unsigned _octaves);
+			OctaveNoise(const Real _scale = 1, const unsigned _octaves = 3);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 
@@ -77,7 +77,7 @@ namespace Textures {
 
 	class Voronoi : public Node, public Noise {
 		public:
-			Voronoi(const Real _scale);
+			Voronoi(const Real _scale = 1);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 

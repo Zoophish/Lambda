@@ -48,6 +48,26 @@ Node::Node(const Node &_node) :
 	}
 }
 
+SocketRef *Node::GetInputSocket(const unsigned _index) {
+	return &inputSockets[_index];
+}
+
+SocketRef *Node::GetInputSocket(const char *_tag) {
+	for (unsigned i = 0; i < numIn; ++i) {
+		if (inputSockets[i].tag == std::string(_tag)) return &inputSockets[i];
+	}
+}
+
+Socket *Node::GetOutputSocket(const unsigned _index) {
+	return &outputSockets[_index];
+}
+
+Socket *Node::GetOutputSocket(const char *_tag) {
+	for (unsigned i = 0; i < numIn; ++i) {
+		if (outputSockets[i].tag == std::string(_tag)) return &outputSockets[i];
+	}
+}
+
 GraphIterator Node::begin() {
 	return GraphIterator(this);
 }

@@ -5,6 +5,8 @@ LAMBDA_BEGIN
 
 class InstanceProxy {
 	public:
+		InstanceProxy();
+
 		InstanceProxy(Object *_object);
 
 		/*
@@ -22,6 +24,8 @@ class InstanceProxy {
 
 class Instance : public Object {
 	public:
+		Instance();
+
 		Instance(InstanceProxy *_proxy);
 
 		/*

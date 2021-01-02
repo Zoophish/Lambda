@@ -11,7 +11,6 @@ TriangleMesh::TriangleMesh() : Object() {
 	numVertices = 0;
 	numTriangles = 0;
 	smoothNormals = false;
-	hasUVs = false;
 }
 
 TriangleMesh::~TriangleMesh() {
@@ -79,7 +78,7 @@ Real TriangleMesh::Area() const {
 }
 
 void TriangleMesh::ProcessHit(const RTCRayHit &_h, RayHit &_hit) const {
-	if (hasUVs) {
+	if (textureCoordinates) {
 		_hit.uvCoords = maths::BarycentricInterpolation(
 			textureCoordinates[triangles[_h.hit.primID].v0],
 			textureCoordinates[triangles[_h.hit.primID].v1],

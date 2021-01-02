@@ -3,8 +3,8 @@
 #include <list>
 #include <algorithm>
 
-#define L1_CACHE_LINE_SIZE 64	//64 bit cache line size
-#define ALLOC_BLOCK_SIZE 262144	//256kb in bits
+constexpr unsigned L1_CACHE_LINE_SIZE = 64;	//64 bit cache line size
+constexpr unsigned ALLOC_BLOCK_SIZE = 262144;	//256kb in bits
 
 void *AllocAligned(const size_t _size);
 

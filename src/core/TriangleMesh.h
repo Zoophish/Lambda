@@ -1,15 +1,9 @@
-/*----	By Sam Warren 2019	----
-  ----	Allows for the construction and loading of meshes that can be passed into Embree.	----
-
+/*----	Sam Warren 2019-2020	----
 	Any changes made to the mesh data must be committed to take effect.
-
-	Embree only supports 32-bit floats and 16-byte aligned vertex structures.
-	Keep defined if Embree is being used:	*/
-//#define LAMBDA_GEOMETRY_FORCE_FLOAT32
+*/
 
 #pragma once
 #include <vector>
-#include <utility/BoolArray.h>
 #include "Object.h"
 
 LAMBDA_BEGIN
@@ -26,7 +20,6 @@ class TriangleMesh : public Object {
 		size_t numTriangles;
 		size_t numVertices;
 		bool smoothNormals;
-		bool hasUVs;
 
 		TriangleMesh();
 
@@ -75,14 +68,14 @@ class TriangleMesh : public Object {
 		Real Area() const;
 
 		/*
-			Samples a point in _triangle in world space.
+			Samples a point in _triangle.
 		*/
 		inline Vec3 SamplePointInTriangle(const Triangle &_triangle, const Vec2 &_u) const {
 			const Vec3 &v0 = vertices[_triangle.v0];
 			const Vec3 &v1 = vertices[_triangle.v1];
 			const Vec3 &v2 = vertices[_triangle.v2];
 			const Vec3 point = v0 + (v1 - v0) * _u.x + (v2 - v0) * _u.y;
-			return xfm * point;
+			return point;
 		}
 
 	protected:

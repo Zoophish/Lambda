@@ -291,6 +291,14 @@ class Node {
 
 		Node(const Node &_node);
 
+		SocketRef *GetInputSocket(const unsigned _index);
+
+		SocketRef *GetInputSocket(const char *_tag);
+
+		Socket *GetOutputSocket(const unsigned _index);
+
+		Socket *GetOutputSocket(const char *_tag);
+
 		GraphIterator begin();
 
 		GraphIterator end();

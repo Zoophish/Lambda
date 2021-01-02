@@ -2,7 +2,7 @@
 #include "Integrator.h"
 
 LAMBDA_BEGIN
-
+/*
 class VolumetricPathIntegrator : public Integrator {
 	public:
 		unsigned maxBounces, minBounces;
@@ -13,5 +13,5 @@ class VolumetricPathIntegrator : public Integrator {
 
 		Spectrum Li(Ray _r, const Scene &_scene) const override;
 };
-
+*/
 LAMBDA_END

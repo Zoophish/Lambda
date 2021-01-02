@@ -10,7 +10,7 @@ LAMBDA_BEGIN
 template<class T>
 class ResourcePool {
 	public:
-		std::unordered_map<std::string, T*> pool;
+		std::unordered_map<std::string, T *> pool;
 
 		ResourcePool() {}
 
@@ -38,14 +38,13 @@ class ResourcePool {
 };
 
 /*
-	General container for asset objects.
-		- Automatically owns everything pushed to it.
+	General container for rendering objects.
+		- Owns everything pushed to it.
 */
 struct ResourceManager {
 		ResourcePool<Object> objectPool;
 		ResourcePool<Texture> texturePool;
 		ResourcePool<Material> materialPool;
-		//ResourcePool<SceneNode> graphPool;
 		ResourcePool<InstanceProxy> proxyPool;
 };
 

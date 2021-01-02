@@ -1,7 +1,7 @@
 #include "VolumetricPathIntegrator.h"
 
 LAMBDA_BEGIN
-
+/*
 VolumetricPathIntegrator::VolumetricPathIntegrator(Sampler *_sampler, const unsigned _maxBounces, const unsigned _minBounces) {
 	maxBounces = _maxBounces;
 	minBounces = _minBounces;
@@ -51,9 +51,9 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 
 				Spectrum Ld(0);
 
-				/*
-					Distance Generators
-				*/
+				//
+					//Distance Generators
+				//
 				Real distanceT, distancePDF, equiangularPDF;
 				const Spectrum trDistance = event.medium->SampleDistance(r, *sampler, event, &distanceT, &distancePDF);	//IMPORTANT: _pdf parameter may be redundant?
 				const Vec3 distancePoint = r.o + r.d * distanceT;
@@ -92,7 +92,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 
 				/*
 					Equiangular Generators
-				*/
+				*//*
 				Real equiangularT;
 				const Spectrum trEquiangular = event.medium->SampleEquiangular(r, *sampler, event, lightPoint, &equiangularT, &equiangularPDF);
 				const Vec3 equiangularPoint = r.o + r.d * equiangularT;
@@ -213,5 +213,5 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	}
 	return L;
 }
-
+*/
 LAMBDA_END

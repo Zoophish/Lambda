@@ -11,7 +11,7 @@ namespace ShaderGraph {
 		public:
 			Real value;
 
-			ScalarInput(const Real _value);
+			ScalarInput(const Real _value = 0.5);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 	};
@@ -22,7 +22,7 @@ namespace ShaderGraph {
 		public:
 			Vec2 vec2;
 
-			Vec2Input(const Vec2 &_vec);
+			Vec2Input(const Vec2 &_vec = Vec2(0.5, 0.5));
 
 			void GetVec2(const ScatterEvent &_event, void *_out) const;
 	};
@@ -33,7 +33,7 @@ namespace ShaderGraph {
 		public:
 			Colour rgb;
 
-			RGBInput(const Colour &_rgb);
+			RGBInput(const Colour &_rgb = Colour(1, 1, 1));
 			RGBInput(const Real *_rgb);
 
 			void GetColour(const ScatterEvent &_event, void *_out) const;
@@ -47,7 +47,7 @@ namespace ShaderGraph {
 
 			SpectralInput(Real *_lambda, Real *_vals, const unsigned _n);
 
-			SpectralInput(const Spectrum &_spec);
+			SpectralInput(const Spectrum &_spec = Spectrum(1));
 
 			void GetSpectrum(const ScatterEvent &_event, void *_out) const;
 	};
@@ -58,7 +58,7 @@ namespace ShaderGraph {
 		public:
 			unsigned samples;
 
-			BlackbodyInput(Socket* _temperatureSocket, const unsigned _samples = Spectrum::nSamples);
+			BlackbodyInput(Socket* _temperatureSocket = nullptr, const unsigned _samples = Spectrum::nSamples);
 
 			void GetSpectrum(const ScatterEvent &_event, void *_out) const;
 
@@ -72,7 +72,7 @@ namespace ShaderGraph {
 		public:
 			Texture *tex;
 
-			ImageTextureInput(Texture *_tex);
+			ImageTextureInput(Texture *_tex = nullptr);
 
 			void GetColour(const ScatterEvent &_event, void *_out) const;
 
@@ -86,7 +86,7 @@ namespace ShaderGraph {
 			Texture *tex;
 			uint8_t channel;
 
-			ImageTextureChannelInput(Texture *_tex, const uint8_t _channel = 0);
+			ImageTextureChannelInput(Texture *_tex = nullptr, const uint8_t _channel = 0);
 
 			void GetScalar(const ScatterEvent &_event, void *_out) const;
 	};
@@ -97,7 +97,7 @@ namespace ShaderGraph {
 		public:
 			texture_t<Spectrum> *tex;
 
-			SpectralTextureInput(texture_t<Spectrum> *_tex);
+			SpectralTextureInput(texture_t<Spectrum> *_tex = nullptr);
 
 			void GetSpectrum(const ScatterEvent &_event, void *_out) const;
 	};

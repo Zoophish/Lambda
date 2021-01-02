@@ -52,11 +52,14 @@ namespace MeshImport {
 		//	Texture Coordinates
 		static const int channel = 0;
 		if (_aiMesh->HasTextureCoords(channel)) {
-			_tMesh->hasUVs = true;
 			for (size_t i = 0; i < _tMesh->numVertices; ++i) {
 				_tMesh->textureCoordinates[i].x = (Real)1 - _aiMesh->mTextureCoords[channel][i].x;
 				_tMesh->textureCoordinates[i].y = (Real)1 - _aiMesh->mTextureCoords[channel][i].y;
 			}
+		}
+		else {
+			delete[] _tMesh->textureCoordinates;
+			_tMesh->textureCoordinates = nullptr;
 		}
 	}
 

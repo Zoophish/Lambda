@@ -156,7 +156,7 @@ int main() {
 
 	//Import an asset using an AssetImporter object
 	AssetImporter ai;
-	ai.Import("../content/box_artifacts.obj");
+	ai.Import("../content/lucy.obj");
 
 	//Push the mesh objects to the resource manager...
 	ai.PushToResourceManager(&resources, (ImportOptions)(IMP_MESHES));
@@ -229,7 +229,7 @@ int main() {
 	light.intensity = 14;
 
 	//Add it to the scene - the associated light object will be added to scene.lights automatically
-	scene.AddLight(&light);
+	//scene.AddLight(&light);
 	//scene.AddObject(&lightMesh);
 
 	//Make environment lighting
@@ -238,7 +238,7 @@ int main() {
 	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 0;
+	ibl.intensity = 1;
 	ibl.offset = Vec2(PI*-.5, 0);
 
 	//Add it to scene's lights

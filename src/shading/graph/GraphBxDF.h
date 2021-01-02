@@ -22,63 +22,63 @@ namespace ShaderGraph {
 
 	class MixBxDFNode : public Node, public MixBSDF {
 		public:
-			MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio);
+			MixBxDFNode(Socket *_bxdfA = nullptr, Socket *_bxdfB = nullptr, Socket *_ratio = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class LambertianBRDFNode : public Node, public LambertianBRDF {
 		public:
-			LambertianBRDFNode(Socket *_albedo);
+			LambertianBRDFNode(Socket *_albedo = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class OrenNayarBRDFNode : public Node, public OrenNayarBRDF {
 		public:
-			OrenNayarBRDFNode(Socket *_albedo, Socket *_roughness);
+			OrenNayarBRDFNode(Socket *_albedo = nullptr, Socket *_roughness = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class OrenNayarBTDFNode : public Node, public OrenNayarBTDF {
 		public:
-			OrenNayarBTDFNode(Socket *_albedo, Socket *_roughness);
+			OrenNayarBTDFNode(Socket *_albedo = nullptr, Socket *_roughness = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class MicrofacetBRDFNode : public Node, public MicrofacetBRDF {
 		public:
-			MicrofacetBRDFNode(Socket *_albedo, Socket *_roughness, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
+			MicrofacetBRDFNode(Socket *_albedo = nullptr, Socket *_roughness = nullptr, MicrofacetDistribution *_distribution = nullptr, Fresnel *_fresnel = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class GhostBTDFNode : public Node, public GhostBTDF {
 		public:
-			GhostBTDFNode(Socket *_alpha);
+			GhostBTDFNode(Socket *_alpha = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class FresnelBSDFNode : public Node, public FresnelBSDF {
 		public:
-			FresnelBSDFNode(Socket *_albedo, Socket *_ior);
+			FresnelBSDFNode(Socket *_albedo = nullptr, Socket *_ior = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class SpecularBRDFNode : public Node, public SpecularBRDF {
 		public:
-			SpecularBRDFNode(Socket *_albedo, Fresnel *_fresnel);
+			SpecularBRDFNode(Socket *_albedo = nullptr, Fresnel *_fresnel = nullptr);
 
 			DECL_CLBCK_FUNC;
 	};
 
 	class SpecularBTDFNode : public Node, public SpecularBTDF {
 		public:
-			SpecularBTDFNode(Socket *_albedo, const Real _etaT);
+			SpecularBTDFNode(Socket *_albedo = nullptr, const Real _etaT = 1);
 
 			DECL_CLBCK_FUNC;
 	};
