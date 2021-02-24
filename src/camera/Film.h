@@ -27,7 +27,10 @@ class Film {
 		/*
 			Adds a spectral sample to pixel at coordinates _x and _y.
 		*/
-		void AddSample(const Spectrum &_s, const unsigned _x, const unsigned _y);
+		inline void AddSample(const Spectrum &_s, const unsigned _x, const unsigned _y) {
+			filmData.GetPixelCoord(_x, _y).spectrum += _s;
+			filmData.GetPixelCoord(_x, _y).nSamples++;
+		}
 
 		/*
 			Converts the accumulation of spetral samples on the film plane to

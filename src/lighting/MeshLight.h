@@ -15,6 +15,8 @@ class MeshLight : public Light {
 		ShaderGraph::Socket *emission;
 		Real intensity = 1;
 
+		MeshLight();
+
 		MeshLight(TriangleMesh *_mesh);
 
 		Spectrum Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pdf) const override;

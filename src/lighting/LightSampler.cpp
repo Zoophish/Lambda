@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <core/Scene.h>
 #include "LightSampler.h"
 

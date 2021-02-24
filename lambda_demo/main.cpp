@@ -32,6 +32,7 @@ It briefly runs over:
 #include <lighting/PointLight.h>
 #include <lighting/Spotlight.h>
 #include <render/MosaicRenderer.h>
+#include <render/ProgressiveRender.h>
 #include <utility/Memory.h>
 #include <image/processing/PostProcessing.h>
 #include <image/processing/ToneMap.h>
@@ -263,7 +264,7 @@ int main() {
 	sampler.sampleShifter = &sampleShifter;
 
 	//Make a film that can be rendered to
-	Film film(1024, 1024);
+	Film film(512, 512);
 
 
 	//Construct a camera with a circular aperture of size .03 world units
@@ -296,16 +297,22 @@ int main() {
 	std::cout << std::endl << "Render at what spp?";
 	std::cin >> renderDirective.spp;
 
-	Texture albedoPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
-	Texture normalPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
-	Texture colourPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	//Texture albedoPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	//Texture normalPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	//Texture colourPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
 	//Render the render directive using a renderer and a tile renderer
-	AsyncMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
+	ProgressiveRender rdr(renderDirective);
+	rdr.Init();
+	//TBBMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
 	auto start = std::chrono::system_clock::now();
-	rdr.Render();
-	film.ToRGBTexture(&colourPass);
-	film.Clear();
+	//rdr.Render();
+	using namespace std::chrono_literals;
+	std::this_thread::sleep_for(12000ms);
+	rdr.Stop();
+	auto end = std::chrono::system_clock::now();
+	//film.ToRGBTexture(&colourPass);
+	//film.Clear();
 	//renderDirective.integrator = &albedoRdr;
 	//rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
 	//rdr.Render();
@@ -315,7 +322,6 @@ int main() {
 	//rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
 	//rdr.Render();
 	//film.ToRGBTexture(&normalPass);
-	auto end = std::chrono::system_clock::now();
 	//Display render time
 	std::chrono::duration<double> elapsed_seconds = end - start;
 	std::cout << std::endl << "TIME: " << elapsed_seconds.count();
@@ -331,9 +337,9 @@ int main() {
 
 	//Save to file - gamma=true, alpha=false
 	//Different image formats can be used by changing the postfix
-	colourPass.SaveToImageFile("demo_render.png", true, false);
+	//colourPass.SaveToImageFile("demo_render.png", true, false);
 	//normalPass.SaveToImageFile("normals.png", false, false);
-
 	system("pause");
+	rdr.outputTexture.SaveToImageFile("progressive.png", true);
 	return 0;
 }

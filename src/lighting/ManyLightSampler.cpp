@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <lighting/MeshLight.h>
 #include <lighting/EnvironmentLight.h>
 #include "ManyLightSampler.h"

@@ -3,14 +3,42 @@
 
 LAMBDA_API_NAMESPACE_BEGIN
 
+
+
 /* Opaque Types */
 
+struct LAMBDAMaterial;
+struct LAMBDALight;
 struct LAMBDAShader;
 struct LAMBDAShaderNode;
 
 
-/* Shader Node Types */
 
+/* Creates a new material. */
+LAMBDA_API LAMBDAMaterial *lambdaCreateMaterial();
+
+/* Assigns _light to _material. */
+LAMBDA_API void lambdaSetMaterialLight(LAMBDAMaterial *_material, LAMBDALight *_light);
+
+/* Assigns the bxdf output socket in _node to _material. */
+LAMBDA_API void lambdaSetMaterialBXDF(LAMBDAMaterial *_material, LAMBDAShaderNode *_node);
+
+
+
+/* Light types */
+enum LAMBDALightType {
+	LAMBDA_LIGHT_POINT,
+	LAMBDA_LIGHT_MESH,
+	LAMBDA_LIGHT_ENVIRONMENT,
+	LAMBDA_LIGHT_SPOT,
+};
+
+/* Creates a light object. */
+LAMBDA_API LAMBDALight *lambdaCreateLight(LAMBDALightType _type);
+
+
+
+/* Shader Node Types */
 enum LAMBDAShaderNodeType {
 	LAMBDA_NODE_BXDF_MIX,
 	LAMBDA_NODE_BXDF_LAMBERTIAN,
@@ -57,6 +85,7 @@ LAMBDA_API void lambdaLinkSocketsTag(LAMBDAShaderNode *_outNode, char *_outSocke
 
 /* Link an output socket of a node to another's input socket. */
 LAMBDA_API void lambdaLinkSockets(LAMBDAShaderNode *_outputNode, int _outSocketIndex, LAMBDAShaderNode *_inputNode, int _inSocketIndex);
+
 
 
 

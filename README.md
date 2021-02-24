@@ -1,27 +1,55 @@
 # Lambda
-A high performance physically-based renderer written in C++.
+A high performance physically-based renderer.
 
 ## Features
-- Triangulated mesh geometry
-- Graph based shading language
-- Geometry instancing
-- Many lights sampling
-- PBRT-style unbiased spectral rendering
-- Numerous BSDF models: Lambertian, Fresnel, specular, mix
-- Microfacet BSDFs: Oren-Nayar, Beckmann-Spizzichino, Towbridge-Reitz/GGX
-- Efficient rendering of participating media
-- Path integrator with multiple importance sampling
-- Pass Rendering: direct lighting, normals, depth, albedo, arbitrary textures
-- Denoising via Intel Open Image Denoise
-- Mesh lights/portals, infinite/environment lights, spotlights, point lights
-- Pinhole, thin lens and spherical/equirectangular camera models
-- Arbitrary camera aperture shapes
-- Quasi-random sequence sampling with blue noise dithering
-- Simple 3D asset importer via Assimp
-- Texture encoding optimisation
-- Multithreaded rendering
-- Embree raytracing acceleration
-- SSE support accross the program
+**C API**
+    Lambda can be built as a shared library and accessed via an abstracted interface for usage in other applications or bindings to other languages.
+
+**Geometry**
+    Triangle primitives and meshes are currently supported, however the primitive options are extensible via Embree.
+    Instance proxies and objects allow scenes to contain large amounts of geometry with little memory usage.
+
+**Materials & Shading**
+    Materials are simple objects containing surface and volumetric properties that are driven by node networks. These are excecuted in a fast virtual node machine and do not need compiling, meaning edits take place immediately in real time.
+
+    BxDF & Medium Nodes:
+        - Standard BSDFs: Lambertian, transparent/translucent, specular reflection and transmission.
+        - PBR BSDFs: Fresnel, GGX, Oren-Nayar, Beckmann-Spizzichino, etc.
+        - PBR volumetric shading models.
+
+    Mathematical Nodes:
+        Standrad scalar and vector mathematical operators are supported.
+
+    Texture Nodes:
+        - Image textures
+        - Procedural textures: Perlin, value, voronoi, etc noise types - 2D & 3D support and octave stacking.
+
+**Lighting**
+    - Environment/infinite lights
+    - Point lights
+    - Spotlights
+    - Mesh lights
+
+**Rendering**
+    Rendering uses an unbiased Monte Carlo path-tracing implementation:
+        - PBRT-style spectral path-tracing
+        - Multiple importance sampling
+        - Equiangular medium sampling
+        - Light tree sampling for better efficiency and many lights support
+    Pass rendering is supported for albedo, direct lighting, normals, depth etc. Custom pass rendering is also supported.
+
+**Camera**
+    - Thin lens camera: DOF with custom bokeh/aperture shape.
+    - Spherical camera
+
+**Post Processing**
+    Extensible post processing stack; currently supporting:
+        - Denoising (IOIDN)
+
+**Concurrency**
+    Rendering can parallelised across multiple threads.
+    Progressive rendering is also supported and runs independently of the main thread.
+    Performance-critical code is optimised with SIMD vectorization.
 
 ![Transparency in materials (leaves).](https://github.com/Zoophish/Lambda/blob/master/repo_resources/lucyinnature.png)
 
@@ -40,23 +68,20 @@ A high performance physically-based renderer written in C++.
 - Assimp (http://www.assimp.org/)
 - Open Image Denoise (https://www.openimagedenoise.org/)
 
-## Other Third Party Libraries
+## Third Party Libraries
 - stb_image & stb_image_write included in repository (https://github.com/nothings/stb)
 
  **Future goals**
+ - Globe rendering & precision techniques for planetary scale rendering
  - Sobol' sampler with Owen scrambling
  - Path guiding
- - Packet-tracing on albedo and look-dev integrators
- - Tonemapping post-process
- - Utility integrators (depth, normal, albedo, etc)
+ - Fast raytraced look-dev rendering
+ - Better post processing options
  - Deep compositing AOVs
  - Bidirectional pathtracing integrator
  - Realistic camera model with lens and sensor profiles
- - Camera chromatic aberration
  - Parameterised Hair BSDF (Bitterli, Chiang - 2016)
  - Virtual-displacement mapping
- - Animated rendering
- - Massive-scene optimisation (occlusion of insignificant object groups, asset caching)
+ - Animated transforms & deformables
  - Light-pass rendering
- - Floating origin chunk instantiation for planetary scale rendering
- - Physical-atmosphere approximation with clouds
+ - Physical-atmosphere with clouds

@@ -39,10 +39,11 @@ struct RenderTile {
 typedef void (*TileRenderer)(const RenderTile *);
 
 struct RenderMosaic {
+	std::vector<RenderTile> tiles;
 	unsigned nX, nY;
-	std::unique_ptr<RenderTile[]> tiles;
 
-	RenderMosaic() {}
+
+	RenderMosaic();
 
 	RenderMosaic(const RenderDirective &_directive);
 };
@@ -50,7 +51,15 @@ struct RenderMosaic {
 
 namespace TileRenderers {
 
+	/*
+		Adds conribution to tile using render directive's spp parameter.
+	*/
 	void UniformSpp(const RenderTile *_tile);
+
+	/*
+		Adds single sample contribution to tile.
+	*/
+	void UniformIncrement(const RenderTile *_tile);
 
 	//class UniformTileRenderer : public TileRenderer {
 	//	public:

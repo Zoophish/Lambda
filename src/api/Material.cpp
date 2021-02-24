@@ -1,16 +1,35 @@
 #pragma once
-#include <lambda/Shader.h>
+#include <lambda/Material.h>
 
-#include <utility/Memory.h>
+#include <shading/Material.h>
 #include <shading/graph/GraphBxDF.h>
 #include <shading/graph/GraphConverters.h>
 #include <shading/graph/GraphInputs.h>
 #include <shading/graph/GraphMaths.h>
 #include <shading/graph/GraphTexture.h>
 
+#include <lighting/PointLight.h>
+#include <lighting/MeshLight.h>
+#include <lighting/EnvironmentLight.h>
+#include <lighting/Spotlight.h>
+
 namespace sg = lambda::ShaderGraph;
 
 LAMBDA_API_NAMESPACE_BEGIN
+
+struct LAMBDAMaterial {
+	lambda::Material material;
+};
+
+struct LAMBDALight {
+	lambda::Light *light;
+	LAMBDALightType type;
+
+	~LAMBDALight() {
+		if (light) delete light;
+		light = nullptr;
+	}
+};
 
 struct LAMBDAShader {
 	MemoryArena shaderArena;
@@ -20,6 +39,52 @@ struct LAMBDAShaderNode {
 	lambda::ShaderGraph::Node *node;
 	LAMBDAShaderNodeType nodeType;
 };
+
+
+
+
+LAMBDAMaterial *lambdaCreateMaterial() {
+	LAMBDAMaterial *material = new LAMBDAMaterial();
+	return material;
+}
+
+LAMBDALight *lambdaCreateLight(LAMBDALightType _type) {
+
+	LAMBDALight *light = nullptr;
+
+	switch (_type) {
+	case LAMBDA_LIGHT_POINT:
+		light->light = new lambda::PointLight;
+		break;
+	case LAMBDA_LIGHT_MESH:
+		light->light = new lambda::MeshLight();
+		break;
+	case LAMBDA_LIGHT_ENVIRONMENT:
+		light->light = new lambda::EnvironmentLight();
+		break;
+	case LAMBDA_LIGHT_SPOT:
+		light->light = new lambda::Spotlight();
+		break;
+	}
+
+	light->type = _type;
+	return light;
+}
+
+void lambdaSetMaterialLight(LAMBDAMaterial *_material, LAMBDALight *_light) {
+	_material->material.light = _light->light;
+}
+
+void lambdaSetMaterialBXDF(LAMBDAMaterial *_material, LAMBDAShaderNode *_node) {
+	bool verifyBxDF = false;
+	for (int t = 0; t != LAMBDA_NODE_SEPARATE_XYZ; ++t) {
+		if (_node->nodeType == static_cast<LAMBDAShaderNodeType>(t)) {
+			verifyBxDF = true;
+			break;
+		}
+	}
+	if(verifyBxDF) _material->material.bxdf = (lambda::BxDF*)_node->node;
+}
 
 LAMBDAShader *lambdaCreateShader() {
 	LAMBDAShader *shader = new LAMBDAShader;

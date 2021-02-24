@@ -1,7 +1,9 @@
 #include "Memory.h"
 
 void *AllocAligned(const size_t _size) {
-	#if defined(_WIN32)
+	#if __cplusplus == 201703L
+		return std::aligned_alloc(L1_CACHE_LINE_SIZE, _size);
+	#elif defined(_WIN32)
 		return _aligned_malloc(_size, L1_CACHE_LINE_SIZE);
 	#elif defined (__FreeBSD__) || defined(__APPLE__)
 		void *ptr = nullptr;
@@ -15,7 +17,9 @@ void *AllocAligned(const size_t _size) {
 
 void FreeAligned(void *_ptr) {
 	if (!_ptr) return;
-	#if defined(_WIN32)
+	#if __cplusplus == 201703L
+		std::free(_ptr);
+	#elif defined(_WIN32)
 		_aligned_free(_ptr);
 	#else
 		free(_ptr);

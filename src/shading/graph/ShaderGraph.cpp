@@ -58,6 +58,12 @@ SocketRef *Node::GetInputSocket(const char *_tag) {
 	}
 }
 
+SocketRef *Node::GetInputSocket(const SocketType _type) {
+	for (unsigned i = 0; i < numIn; ++i) {
+		if (inputSockets[i].socketType == _type) return &inputSockets[i];
+	}
+}
+
 Socket *Node::GetOutputSocket(const unsigned _index) {
 	return &outputSockets[_index];
 }
@@ -65,6 +71,12 @@ Socket *Node::GetOutputSocket(const unsigned _index) {
 Socket *Node::GetOutputSocket(const char *_tag) {
 	for (unsigned i = 0; i < numIn; ++i) {
 		if (outputSockets[i].tag == std::string(_tag)) return &outputSockets[i];
+	}
+}
+
+Socket *Node::GetOutputSocket(const SocketType _type) {
+	for (unsigned i = 0; i < numIn; ++i) {
+		if (outputSockets[i].socketType == _type) return &outputSockets[i];
 	}
 }
 

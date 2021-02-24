@@ -1,7 +1,8 @@
 #pragma once
+#include <iostream>
+#include "Material.h"
 #include "surface/BxDF.h"
 #include "graph/ShaderGraph.h"
-#include "Material.h"
 
 LAMBDA_BEGIN
 

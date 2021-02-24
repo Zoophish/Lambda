@@ -2,6 +2,10 @@
 
 LAMBDA_BEGIN
 
+MeshLight::MeshLight() {
+	mesh = nullptr;
+}
+
 MeshLight::MeshLight(TriangleMesh *_mesh) {
 	mesh = _mesh;
 	_mesh->material->light = this;

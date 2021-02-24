@@ -4,7 +4,6 @@
 */
 
 #pragma once
-#include <iostream>
 #include <maths/maths.h>
 #include <core/Ray.h>
 
@@ -18,12 +17,12 @@ class Medium;
 
 struct ScatterEvent {
 	Vec3 wo, wi, woL, wiL;
-	Real eta = 1.001;
-	int sidedness = 1;	//1 = same side as normal, else = -1
-	bool mediumInteraction = false;
 	RayHit *hit;
+	int sidedness = 1;	//1 = same side as normal, else = -1
 	Medium *medium = nullptr;
 	const Scene *scene;
+	Real eta = 1.001;
+	bool mediumInteraction = false;
 
 	inline Vec3 ToLocal(const Vec3 &_v) const {
 		return maths::WorldToLocal(_v, hit->tangent, hit->normalS, hit->bitangent);

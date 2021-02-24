@@ -33,11 +33,11 @@ SG_BEGIN
 
 
 
-using NodeDelegate = ConstDelegate<void, const ScatterEvent &, void *>;
+using NodeDelegate = Delegate<void, const ScatterEvent &, void *>;
 
 #define MAKE_SOCKET_CALLBACK(_func) NodeDelegate::FromFunction<std::remove_reference<decltype(*this)>::type, (_func)>(this)
 
-#define MAKE_SOCKET(_type, _callback, _tag) {	(_type), MAKE_SOCKET_CALLBACK(_callback), nullptr, (_tag)	}
+#define MAKE_SOCKET(_type, _callback, _tag) {	(_tag), MAKE_SOCKET_CALLBACK(_callback), nullptr, (_type) 	}
 
 #define MAKE_INPUT_SOCKET(_type, _socketPtr, _tag) {	(_type), (_socketPtr), (_tag)	};
 
@@ -70,10 +70,10 @@ template<> constexpr char const *getSocketTag<Spectrum> = "Spectrum";
 class Node;
 
 struct Socket {
-	SocketType socketType = SocketType::TYPE_NULL;
+	std::string tag;
 	NodeDelegate callback;
 	Node *node = nullptr;
-	std::string tag;
+	SocketType socketType = SocketType::TYPE_NULL;
 
 	/*
 		Methods are kept inline for higher chance of expansion.
@@ -233,7 +233,10 @@ struct Socket {
 		ASSERT_CALLBACK(callback);
 		switch (socketType) {
 		case SocketType::TYPE_COLOUR:
-			return Spectrum::FromRGB((Real *) &GetAs<Colour>(_event), _type);
+		{
+			Colour c = GetAs<Colour>(_event);
+			return Spectrum::FromRGB((Real *)&c, _type);
+		}
 		case SocketType::TYPE_SCALAR:
 			return Spectrum(GetAs<Real>(_event));
 		case SocketType::TYPE_SPECTRUM:
@@ -295,9 +298,13 @@ class Node {
 
 		SocketRef *GetInputSocket(const char *_tag);
 
+		SocketRef *GetInputSocket(const SocketType _type);
+
 		Socket *GetOutputSocket(const unsigned _index);
 
 		Socket *GetOutputSocket(const char *_tag);
+
+		Socket *GetOutputSocket(const SocketType _type);
 
 		GraphIterator begin();
 

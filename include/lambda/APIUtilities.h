@@ -1,8 +1,16 @@
-#define LAMBDA_API_NAMESPACE_BEGIN namespace Lambda {
-#define LAMBDA_API_NAMESPACE_END }
+#define LAMBDA_API_USE_NAMESPACE
 
-//#define LAMBDA_STATIC
+#ifdef LAMBDA_API_USE_NAMESPACE
+	#define LAMBDA_API_NAMESPACE_BEGIN namespace Lambda {
+	#define LAMBDA_API_NAMESPACE_END }
+#else
+	#define LAMBDA_API_NAMESPACE_BEGIN
+	#define LAMBDA_API_NAMESPACE_END
+#endif
 
+#define _EXPORTING
+
+/* Define LAMBDA_STATIC in preprocessor definitions for static linkage. */
 #ifndef LAMBDA_STATIC
 	#ifdef _WIN32
 		#ifdef _EXPORTING

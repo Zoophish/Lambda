@@ -5,11 +5,7 @@ LAMBDA_BEGIN
 
 Film::Film(const unsigned _width, const unsigned _height) {
 	filmData.Resize(_width, _height);
-}
-
-void Film::AddSample(const Spectrum &_s, const unsigned _x, const unsigned _y) {
-	filmData.GetPixelCoord(_x, _y).spectrum += _s;
-	filmData.GetPixelCoord(_x, _y).nSamples++;
+	Clear();
 }
 
 void Film::ToRGBTexture(Texture *_output) const {
@@ -19,8 +15,9 @@ void Film::ToRGBTexture(Texture *_output) const {
 			float xyz[3];
 			const Spectrum out = (Spectrum)(filmData[i].spectrum / (Real)filmData[i].nSamples);
 			out.ToRGB(xyz);
-
-			(*_output)[i] = Colour(&xyz[0]);
+			Colour c(&xyz[0]);
+			c.a = 1;
+			(*_output)[i] = c;
 		}
 	}
 	else std::cout << std::endl << "Output texture size does not match film size.";

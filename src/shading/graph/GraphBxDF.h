@@ -11,7 +11,7 @@ namespace ShaderGraph {
 
 	#define _DECLTYPE std::remove_reference<decltype(*this)>::type
 	#define BXDF_CALLBACK &std::add_const<_DECLTYPE>::type::GetBxDF
-	#define MAKE_BXDF_SOCKET(_type, _callback, _tag) {	(_type), NodeDelegate::FromFunction<_DECLTYPE, _callback>(this), nullptr, (_tag)	}
+	#define MAKE_BXDF_SOCKET(_type, _callback, _tag) {	(_tag), NodeDelegate::FromFunction<_DECLTYPE, _callback>(this), nullptr, (_type)	}
 	
 	/*
 		All BxDF nodes return the same thing, so we can use this macro as a
