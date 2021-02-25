@@ -2,35 +2,35 @@
 A high performance physically-based renderer.
 
 ## Features
-**C API**
-    Lambda can be built as a shared library and accessed via an abstracted interface for usage in other applications or bindings to other languages.
+**C API**  
+	Lambda can be built as a shared library and accessed via an abstracted interface for usage in other applications or bindings to other languages.
 
-**Geometry**
+**Geometry**  
     Triangle primitives and meshes are currently supported, however the primitive options are extensible via Embree.
     Instance proxies and objects allow scenes to contain large amounts of geometry with little memory usage.
 
-**Materials & Shading**
-    Materials are simple objects containing surface and volumetric properties that are driven by node networks. These are excecuted in a fast virtual node machine and do not need compiling, meaning edits take place immediately in real time.
-
-    BxDF & Medium Nodes:
+**Materials & Shading**  
+    Materials are simple objects containing surface and volumetric properties that are driven by node networks. These are executed in a fast virtual node machine and do not need compiling, meaning edits take place immediately in real time.
+    
+*BxDF & Medium Nodes:*  
         - Standard BSDFs: Lambertian, transparent/translucent, specular reflection and transmission.
         - PBR BSDFs: Fresnel, GGX, Oren-Nayar, Beckmann-Spizzichino, etc.
         - PBR volumetric shading models.
 
-    Mathematical Nodes:
-        Standrad scalar and vector mathematical operators are supported.
-
-    Texture Nodes:
+*Mathematical Nodes:*  
+        Standard scalar and vector mathematical operators are supported.
+        
+*Texture Nodes:*  
         - Image textures
-        - Procedural textures: Perlin, value, voronoi, etc noise types - 2D & 3D support and octave stacking.
+        - Procedural textures: Perlin, value, Voronoi, etc noise types - 2D & 3D support and octave stacking.
 
-**Lighting**
+**Lighting**  
     - Environment/infinite lights
     - Point lights
     - Spotlights
     - Mesh lights
 
-**Rendering**
+**Rendering**  
     Rendering uses an unbiased Monte Carlo path-tracing implementation:
         - PBRT-style spectral path-tracing
         - Multiple importance sampling
@@ -38,15 +38,15 @@ A high performance physically-based renderer.
         - Light tree sampling for better efficiency and many lights support
     Pass rendering is supported for albedo, direct lighting, normals, depth etc. Custom pass rendering is also supported.
 
-**Camera**
+**Camera**  
     - Thin lens camera: DOF with custom bokeh/aperture shape.
     - Spherical camera
 
-**Post Processing**
+**Post Processing**  
     Extensible post processing stack; currently supporting:
         - Denoising (IOIDN)
 
-**Concurrency**
+**Concurrency**   
     Rendering can parallelised across multiple threads.
     Progressive rendering is also supported and runs independently of the main thread.
     Performance-critical code is optimised with SIMD vectorization.
@@ -71,7 +71,7 @@ A high performance physically-based renderer.
 ## Third Party Libraries
 - stb_image & stb_image_write included in repository (https://github.com/nothings/stb)
 
- **Future goals**
+ **Future goals**  
  - Globe rendering & precision techniques for planetary scale rendering
  - Sobol' sampler with Owen scrambling
  - Path guiding
