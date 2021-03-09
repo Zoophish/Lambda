@@ -26,7 +26,9 @@ enum LAMBDAType {
 	LAMBDA_OBJECT,
 	LAMBDA_TRIANGLE_MESH,
 	LAMBDA_TEXTURE,
-	LAMBDA_LIGHT
+	LAMBDA_LIGHT,
+	LAMBDA_NODE,
+	LAMBDA_MATERIAL
 };
 
 
@@ -66,14 +68,14 @@ enum LAMBDA_Buffer {
 	LAMBDA_BUFFER_TEXTURE_COORDINATE
 };
 
-/* Set the data of a buffer inside _mesh. */
+/* Set the data of a buffer inside _mesh. Format must be float array. */
 LAMBDA_API void lambdaTriangleMeshSetBuffer(LAMBDA_TriangleMesh *_mesh, LAMBDA_Buffer _bufferType, void *_ptr, size_t _num);
 
 /* Create an instance proxy for a triangle mesh. */
 LAMBDA_API LAMBDA_Proxy *lambdaCreateProxy(LAMBDA_TriangleMesh *_mesh);
 
 /* Create an instance object from _proxy. */
-LAMBDA_API LAMBDA_Instance *lambdaCreateInstance(LAMBDA_Proxy *_proxy);
+LAMBDA_API LAMBDA_Instance *lambdaCreateInstance(LAMBDA_Device *_device, LAMBDA_Proxy *_proxy);
 
 /* Utility for applying transform parameters to the transformation matrix _xfm. */
 LAMBDA_API void lambdaMakeAffineTransform(float _xfm[12], float _position[3], float _scale[3], float _eulerAngles[3]);
@@ -99,6 +101,11 @@ enum LAMBDA_Integrator {
 	LAMBDA_INTEGRATOR_DEPTH,
 };
 
+enum LAMBDA_LightStrategy {
+	LAMBDA_LIGHT_STRATEGY_POWER,
+	LAMBDA_LIGHT_STRATEGY_TREE
+};
+
 /* Create a film render target. */
 LAMBDA_API LAMBDA_Film *lambdaCreateFilm(int _width, int _height);
 
@@ -116,20 +123,34 @@ LAMBDA_API void lambdaSetCameraFocalLength(LAMBDA_Camera *_camera, float _focalL
 /* Set aperture radius. */
 LAMBDA_API void lambdaSetCameraApertureSize(LAMBDA_Camera *_camera, float _size);
 
-/* Create a bundle of information to give a renderer.  */
-LAMBDA_API LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMBDA_Film *_film, LAMBDA_Camera *_camera, LAMBDA_Integrator _integrator, int _spp);
+/*
+* LAMBDA_RenderProperties:
+*  spp -------------------- samples per pixel for offline rendering if applicable
+*  tileSizeX, tileSizeY --- size in pixels of render tiles
+*  numThreads ------------- target number of render threads. 0 = automatic
+*  integrator ------------- renderng method to use
+*  lightStrategy ---------- light sampling strategy to use
+*/
+struct LAMBDA_RenderProperties {
+	unsigned spp;
+	unsigned tileSizeX;
+	unsigned tileSizeY;
+	unsigned numThreads;
+	LAMBDA_Integrator integrator;
+	LAMBDA_LightStrategy lightStrategy;
+};
 
-/* Assign the directive an integrator. */
-LAMBDA_API void lambdaSetIntegrator(LAMBDA_RenderDirective *_directive, LAMBDA_Integrator _integrator);
+/* Creates render properties with default values. */
+LAMBDA_API LAMBDA_RenderProperties *lambdaCreateRenderProperties();
 
-/* Set the render tile size (default is 16x16). */
-LAMBDA_API void lambdaSetTileSize(LAMBDA_RenderDirective *_directive, int _width, int _height);
+/* Creates a bundle of information complete to give to a renderer.  */
+LAMBDA_API LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMBDA_Film *_film, LAMBDA_Camera *_camera, LAMBDA_RenderProperties *_properties);
 
 /* Bind a camera to the directive. */
-LAMBDA_API void lambdaBindCamera(LAMBDA_RenderDirective *_directive, LAMBDA_Camera *_camera);
+LAMBDA_API void lambdaSetCamera(LAMBDA_RenderDirective *_directive, LAMBDA_Camera *_camera);
 
 /* Bind a scene to the directive. */
-LAMBDA_API void lambdaBindScene(LAMBDA_RenderDirective *_directive, LAMBDA_Scene *_scene);
+LAMBDA_API void lambdaSetScene(LAMBDA_RenderDirective *_directive, LAMBDA_Scene *_scene);
 
 /* Create a progressive renderer instance. */
 LAMBDA_API LAMBDA_ProgressiveRenderer *lambdaCreateProgressiveRenderer(LAMBDA_RenderDirective *_directive);
@@ -138,6 +159,6 @@ LAMBDA_API LAMBDA_ProgressiveRenderer *lambdaCreateProgressiveRenderer(LAMBDA_Re
 LAMBDA_API void lambdaSetProgressiveRendererCallback(LAMBDA_ProgressiveRenderer *_renderer, void(*_callback)());
 
 /* Returns a pointer to the first RGBA32 texture element and stores _width and _height.  */
-LAMBDA_API void *lambdaGetProgressiveRendererOutput(LAMBDA_ProgressiveRenderer *_renderer, int *_width, int *_height);
+LAMBDA_API void *lambdaGetProgressiveRendererData(LAMBDA_ProgressiveRenderer *_renderer, int *_width, int *_height);
 
 LAMBDA_API_NAMESPACE_END

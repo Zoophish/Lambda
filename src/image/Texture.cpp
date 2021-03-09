@@ -1,10 +1,11 @@
 #pragma once
-#include <iostream>
+#include <string>
 #include "Texture.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image/stb_image_write.h>
 #define STB_IMAGE_IMPLEMENTATION    
 #include <stb_image/stb_image.h>
+
 
 /*
 	-------- Saving Utility Functions --------
@@ -16,9 +17,9 @@ static std::string PathFormat(const std::string &_path) {
 }
 
 static void Gamma(float *_rgba) {
-	_rgba[0] = std::powf(_rgba[0], GAMMA_POW);
-	_rgba[1] = std::powf(_rgba[1], GAMMA_POW);
-	_rgba[2] = std::powf(_rgba[2], GAMMA_POW);
+	_rgba[0] = std::powf(_rgba[0], lambda::GAMMA_POW);
+	_rgba[1] = std::powf(_rgba[1], lambda::GAMMA_POW);
+	_rgba[2] = std::powf(_rgba[2], lambda::GAMMA_POW);
 }
 
 static uint32_t PackChannels(const float *_rgba) {
@@ -35,21 +36,34 @@ static bool WriteData(const uint32_t *_p, const char *_path, const unsigned _w, 
 	if (format == "jpg") { stbi_write_jpg(_path, _w, _h, 4, &_p[0], 100); return true; }
 	if (format == "bmp") { stbi_write_bmp(_path, _w, _h, 4, &_p[0]); return true; }
 	if (format == "tga") { stbi_write_tga(_path, _w, _h, 4, &_p[0]); return true; }
-	std::cout << std::endl << "Did not save texture: " << format << " is not a valid format.";
+	printf("\nDid not save texture: %s is not a supported format.", format.c_str());
 	return false;
 }
 
+
 LAMBDA_BEGIN
 
-bool texture_t<Colour>::GetFileInfo(const char *_path, int *_width, int *_height, int *_channels) {
+Texture::Texture(const unsigned _w, const unsigned _h, const Colour &_c) : texture_t<Colour>(_w, _h, _c) {}
+
+Texture Texture::Copy(const Texture &_texture) {
+	Texture copy;
+	copy.width = _texture.width;
+	copy.height = _texture.height;
+	copy.encoding = _texture.encoding;
+	copy.data.reset(new Colour[_texture.width * _texture.height]);
+	memcpy(&copy.data[0], &_texture.data[0], sizeof(Colour) * _texture.width * _texture.height);
+	return copy;
+}
+
+bool Texture::GetFileInfo(const char *_path, int *_width, int *_height, int *_channels) {
 	return stbi_info(_path, _width, _height, _channels);
 }
 
-bool texture_t<Colour>::GetMemoryInfo(const void *_src, const int _size, int *_w, int *_h, int *_channels) {
+bool Texture::GetMemoryInfo(const void *_src, const int _size, int *_w, int *_h, int *_channels) {
 	return stbi_info_from_memory((const stbi_uc *)_src, _size, _w, _h, _channels);
 }
 
-void texture_t<Colour>::SaveToImageFile(const char *_path, const bool _gammaCorrect, const bool _alpha) const {
+void Texture::SaveToImageFile(const char *_path, const bool _gammaCorrect, const bool _alpha) const {
 	const std::string format = PathFormat(_path);
 	std::unique_ptr<uint32_t[]> p(new uint32_t[width * height]);
 	for (unsigned y = 0; y < height; ++y)
@@ -66,7 +80,7 @@ void texture_t<Colour>::SaveToImageFile(const char *_path, const bool _gammaCorr
 	WriteData(p.get(), _path, width, height);
 }
 
-void texture_t<Colour>::ParseData(float *_data, const int _channels) {
+void Texture::ParseData(float *_data, const int _channels) {
 	for (unsigned y = 0; y < height; ++y) {
 		for (unsigned x = 0; x < width; ++x) {
 			const int r = width * y * _channels + x * _channels;
@@ -78,35 +92,37 @@ void texture_t<Colour>::ParseData(float *_data, const int _channels) {
 	}
 }
 
-void texture_t<Colour>::LoadImageFile(const char *_path, int _channels) {
+void Texture::LoadImageFile(const char *_path, int _channels) {
 	int file_width, file_height;
 	if (stbi_info(_path, &file_width, &file_height, nullptr)) {
 		Resize(file_width, file_height);
-		std::cout << std::endl << "Loading " << _path;
+		printf("\nLoading %s", _path);
 		int w = width, h = height;
 		float *data = stbi_loadf(_path, &w, &h, &_channels, 0);
 		if (data) {
 			ParseData(data, _channels);
-			std::cout << std::endl << "Loaded texture.";
+			printf("\nLoaded texture.");
 		}
-		else { std::cout << std::endl << "Could not load: " << _path; }
+		else { 
+			printf("\nCould not load: %s", _path);
+		}
 		stbi_image_free(data);
 	}
-	else std::cout << std::endl << "Image file not found: " << _path;
+	else printf("\nImage file not found: %s", _path);
 }
 
-void texture_t<Colour>::LoadFromMemory(const void *_src, const int _size, const int _channels) {
+void Texture::LoadFromMemory(const void *_src, const int _size, const int _channels) {
 	int w, h;
-	std::cout << std::endl << "Loading texture: " << _src;
+	printf("\nLoading texture: %p", _src);
 	float *data = stbi_loadf_from_memory((const stbi_uc *)_src, _size, &w, &h, nullptr, _channels);
 	if (data) {
 		ParseData(data, _channels);
-		std::cout << std::endl << "Loaded texture.";
+		printf("\nLoaded texture.");
 	}
-	else { std::cout << std::endl << "Could not load: " << _src; }
+	else {
+		printf("\nCould not load from memory address: %p", _src);
+	}
 	stbi_image_free(data);
 }
-
-
 
 LAMBDA_END

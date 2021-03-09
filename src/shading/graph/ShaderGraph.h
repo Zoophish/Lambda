@@ -39,7 +39,7 @@ using NodeDelegate = Delegate<void, const ScatterEvent &, void *>;
 
 #define MAKE_SOCKET(_type, _callback, _tag) {	(_tag), MAKE_SOCKET_CALLBACK(_callback), nullptr, (_type) 	}
 
-#define MAKE_INPUT_SOCKET(_type, _socketPtr, _tag) {	(_type), (_socketPtr), (_tag)	};
+#define MAKE_INPUT_SOCKET(_type, _socketPtr, _tag) { {0,0,0,0},	(_type), (_socketPtr), (_tag)	};
 
 
 
@@ -252,19 +252,34 @@ struct Socket {
 };
 
 struct SocketRef {
+	Real data[4];	// all socket types are made of Reals
 	SocketType socketType;
 	Socket *socket;
 	std::string tag;
+
+	// unsafe - add type check static assert
+	template<class T>
+	inline void SetDefaultValue(const T &_value) {
+			*reinterpret_cast<T *>(&data[0]) = _value;
+	}
 
 	inline operator bool() const {
 		return static_cast<bool>(socket);
 	}
 
-	template<class T> inline T GetAs(const ScatterEvent &_event) {
+	template<class T>
+	inline T GetDefaultValue() {
+		return *reinterpret_cast<T *>(&data[0]);
+	}
+
+	template<class T>
+	inline T GetAs(const ScatterEvent &_event) {
+		if (!socket) return GetDefaultValue<T>();
 		return socket->GetAs<T>(_event);
 	}
 
 	inline Spectrum GetAsSpectrum(const ScatterEvent &_event) {
+		if (!socket) return GetDefaultValue<Spectrum>();
 		return socket->GetAsSpectrum(_event);
 	}
 

@@ -1,6 +1,7 @@
 //ACES implmentation from: https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl - Stephen Hill
 #include "ToneMap.h"
-	
+
+
 static const Vec3 ACESInputMat[3] =
 {
 	{0.59719, 0.35458, 0.04823},

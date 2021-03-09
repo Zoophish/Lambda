@@ -10,6 +10,11 @@
 #include <integrators/VolumetricPathIntegrator.h>
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/UtilityIntegrators.h>
+#include <shading/graph/GraphBxDF.h>
+#include <shading/graph/GraphInputs.h>
+#include <lighting/ManyLightSampler.h>
+
+namespace sg = lambda::ShaderGraph;
 
 
 class ResourceMap {
@@ -88,19 +93,55 @@ struct LAMBDA_RenderDirective {
 	std::unique_ptr<lambda::Integrator> integrator;
 	std::unique_ptr<lambda::Sampler> sampler;
 	std::unique_ptr<lambda::SampleShifter> sampleShifter;
+	std::unique_ptr<lambda::LightSampler> lightSampler;
 };
 
 struct LAMBDA_ProgressiveRenderer {
 	std::unique_ptr<lambda::ProgressiveRender> renderer;
 };
 
+void LoadStartupResources(LAMBDA_Device *_device) {
+	// startup resources
+	ResourceMap &resources = _device->resourceMap;
+
+	// sample shift mask
+	lambda::Texture *blueNoiseTexture = new lambda::Texture;
+	blueNoiseTexture->LoadImageFile("HDR_RGBA_7.png");
+	_device->resourceMap.Append(
+		"blue_noise_mask",
+		LAMBDA_TEXTURE,
+		blueNoiseTexture
+	);
+
+	// default spectrum
+	sg::SpectralInput *white = new sg::SpectralInput(lambda::Spectrum(1));
+	resources.Append(
+		"default_spectrum",
+		LAMBDA_NODE,
+		white
+	);
+
+	// default bxdf
+	sg::LambertianBRDFNode *bxdf = new sg::LambertianBRDFNode(white->GetOutputSocket(sg::SocketType::TYPE_SPECTRUM));
+	resources.Append(
+		"default_bxdf",
+		LAMBDA_NODE,
+		bxdf
+	);
+
+	// default material
+	lambda::Material *material = new lambda::Material;
+	material->bxdf = bxdf;
+	resources.Append(
+		"default_material",
+		LAMBDA_MATERIAL,
+		material
+	);
+}
 
 LAMBDA_Device *lambdaCreateDevice() {
 	LAMBDA_Device *device = new LAMBDA_Device();
-	// startup resources
-	lambda::Texture *blueNoiseTexture = new lambda::Texture;
-	blueNoiseTexture->LoadImageFile("HDR_RGBA_7.png");
-	device->resourceMap.Append("blue_noise_mask", LAMBDAType::LAMBDA_TEXTURE, blueNoiseTexture);
+	LoadStartupResources(device);
 	return device;
 }
 
@@ -126,9 +167,14 @@ void lambdaDetachObject(LAMBDA_Scene *_scene, LAMBDA_Instance *_instance) {
 	_scene->scene.RemoveObject(&_instance->instance);
 }
 
+static void AssignObjectDefaults(LAMBDA_Device *_device, lambda::Object *_obj) {
+	_obj->material = (lambda::Material*)_device->resourceMap.Find("default_material", LAMBDA_MATERIAL);
+}
+
 LAMBDA_TriangleMesh *lambdaCreateTriangleMesh(LAMBDA_Device *_device, const char *_name) {
 	LAMBDA_TriangleMesh *mesh = new LAMBDA_TriangleMesh();
 	_device->resourceMap.Append(_name, LAMBDA_TRIANGLE_MESH, mesh);
+	AssignObjectDefaults(_device, &mesh->mesh);
 	return mesh;
 }
 
@@ -136,11 +182,11 @@ void lambdaReleaseTriangleMesh(LAMBDA_TriangleMesh *_mesh) {
 	delete _mesh;
 }
 
-void LAMBDA_TriangleMeshAllocData(LAMBDA_TriangleMesh *_mesh, size_t _numVertices, size_t numTriangles) {
+void lambdaTriangleMeshAllocData(LAMBDA_TriangleMesh *_mesh, size_t _numVertices, size_t numTriangles) {
 	_mesh->mesh.AllocData(_numVertices, numTriangles);
 }
 
-void LAMBDA_TriangleMeshSetBuffer(LAMBDA_TriangleMesh *_mesh, LAMBDA_Buffer _bufferType, void *_ptr, size_t _len) {
+void lambdaTriangleMeshSetBuffer(LAMBDA_TriangleMesh *_mesh, LAMBDA_Buffer _bufferType, void *_ptr, size_t _len) {
 	switch(_bufferType) {
 	case LAMBDA_BUFFER_VERTEX:
 
@@ -180,9 +226,10 @@ LAMBDA_Proxy *lambdaCreateProxy(LAMBDA_TriangleMesh *_mesh) {
 	return proxy;
 }
 
-LAMBDA_Instance *lambdaCreateInstance(LAMBDA_Proxy *_proxy) {
+LAMBDA_Instance *lambdaCreateInstance(LAMBDA_Device *_device, LAMBDA_Proxy *_proxy) {
 	LAMBDA_Instance *instance = new LAMBDA_Instance();
 	instance->instance = lambda::Instance(&_proxy->proxy);
+	AssignObjectDefaults(_device, &instance->instance);
 	return instance;
 }
 
@@ -245,26 +292,18 @@ void lambdaSetCameraApertureSize(LAMBDA_Camera *_camera, float _size) {
 	_camera->aperture->size = _size;
 }
 
-LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMBDA_Film *_film, LAMBDA_Camera *_camera, LAMBDA_Integrator _integrator, int _spp) {
-	LAMBDA_RenderDirective *directive = new LAMBDA_RenderDirective;
-	directive->directive.reset(new lambda::RenderDirective());
-	directive->sampler.reset(new lambda::HaltonSampler());
-
-	lambda::Texture *blue_noise_tex = (lambda::Texture *)_device->resourceMap.Find("blue_noise_mask", LAMBDAType::LAMBDA_TEXTURE);
-	directive->sampleShifter.reset(new lambda::SampleShifter(blue_noise_tex));
-	directive->sampleShifter->maskDimensionStart = 3;	// better output starting here
-	directive->directive->camera = _camera->camera.get();
-	directive->directive->film = &_film->film;
-	directive->directive->spp = _spp;
-	directive->directive->sampleShifter = directive->sampleShifter.get();
-	directive->directive->tileSizeX = 16;
-	directive->directive->tileSizeY = 16;
-	lambdaSetIntegrator(directive, _integrator);
-
-	return directive;
+LAMBDA_RenderProperties *lambdaCreateRenderProperties() {
+	LAMBDA_RenderProperties *props = new LAMBDA_RenderProperties;
+	props->integrator = LAMBDA_INTEGRATOR_VOLPATH;
+	props->lightStrategy = LAMBDA_LIGHT_STRATEGY_TREE;
+	props->numThreads = 0;
+	props->spp = 1;
+	props->tileSizeX = 16;
+	props->tileSizeY = 16;
+	return props;
 }
 
-void lambdaSetIntegrator(LAMBDA_RenderDirective *_directive, LAMBDA_Integrator _integrator) {
+static void SetIntegrator(LAMBDA_RenderDirective *_directive, LAMBDA_Integrator _integrator) {
 	auto setIntegrator = [&](lambda::Integrator *_intgtr) {
 		_directive->integrator.reset(_intgtr);
 	};
@@ -293,16 +332,45 @@ void lambdaSetIntegrator(LAMBDA_RenderDirective *_directive, LAMBDA_Integrator _
 	}
 }
 
-void lambdaSetTileSize(LAMBDA_RenderDirective *_directive, int _width, int _height) {
-	_directive->directive->tileSizeX = _width;
-	_directive->directive->tileSizeY = _height;
+static void SetLightSampler(LAMBDA_RenderDirective *_directive, LAMBDA_LightStrategy _lightStrategy) {
+	switch (_lightStrategy) {
+	case LAMBDA_LIGHT_STRATEGY_POWER:
+		_directive->lightSampler.reset(new lambda::PowerLightSampler(*_directive->directive->scene));
+		break;
+	case LAMBDA_LIGHT_STRATEGY_TREE:
+		_directive->lightSampler.reset(new lambda::ManyLightSampler(*_directive->directive->scene));
+		break;
+	default:
+		_directive->lightSampler.reset(new lambda::ManyLightSampler(*_directive->directive->scene));
+	}
 }
 
-void lambdaBindCamera(LAMBDA_RenderDirective *_directive, LAMBDA_Camera *_camera) {
+LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMBDA_Film *_film, LAMBDA_Camera *_camera, LAMBDA_RenderProperties *_properties) {
+	LAMBDA_RenderDirective *directive = new LAMBDA_RenderDirective;
+	directive->directive.reset(new lambda::RenderDirective());
+	directive->sampler.reset(new lambda::HaltonSampler());
+
+	lambda::Texture *blue_noise_tex = (lambda::Texture *)_device->resourceMap.Find("blue_noise_mask", LAMBDAType::LAMBDA_TEXTURE);
+	directive->sampleShifter.reset(new lambda::SampleShifter(blue_noise_tex));
+	directive->sampleShifter->maskDimensionStart = 3;	// better output starting here
+	directive->directive->camera = _camera->camera.get();
+	directive->directive->film = &_film->film;
+	directive->directive->sampleShifter = directive->sampleShifter.get();
+	// render properties
+	directive->directive->spp = _properties->spp;
+	directive->directive->tileSizeX = _properties->tileSizeX;
+	directive->directive->tileSizeY = _properties->tileSizeY;
+	//directive->directive->numThreads = _properties->numThreads;
+	SetIntegrator(directive, _properties->integrator);
+
+	return directive;
+}
+
+void lambdaSetCamera(LAMBDA_RenderDirective *_directive, LAMBDA_Camera *_camera) {
 	_directive->directive->camera = _camera->camera.get();
 }
 
-void lambdaBindScene(LAMBDA_RenderDirective *_directive, LAMBDA_Scene *_scene) {
+void lambdaSetScene(LAMBDA_RenderDirective *_directive, LAMBDA_Scene *_scene) {
 	_directive->directive->scene = &_scene->scene;
 }
 
@@ -316,7 +384,7 @@ void lambdaSetProgressiveRendererCallback(LAMBDA_ProgressiveRenderer *_renderer,
 	_renderer->renderer->updateCallback = _callback;
 }
 
-void *lambdaGetProgressiveRendererOutput(LAMBDA_ProgressiveRenderer *_renderer, int *_width, int *_height) {
+void *lambdaGetProgressiveRendererData(LAMBDA_ProgressiveRenderer *_renderer, int *_width, int *_height) {
 	*_width = _renderer->renderer->outputTexture.GetWidth();
 	*_height = _renderer->renderer->outputTexture.GetHeight();
 	return _renderer->renderer->outputTexture.GetData();

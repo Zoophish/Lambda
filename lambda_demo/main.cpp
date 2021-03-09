@@ -59,7 +59,7 @@ int main() {
 	Texture blue(1, 1, Colour(.63, .1, 1));
 	Texture grid;
 	grid.LoadImageFile("demo_content/box_tex.png");
-	grid.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	grid.interpolation = InterpolationMode::INTERP_NEAREST;
 
 	//Use a memory arena for the shader graph (optional)
 	MemoryArena graphArena;
@@ -132,7 +132,7 @@ int main() {
 	med->phase = phase.get();
 
 	//Shading property objects are kept in material objects
-	Texture boxTex; boxTex.LoadImageFile("demo_content/box_tex.png"); boxTex.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	Texture boxTex; boxTex.LoadImageFile("demo_content/box_tex.png"); boxTex.interpolation = InterpolationMode::INTERP_NEAREST;
 	sg::ImageTextureInput *box_tex_node = graphArena.New<sg::ImageTextureInput>(&boxTex);
 	sg::MicrofacetBRDFNode *microfacetBRDF = graphArena.New<sg::MicrofacetBRDFNode>(&whiteNode->outputSockets[0], &roughnessNode->outputSockets[0], &d, &fres);
 	sg::LambertianBRDFNode *box_diffuse = graphArena.New<sg::LambertianBRDFNode>(&box_tex_node->outputSockets[0]);// &sigmaNode->outputSockets[0]);
@@ -235,7 +235,7 @@ int main() {
 
 	//Make environment lighting
 	Texture envMap;
-	envMap.interpolationMode = InterpolationMode::INTERP_NEAREST;
+	envMap.interpolation = InterpolationMode::INTERP_NEAREST;
 	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
@@ -299,19 +299,19 @@ int main() {
 
 	//Texture albedoPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 	//Texture normalPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
-	//Texture colourPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
+	Texture colourPass(film.filmData.GetWidth(), film.filmData.GetHeight(), Colour(1, 1, 1, 1));
 
 	//Render the render directive using a renderer and a tile renderer
-	ProgressiveRender rdr(renderDirective);
-	rdr.Init();
-	//TBBMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
+	//ProgressiveRender rdr(renderDirective);
+	//rdr.Init();
+	TBBMosaicRenderer rdr(renderDirective, TileRenderers::UniformSpp);
 	auto start = std::chrono::system_clock::now();
-	//rdr.Render();
+	rdr.Render();
 	using namespace std::chrono_literals;
-	std::this_thread::sleep_for(12000ms);
-	rdr.Stop();
+	//std::this_thread::sleep_for(12000ms);
+	//rdr.Stop();
 	auto end = std::chrono::system_clock::now();
-	//film.ToRGBTexture(&colourPass);
+	film.ToRGBTexture(&colourPass);
 	//film.Clear();
 	//renderDirective.integrator = &albedoRdr;
 	//rdr = AsyncMosaicRenderer(renderDirective, TileRenderers::UniformSpp);
@@ -337,9 +337,9 @@ int main() {
 
 	//Save to file - gamma=true, alpha=false
 	//Different image formats can be used by changing the postfix
-	//colourPass.SaveToImageFile("demo_render.png", true, false);
+	colourPass.SaveToImageFile("demo_render.png", true, false);
 	//normalPass.SaveToImageFile("normals.png", false, false);
 	system("pause");
-	rdr.outputTexture.SaveToImageFile("progressive.png", true);
+	//rdr.outputTexture.SaveToImageFile("progressive.png", true, false);
 	return 0;
 }

@@ -17,14 +17,12 @@
 #pragma once
 #include <cmath>
 #include <algorithm>
-#include "complex_t.h"
 #include "vec3.h"
 #include "vec2.h"
 #include "bounds.h"
 #include "affine3.h"
 
 typedef LAMBDA_MATHS_PRECISION Real;
-typedef complex_t<Real> Complex;
 typedef vec3<Real> Vec3;
 typedef vec2<Real> Vec2;
 typedef bounds<Real> Bounds;
@@ -93,11 +91,6 @@ namespace maths {
 }
 
 #ifdef LAMBDA_MATHS_COMMON_TYPES
-typedef complex_t<float> complexf;
-typedef complex_t<double> complexd;
-typedef complex_t<int> complexi;
-typedef complex_t<unsigned> complexu;
-
 typedef vec3<float> vec3f;
 typedef vec3<double> vec3d;
 typedef vec3<int> vec3i;

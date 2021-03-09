@@ -17,40 +17,40 @@ namespace sg = lambda::ShaderGraph;
 
 LAMBDA_API_NAMESPACE_BEGIN
 
-struct LAMBDAMaterial {
+struct LAMBDA_Material {
 	lambda::Material material;
 };
 
-struct LAMBDALight {
+struct LAMBDA_Light {
 	lambda::Light *light;
-	LAMBDALightType type;
+	LAMBDA_LightType type;
 
-	~LAMBDALight() {
+	~LAMBDA_Light() {
 		if (light) delete light;
 		light = nullptr;
 	}
 };
 
-struct LAMBDAShader {
+struct LAMBDA_Shader {
 	MemoryArena shaderArena;
 };
 
-struct LAMBDAShaderNode {
+struct LAMBDA_ShaderNode {
 	lambda::ShaderGraph::Node *node;
-	LAMBDAShaderNodeType nodeType;
+	LAMBDA_ShaderNodeType nodeType;
 };
 
 
 
 
-LAMBDAMaterial *lambdaCreateMaterial() {
-	LAMBDAMaterial *material = new LAMBDAMaterial();
+LAMBDA_Material *lambdaCreateMaterial() {
+	LAMBDA_Material *material = new LAMBDA_Material();
 	return material;
 }
 
-LAMBDALight *lambdaCreateLight(LAMBDALightType _type) {
+LAMBDA_Light *lambdaCreateLight(LAMBDA_LightType _type) {
 
-	LAMBDALight *light = nullptr;
+	LAMBDA_Light *light = nullptr;
 
 	switch (_type) {
 	case LAMBDA_LIGHT_POINT:
@@ -71,14 +71,14 @@ LAMBDALight *lambdaCreateLight(LAMBDALightType _type) {
 	return light;
 }
 
-void lambdaSetMaterialLight(LAMBDAMaterial *_material, LAMBDALight *_light) {
+void lambdaSetMaterialLight(LAMBDA_Material *_material, LAMBDA_Light *_light) {
 	_material->material.light = _light->light;
 }
 
-void lambdaSetMaterialBXDF(LAMBDAMaterial *_material, LAMBDAShaderNode *_node) {
+void lambdaSetMaterialBXDF(LAMBDA_Material *_material, LAMBDA_ShaderNode *_node) {
 	bool verifyBxDF = false;
 	for (int t = 0; t != LAMBDA_NODE_SEPARATE_XYZ; ++t) {
-		if (_node->nodeType == static_cast<LAMBDAShaderNodeType>(t)) {
+		if (_node->nodeType == static_cast<LAMBDA_ShaderNodeType>(t)) {
 			verifyBxDF = true;
 			break;
 		}
@@ -86,14 +86,14 @@ void lambdaSetMaterialBXDF(LAMBDAMaterial *_material, LAMBDAShaderNode *_node) {
 	if(verifyBxDF) _material->material.bxdf = (lambda::BxDF*)_node->node;
 }
 
-LAMBDAShader *lambdaCreateShader() {
-	LAMBDAShader *shader = new LAMBDAShader;
+LAMBDA_Shader *lambdaCreateShader() {
+	LAMBDA_Shader *shader = new LAMBDA_Shader;
 	return shader;
 }
 
-LAMBDAShaderNode *lambdaCreateShaderNode(LAMBDAShader *_shader, LAMBDAShaderNodeType _nodeType) {
+LAMBDA_ShaderNode *lambdaCreateShaderNode(LAMBDA_Shader *_shader, LAMBDA_ShaderNodeType _nodeType) {
 
-	LAMBDAShaderNode *node = new LAMBDAShaderNode();
+	LAMBDA_ShaderNode *node = new LAMBDA_ShaderNode();
 	MemoryArena &arena = _shader->shaderArena;
 
 	switch (_nodeType) {
@@ -194,7 +194,7 @@ LAMBDAShaderNode *lambdaCreateShaderNode(LAMBDAShader *_shader, LAMBDAShaderNode
 	return node;
 }
 
-void lambdaLinkSocketsTag(LAMBDAShaderNode *_outNode, char *_outSocketTag, LAMBDAShaderNode *_inNode, char *_inSocketTag) {
+void lambdaLinkSocketsTag(LAMBDA_ShaderNode *_outNode, char *_outSocketTag, LAMBDA_ShaderNode *_inNode, char *_inSocketTag) {
 	sg::Socket *outSocket = nullptr;
 	outSocket = _outNode->node->GetOutputSocket(_outSocketTag);
 	sg::SocketRef *inSocket = nullptr;
@@ -202,7 +202,7 @@ void lambdaLinkSocketsTag(LAMBDAShaderNode *_outNode, char *_outSocketTag, LAMBD
 	sg::Connect(*outSocket, *inSocket);
 }
 
-void lambdaLinkSockets(LAMBDAShaderNode *_outNode, int _outSocketIndex, LAMBDAShaderNode *_inNode, int _inSocketIndex) {
+void lambdaLinkSockets(LAMBDA_ShaderNode *_outNode, int _outSocketIndex, LAMBDA_ShaderNode *_inNode, int _inSocketIndex) {
 	sg::Socket outSocket = _outNode->node->outputSockets[_outSocketIndex];
 	sg::SocketRef &inSocket = _inNode->node->inputSockets[_inSocketIndex];
 	sg::Connect(outSocket, inSocket);

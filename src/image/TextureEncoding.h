@@ -1,40 +1,23 @@
-/*	---- Sam Warren 2019 ----
-NOTE Morton and Hilbert will only work on textures with side lengths of 2^N.
-Textures may be arranged differently in memory for various benefits.
-	-	Scanline stores texels row by row and is required to save a texture to a file. (i.e. Use for render textures)
-	-	Morton and Hilbert ordering can improve locality preservation between 2D->1D mapping. (i.e. Use for large material textures)
-	-	Hilbert and Morton slightly outperform each other in different scenarios, however Morton is more practical.
-
-Newer processors have Binary Manipulation Instruction sets (BMI) that can be used to hardware accellerate Morton encoding/decoding.
-*/
 #pragma once
+#include <cstdint>
 #include <Lambda.h>
-#define USE_BMI
+
 
 LAMBDA_BEGIN
 
 namespace TextureEncoding {
 
-	/*
-		Texture sides MUST be of 2^N.
-	*/
-	size_t MortonOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y);
+	inline uint64_t ShiftInterleave(const uint32_t _i) {
+		uint64_t word = _i;
+		word = (word ^ (word << 16)) & 0x0000ffff0000ffff;
+		word = (word ^ (word << 8)) & 0x00ff00ff00ff00ff;
+		word = (word ^ (word << 4)) & 0x0f0f0f0f0f0f0f0f;
+		word = (word ^ (word << 2)) & 0x3333333333333333;
+		word = (word ^ (word << 1)) & 0x5555555555555555;
+		return word;
+	}
 
-	/*
-		Texture size MUST be of 2^N and square.
-	*/
-	size_t HilbertOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y);
-
-	/*
-		Any texture size works.
-	*/
-	size_t ScanlineRowOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y);
-
-	/*
-		Any texture size works.
-	*/
-	size_t ScanlineColOrder(const unsigned _w, const unsigned _h, const unsigned _x, const unsigned _y);
-
+	uint32_t HilbertXYToIndex(uint32_t n, uint32_t x, uint32_t y);
 }
 
 LAMBDA_END

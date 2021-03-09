@@ -7,26 +7,26 @@ LAMBDA_API_NAMESPACE_BEGIN
 
 /* Opaque Types */
 
-struct LAMBDAMaterial;
-struct LAMBDALight;
-struct LAMBDAShader;
-struct LAMBDAShaderNode;
+struct LAMBDA_Material;
+struct LAMBDA_Light;
+struct LAMBDA_Shader;
+struct LAMBDA_ShaderNode;
 
 
 
 /* Creates a new material. */
-LAMBDA_API LAMBDAMaterial *lambdaCreateMaterial();
+LAMBDA_API LAMBDA_Material *lambdaCreateMaterial();
 
 /* Assigns _light to _material. */
-LAMBDA_API void lambdaSetMaterialLight(LAMBDAMaterial *_material, LAMBDALight *_light);
+LAMBDA_API void lambdaSetMaterialLight(LAMBDA_Material *_material, LAMBDA_Light *_light);
 
 /* Assigns the bxdf output socket in _node to _material. */
-LAMBDA_API void lambdaSetMaterialBXDF(LAMBDAMaterial *_material, LAMBDAShaderNode *_node);
+LAMBDA_API void lambdaSetMaterialBXDF(LAMBDA_Material *_material, LAMBDA_ShaderNode *_node);
 
 
 
 /* Light types */
-enum LAMBDALightType {
+enum LAMBDA_LightType {
 	LAMBDA_LIGHT_POINT,
 	LAMBDA_LIGHT_MESH,
 	LAMBDA_LIGHT_ENVIRONMENT,
@@ -34,12 +34,12 @@ enum LAMBDALightType {
 };
 
 /* Creates a light object. */
-LAMBDA_API LAMBDALight *lambdaCreateLight(LAMBDALightType _type);
+LAMBDA_API LAMBDA_Light *lambdaCreateLight(LAMBDA_LightType _type);
 
 
 
 /* Shader Node Types */
-enum LAMBDAShaderNodeType {
+enum LAMBDA_ShaderNodeType {
 	LAMBDA_NODE_BXDF_MIX,
 	LAMBDA_NODE_BXDF_LAMBERTIAN,
 	LAMBDA_NODE_BXDF_OREN_NAYAR_R,
@@ -75,16 +75,16 @@ enum LAMBDAShaderNodeType {
 };
 
 /* Creates a new shader. */
-LAMBDA_API LAMBDAShader *lambdaCreateShader();
+LAMBDA_API LAMBDA_Shader *lambdaCreateShader();
 
 /* Add a new node to _shader. */
-LAMBDA_API LAMBDAShaderNode *lambdaCreateShaderNode(LAMBDAShader *_shader, LAMBDAShaderNodeType _nodeType);
+LAMBDA_API LAMBDA_ShaderNode *lambdaCreateShaderNode(LAMBDA_Shader *_shader, LAMBDA_ShaderNodeType _nodeType);
 
 /* Link an output socket of a node to another's input socket. */
-LAMBDA_API void lambdaLinkSocketsTag(LAMBDAShaderNode *_outNode, char *_outSocketTag, LAMBDAShaderNode *_inNode, char *_inSocketTag);
+LAMBDA_API void lambdaLinkSocketsTag(LAMBDA_ShaderNode *_outNode, char *_outSocketTag, LAMBDA_ShaderNode *_inNode, char *_inSocketTag);
 
 /* Link an output socket of a node to another's input socket. */
-LAMBDA_API void lambdaLinkSockets(LAMBDAShaderNode *_outputNode, int _outSocketIndex, LAMBDAShaderNode *_inputNode, int _inSocketIndex);
+LAMBDA_API void lambdaLinkSockets(LAMBDA_ShaderNode *_outputNode, int _outSocketIndex, LAMBDA_ShaderNode *_inputNode, int _inSocketIndex);
 
 
 

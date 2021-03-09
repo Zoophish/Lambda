@@ -13,15 +13,15 @@ A high performance physically-based renderer.
     Materials are simple objects containing surface and volumetric properties that are driven by node networks. These are executed in a fast virtual node machine and do not need compiling, meaning edits take place immediately in real time.
     
 *BxDF & Medium Nodes:*  
-        - Standard BSDFs: Lambertian, transparent/translucent, specular reflection and transmission.
-        - PBR BSDFs: Fresnel, GGX, Oren-Nayar, Beckmann-Spizzichino, etc.
-        - PBR volumetric shading models.
+        - Standard BSDFs: Lambertian, transparent/translucent, specular reflection and transmission.  
+        - PBR BSDFs: Fresnel, GGX, Oren-Nayar, Beckmann-Spizzichino, etc.  
+        - PBR volumetric shading models.  
 
 *Mathematical Nodes:*  
         Standard scalar and vector mathematical operators are supported.
         
 *Texture Nodes:*  
-        - Image textures
+        - Image textures  
         - Procedural textures: Perlin, value, Voronoi, etc noise types - 2D & 3D support and octave stacking.
 
 **Lighting**  
@@ -31,11 +31,11 @@ A high performance physically-based renderer.
     - Mesh lights
 
 **Rendering**  
-    Rendering uses an unbiased Monte Carlo path-tracing implementation:
-        - PBRT-style spectral path-tracing
-        - Multiple importance sampling
-        - Equiangular medium sampling
-        - Light tree sampling for better efficiency and many lights support
+    Rendering uses an unbiased Monte Carlo path-tracing implementation:  
+        - PBRT-style spectral path-tracing  
+        - Multiple importance sampling  
+        - Equiangular medium sampling  
+        - Light tree sampling for better efficiency and many lights support  
     Pass rendering is supported for albedo, direct lighting, normals, depth etc. Custom pass rendering is also supported.
 
 **Camera**  
@@ -47,7 +47,7 @@ A high performance physically-based renderer.
         - Denoising (IOIDN)
 
 **Concurrency**   
-    Rendering can parallelised across multiple threads.
+    Multithreaded rendering supported.
     Progressive rendering is also supported and runs independently of the main thread.
     Performance-critical code is optimised with SIMD vectorization.
 
