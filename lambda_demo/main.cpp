@@ -22,6 +22,7 @@ It briefly runs over:
 #include <integrators/DirectLightingIntegrator.h>
 #include <integrators/PathIntegrator.h>
 #include <integrators/VolumetricPathIntegrator.h>
+#include <integrators/MISVolumetricPathIntegrator.h>
 #include <integrators/UtilityIntegrators.h>
 #include <sampling/HaltonSampler.h>
 #include <camera/Camera.h>
@@ -165,7 +166,7 @@ int main() {
 	//...and add all the meshes from that asset
 	for (auto &it : resources.objectPool.pool) {
 		//it.second->material = MaterialImport::GetMaterial(ai.scene, &resources, it.first);
-		it.second->material = &diffuse_material2;
+		it.second->material = &diffuse_material;
 		scene.AddObject(it.second);
 	}
 
@@ -181,13 +182,13 @@ int main() {
 	scene.hasVolumes = true;
 
 	//Import another asset file
-	ai.Import("../content/ocean.obj");
+	ai.Import("../content/box_empty.obj");
 
 	//You can manually make a new mesh object that isn't owned...
 	TriangleMesh plane;
 	//...and then manually load vertex data into from Assimp scene class
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &plane);
-	plane.material = &glass_material;
+	plane.material = &diffuse_material2;
 	plane.smoothNormals = false;
 	
 	//Add it to the scene
@@ -204,7 +205,7 @@ int main() {
 	MeshImport::LoadMeshVertexBuffers(ai.scene->mMeshes[0], &boundsMesh);
 	boundsMesh.material = &volume_scatter_material;
 
-	//scene.AddObject(&boundsMesh);
+	scene.AddObject(&boundsMesh);
 
 	//Release the asset importer to save some memory
 	ai.Release();
@@ -230,7 +231,7 @@ int main() {
 	light.intensity = 14;
 
 	//Add it to the scene - the associated light object will be added to scene.lights automatically
-	//scene.AddLight(&light);
+	scene.AddLight(&light);
 	//scene.AddObject(&lightMesh);
 
 	//Make environment lighting
@@ -239,7 +240,7 @@ int main() {
 	envMap.LoadImageFile("../content/sunset_in_the_chalk_quarry_4k.hdr");
 	//Shader graph currently not supported on environment lights
 	EnvironmentLight ibl(&envMap);
-	ibl.intensity = 1;
+	ibl.intensity = 0;
 	ibl.offset = Vec2(PI*-.5, 0);
 
 	//Add it to scene's lights
@@ -279,6 +280,7 @@ int main() {
 	DirectLightingIntegrator directIntegrator(&sampler);
 	PathIntegrator pathIntegrator(&sampler);
 	VolumetricPathIntegrator volPathIntegrator(&sampler);
+	MISVolumetricPathIntegrator misVolPathIntegrator(&sampler);
 	AlbedoPass albedoRdr(&sampler);
 	NormalPass normalRdr(&sampler);
 

@@ -1,15 +1,16 @@
-#include "VolumetricPathIntegrator.h"
+#include "MISVolumetricPathIntegrator.h"
+
 
 LAMBDA_BEGIN
-/*
-VolumetricPathIntegrator::VolumetricPathIntegrator(Sampler *_sampler, const unsigned _maxBounces, const unsigned _minBounces) {
+
+MISVolumetricPathIntegrator::MISVolumetricPathIntegrator(Sampler *_sampler, const unsigned _maxBounces, const unsigned _minBounces) {
 	maxBounces = _maxBounces;
 	minBounces = _minBounces;
 	sampler = _sampler;
 }
 
-Integrator *VolumetricPathIntegrator::clone() const {
-	return new VolumetricPathIntegrator(*this);
+Integrator *MISVolumetricPathIntegrator::clone() const {
+	return new MISVolumetricPathIntegrator(*this);
 }
 
 static Medium *InMedium(const Vec3 &_p, const Scene &_scene) {
@@ -17,7 +18,59 @@ static Medium *InMedium(const Vec3 &_p, const Scene &_scene) {
 	return nullptr;
 }
 
-Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
+// TO SELF: Real *_f might be redundant
+Spectrum MISVolumetricPathIntegrator::LdMediumPoint(ScatterEvent &_event, const Vec3 &_p, const Light &_l, Real _lpdf, Real *_f) const {
+	const Scene &scene = *_event.scene;
+	RayHit &hit = *_event.hit;
+
+	const Vec3 scatterPoint = hit.point;	//Keep the point in which the media scatter occurs so we can reuse hit.
+	hit.point = _p;
+
+	Real scatteringPDF, lightPDF;
+	Spectrum p, Li = _l.Sample_Li(_event, sampler, lightPDF);
+	lightPDF *= _lpdf;	//Final pdf of light & point on light
+
+	Spectrum Ld(0);
+	if (lightPDF > 0 && !Li.IsBlack()) {
+		scatteringPDF = _event.medium->phase->p(_event.wo, _event.wi);
+		p = Spectrum(scatteringPDF);
+		if (scatteringPDF > 0) {
+			const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
+			Ld += Li * p * weight / lightPDF;
+		}
+	}
+
+	scatteringPDF = _event.medium->phase->Sample_p(_event.wo, &_event.wi, *sampler);
+	*_f = scatteringPDF;
+
+	RayHit rhit;
+	Ray r = { _p, _event.wi };
+
+	Spectrum Tr(1);
+	Medium *med = _event.medium;
+	const bool scatterIntersect = _event.scene->IntersectTr(r, rhit, *sampler, med, &Tr);	//Direct lighting from phase scatter (skips through media)
+	
+	if (scatteringPDF > 0) {	//Add phase-scattering light contribution
+		if (const Light *nl = scatterIntersect ? rhit.object->material->light : (Light *)scene.envLight) {
+			if (nl != &_l) {
+				_lpdf = scene.lightSampler->Pdf(_event, nl); //Recalculate light distribution pdf if don't already know it
+			}
+			lightPDF = _lpdf * nl->PDF_Li(_event);
+			Li = Spectrum(0);
+			if (scatterIntersect) Li = nl->L(_event);
+			else Li = nl->Le(r);	//Special case for infinite lights
+			const Real weight = PowerHeuristic(scatteringPDF, lightPDF);
+			if (!Li.IsBlack() && lightPDF > 0) {
+				Ld += Li * Tr * weight / scatteringPDF;
+			}
+		}
+	}
+
+	hit.point = scatterPoint;
+	return Ld;
+}
+
+Spectrum MISVolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	Spectrum L(0), beta(1);
 	RayHit hit;
 	ScatterEvent event;
@@ -27,7 +80,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	bool scatterIntersect = false;
 	event.medium = InMedium(r.o, _scene);
 	for (int bounces = 0; bounces < maxBounces; ++bounces) {
-		if (bounces == 0 ? _scene.Intersect(r, *event.hit) : scatterIntersect) {
+		if (bounces == 0 ? _scene.Intersect(r, hit) : scatterIntersect) {
 
 			if (bounces == 0) {	//Direct lighting on bounce 0 done here
 				if (hit.object->material->light) {
@@ -38,67 +91,13 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 			}
 
-			//if (event.medium) beta *= event.medium->SampleDistance(r, *sampler, event);
-			//else event.mediumInteraction = false;
-
+			Real distanceT, distancePDF;
+			//bool mediumPath = sampler->Get1D() > 0.5;
 			if (event.medium) {
-				Real lightPDF, lightDistPdf = 1;
-				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);	//TODO: Sample via ray segment
-				lightPDF *= lightDistPdf; //Full light pdf
-				Real lightPointPdf;
-				const Vec3 lightPoint = l->SamplePoint(*sampler, event, &lightPointPdf);
-				lightPDF *= lightPointPdf;
-
-				Spectrum Ld(0);
-
-				//
-					//Distance Generators
-				//
-				Real distanceT, distancePDF, equiangularPDF;
-				const Spectrum trDistance = event.medium->SampleDistance(r, *sampler, event, &distanceT, &distancePDF);	//IMPORTANT: _pdf parameter may be redundant?
-				const Vec3 distancePoint = r.o + r.d * distanceT;
-				equiangularPDF = event.medium->PDFEquiangular(r, lightPoint, event.hit->tFar, (r.o - distancePoint).Magnitude());
-
-				//	NEE
-				Spectrum f;
-
-				Ray neeRay(distancePoint, (lightPoint - distancePoint).Magnitude());
-				RayHit neeHit;
-				Spectrum neeTr(1), Li;
-				Real scatterPDF;
-				lightPDF = Light::PointMutualVisibility(distancePoint, lightPoint, event, _scene, *sampler, &neeTr) ? lightPDF : 0;
-				if (lightPDF) {
-					Li = l->L(event);
-					f = event.mediumInteraction ? event.medium->phase->p(event.wo, event.wi) : hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
-					scatterPDF = event.mediumInteraction ? f[0] : hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
-					if (!f.IsBlack() && scatterPDF > 0) {
-						const Real weight = PowerHeuristic(1, lightPDF, 1, scatterPDF);
-						Ld += Li * neeTr * f * weight / lightPDF;
-					}
-				}
-
-				//	BXDF
-				f = event.mediumInteraction ? event.medium->phase->Sample_p(event.wo, &event.wi, *sampler) : hit.object->material->bxdf->Sample_f(event, *sampler, scatterPDF);
-				//scatterPDF = event.mediumInteraction ? 
-
-				r.o = hit.point;
-				r.d = event.wi;
-
-				Spectrum Tr(1);
-				Medium *med = event.medium;
-				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, med, &Tr);
-
-
-
-				/*
-					Equiangular Generators
-				*//*
-				Real equiangularT;
-				const Spectrum trEquiangular = event.medium->SampleEquiangular(r, *sampler, event, lightPoint, &equiangularT, &equiangularPDF);
-				const Vec3 equiangularPoint = r.o + r.d * equiangularT;
-				distancePDF = event.medium->PDFDistance(equiangularT);
-
+				beta *= event.medium->SampleDistance(r, *sampler, event, &distanceT, &distancePDF);
+				//else beta *= event.medium->SampleEquiangular(r, *sampler, event, &distanceT, &distancePDF);
 			}
+			else event.mediumInteraction = false;
 
 			if (!event.mediumInteraction) {
 				if (hit.object->material && hit.object->material->bxdf) {
@@ -115,7 +114,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 						f = hit.object->material->bxdf->f(event) * std::abs(event.wiL.y);
 						scatteringPDF = hit.object->material->bxdf->Pdf(event.woL, event.wiL, event);
 						if (!f.IsBlack() && scatteringPDF > 0) {
-							const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
+							const Real weight = PowerHeuristic(lightPDF, scatteringPDF);
 							Ld += Li * f * weight / lightPDF;
 						}
 					}
@@ -144,7 +143,7 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					L += beta * Ld;
 					beta *= f / scatteringPDF;
 				}
-				else {
+				else {	// make next event a medium interaction
 					event.medium = hit.object->material->mediaBoundary.GetMedium(r.d, hit.normalG);	//Set medium for next ray
 					r.o = hit.point + hit.normalG * (maths::Dot(event.hit->normalG, r.d) < 0 ? -SURFACE_EPSILON : SURFACE_EPSILON);
 					if(bounces > 0) scatterIntersect = _scene.Intersect(r, hit);	//Go to next path vertex, but...
@@ -152,52 +151,53 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 					continue;
 				}
 			}
-			else if(event.medium) {
+			else if (event.medium) {
 				event.wo = -r.d;
-				const Vec3 scatterPoint = hit.point;	//Keep the point in which the media scatter occurs so we can reuse hit.
-				Real lightDistPdf = 1;
-				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
+
+				// TO SELF: Sample ray segment from light sampler rather than point
+				Real lightPDF;
+				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightPDF);
+				Real lightPointPdf;
+				const Vec3 lightPoint = l->SamplePoint(*sampler, event, &lightPointPdf);
+				//lightPDF *= lightPointPdf;
+
 				Spectrum Ld(0);
-				Real scatteringPDF, lightPDF;
-				Spectrum p, Li = l->Sample_Li(event, sampler, lightPDF);
-				lightPDF *= lightDistPdf;	//True pdf of light
-				if (lightPDF > 0 && !Li.IsBlack()) {
-					scatteringPDF = event.medium->phase->p(event.wo, event.wi);
-					p = Spectrum(scatteringPDF);
-					if (scatteringPDF > 0) {
-						const Real weight = PowerHeuristic(1, lightPDF, 1, scatteringPDF);
-						Ld += Li * p * weight / lightPDF;
-					}
-				}
-				scatteringPDF = event.medium->phase->Sample_p(event.wo, &event.wi, *sampler);
-				p = scatteringPDF;
 
-				r.o = hit.point;
+				// Distance Generators
+				Real equiangularT, distancePDF2, equiangularPDF, equiangularPDF2;
+				//const Spectrum trDistance = event.medium->SampleDistance(r, *sampler, event, &distanceT, &distancePDF);
+				const Vec3 distancePoint = r.o + r.d * distanceT;
+				equiangularPDF2 = event.medium->PDFEquiangular(r, lightPoint, event.hit->tFar, distanceT);
+				const Real distanceW = PowerHeuristic(distancePDF, equiangularPDF2);
+
+				const Spectrum trEquiangular = event.medium->SampleEquiangular(r, *sampler, event, lightPoint, &equiangularT, &equiangularPDF);
+				const Vec3 equiangularPoint = r.o + r.d * equiangularT;
+				distancePDF2 = event.medium->PDFDistance(equiangularT);
+				const Real equiangularW = PowerHeuristic(equiangularPDF, distancePDF2);
+
+				// Decide what path to continue (last function to make modifications)
+				Real phasePDF;
+				//if (sampler->Get1D() > 0.5) {
+				//	const Spectrum liDistance = LdMediumPoint(event, distancePoint, *l, &f, &r);
+				//	Ld += liDistance * distanceW / distancePDF;
+				//	const Spectrum liEquiangular = LdMediumPoint(event, equiangularPoint, *l, &f, &r);
+				//	Ld += liEquiangular * equiangularW / equiangularPDF;
+				//	r.o = equiangularPoint;
+				//}
+				//else {
+					//const Spectrum liEquiangular = LdMediumPoint(event, equiangularPoint, *l, &f, &r);
+					//Ld += liEquiangular * equiangularW / equiangularPDF;
+					const Spectrum liDistance = LdMediumPoint(event, distancePoint, *l, lightPDF, &phasePDF);
+					Ld += liDistance * 1 / distancePDF;
+					r.o = distancePoint;
+				//}
+
 				r.d = event.wi;
-
-				Spectrum Tr(1);
-				Medium *med = event.medium;
-				scatterIntersect = _scene.IntersectTr(r, hit, *sampler, med, &Tr);	//Direct lighting from phase scatter (skips through media)
-
-				if (scatteringPDF > 0) {	//Add phase-scattering light contribution
-					if (const Light *nl = scatterIntersect ? hit.object->material->light : (Light *)_scene.envLight) {
-						if (nl != l) lightDistPdf = _scene.lightSampler->Pdf(event, nl); //Recalculate light distribution pdf if we don't already know it
-						lightPDF = lightDistPdf * nl->PDF_Li(event);
-						Li = Spectrum(0);
-						if (scatterIntersect) Li = nl->L(event);
-						else Li = nl->Le(r);	//Special case for infinite lights
-						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-						if (!Li.IsBlack() && lightPDF > 0) Ld += Li * Tr * weight / scatteringPDF;
-					}
-				}
- 				else break;
-
-				r.o = scatterPoint;
-				r.d = event.wi;
+				//event.medium = hit.object->material->mediaBoundary.GetMedium(event.wi, hit.normalG);
 				scatterIntersect = _scene.Intersect(r, hit);	//Next path vertex (doesn't skip through media)
 
 				L += beta * Ld;
-				//p is equal to the scattering pdf, so beta *= p / scatteringPDF is redundant
+				// phase function is perfectly proportional to pdf => beta *= p / p is redundant
 			}
 
 			if (bounces > minBounces) {
@@ -213,5 +213,5 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 	}
 	return L;
 }
-*/
+
 LAMBDA_END
