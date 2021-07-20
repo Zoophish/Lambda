@@ -47,9 +47,21 @@ Real Spotlight::PDF_Li(const ScatterEvent &_event) const {
 	return 0;
 }
 
-Vec3 Spotlight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
-	*_pdf = 1;
-	return position;
+Spectrum Spotlight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const {
+	/*_ls->pdf = 1;*/
+	_ls->point = position;
+	return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity;
+}
+
+Spectrum Spotlight::Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const {
+	const Vec3 p = _shadingPoint + _event.hit->normalG * SURFACE_EPSILON * _event.sidedness;
+	Spectrum Tr(1);
+	if (PointMutualVisibility(p, _ls->point, _event, *_event.scene, _sampler, &Tr)) {
+		const Real dist2 = maths::DistSq(position, _event.hit->point);
+		return Tr * Falloff(-_event.wi) / dist2;
+	}
+	_ls->pdf = 0;
+	return Spectrum(0);
 }
 
 Real Spotlight::Irradiance() const {

@@ -6,27 +6,27 @@
 
 LAMBDA_BEGIN
 
-void Material::BuildSocketMap() {
-	if (ShaderGraph::Node *bxdfNode = dynamic_cast<ShaderGraph::Node *>(bxdf)) {
-		for (unsigned i = 0; i < bxdfNode->numIn; ++i) {
-			if (bxdfNode->inputSockets[i].socketType == ShaderGraph::SocketType::TYPE_COLOUR) {
-				socketMap["albedo"] = bxdfNode->inputSockets[i].socket;
-				return;
-			}
-		}
-	}
-	else std::cout << std::endl << "Could not build socket map as BxDF is not a Node.";
-}
+//void Material::BuildAOVMap() {
+//	if (ShaderGraph::Node *bxdfNode = dynamic_cast<ShaderGraph::Node *>(bxdf)) {
+//		for (auto &node : *bxdfNode) {
+//			if (node.nodeTag == "AOV Output") {
+//				ShaderGraph::AOVOutput *aov = (ShaderGraph::AOVOutput *)&node;
+//				aovMap[aov->name] = aov;
+//			}
+//		}
+//	}
+//	else std::cout << std::endl << "Could not build socket map as BxDF is not a Node.";
+//}
 
-ShaderGraph::Socket *Material::GetSocket(const std::string &_key) const {
-	if (ShaderGraph::Socket *socket = socketMap.at(_key)) return socket;
-	else return nullptr;
-}
+//ShaderGraph::AOVOutput *Material::GetAOV(const std::string &_key) const {
+//	if (ShaderGraph::AOVOutput *aov = aovMap.at(_key)) return aov;
+//	else return nullptr;
+//}
 
 Material::Material() {
 	bxdf = nullptr;
 	light = nullptr;
-	socketMap.reserve(4);
+	//aovMap.reserve(4);
 }
 
 LAMBDA_END

@@ -6,9 +6,9 @@ LAMBDA_BEGIN
 
 class FresnelBSDF : public BxDF {
 	public:
-		ShaderGraph::Socket **albedoSocket, **iorSocket;
+		ShaderGraph::SocketRef *albedoSocket, *iorSocket;
 
-		FresnelBSDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_iorSocket);
+		FresnelBSDF(ShaderGraph::SocketRef *_albedoSocket, ShaderGraph::SocketRef *_iorSocket);
 
 		Spectrum f(const ScatterEvent &_event) const override;
 
@@ -22,9 +22,9 @@ class FresnelBSDF : public BxDF {
 class SpecularBRDF : public BxDF {
 	public:
 		Fresnel *fresnel;
-		ShaderGraph::Socket **albedoSocket;
+		ShaderGraph::SocketRef *albedoSocket;
 	
-		SpecularBRDF(ShaderGraph::Socket **_albedoSocket, Fresnel *_fresnel);
+		SpecularBRDF(ShaderGraph::SocketRef *_albedoSocket, Fresnel *_fresnel);
 	
 		Spectrum f(const ScatterEvent &_event) const override;
 		
@@ -36,9 +36,9 @@ class SpecularBRDF : public BxDF {
 class SpecularBTDF : public BxDF {
 	public:
 		FresnelDielectric fresnel;
-		ShaderGraph::Socket **albedoSocket;
+		ShaderGraph::SocketRef *albedoSocket;
 
-		SpecularBTDF(ShaderGraph::Socket **_albedoSocket, const Real _etaT);
+		SpecularBTDF(ShaderGraph::SocketRef *_albedoSocket, const Real _etaT);
 
 		Spectrum f(const ScatterEvent &_event) const override;
 

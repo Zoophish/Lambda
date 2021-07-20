@@ -38,7 +38,8 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 				}
 			}
 
-			if (event.medium) beta *= event.medium->SampleDistance(r, *sampler, event);
+			Real distanceT;
+			if (event.medium) beta *= event.medium->SampleDistance(r, *sampler, event, &distanceT);
 			else event.mediumInteraction = false;
 
 			if (!event.mediumInteraction) {
@@ -76,8 +77,10 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 							Li = Spectrum(0);
 							if (scatterIntersect) Li = nl->L(event);
 							else Li = nl->Le(r);	//Special case for infinite lights
-							const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-							if (!Li.IsBlack() && lightPDF > 0) Ld += Li * f * weight / scatteringPDF;
+							if (!Li.IsBlack() && lightPDF > 0) {
+								const Real weight = PowerHeuristic(scatteringPDF, lightPDF);
+								Ld += Li * f * weight / scatteringPDF;
+							}
 						}
 					}
 					else break;	//Don't continue path if bsdf is 0 or if scattering pdf is 0
@@ -95,7 +98,8 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 			}
 			else if(event.medium) {
 				event.wo = -r.d;
-				const Vec3 scatterPoint = hit.point;	//Keep the point in which the media scatter occurs so we can reuse hit.
+				const Vec3 scatterPoint = r.o + r.d * distanceT;	//Keep the point in which the media scatter occurs so we can reuse hit.
+				event.hit->point = scatterPoint;
 				Real lightDistPdf = 1;
 				const Light *l = _scene.lightSampler->Sample(event, *sampler, &lightDistPdf);
 				Spectrum Ld(0);
@@ -127,8 +131,10 @@ Spectrum VolumetricPathIntegrator::Li(Ray r, const Scene &_scene) const {
 						Li = Spectrum(0);
 						if (scatterIntersect) Li = nl->L(event);
 						else Li = nl->Le(r);	//Special case for infinite lights
-						const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
-						if (!Li.IsBlack() && lightPDF > 0) Ld += Li * Tr * weight / scatteringPDF;
+						if (!Li.IsBlack() && lightPDF > 0) {
+							const Real weight = PowerHeuristic(1, scatteringPDF, 1, lightPDF);
+							Ld += Li * Tr * weight / scatteringPDF;
+						}
 					}
 				}
  				else break;

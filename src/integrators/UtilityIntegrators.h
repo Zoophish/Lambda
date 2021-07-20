@@ -1,5 +1,6 @@
 #pragma once
 #include "Integrator.h"
+#include "../shading/graph/GraphAOV.h"
 
 LAMBDA_BEGIN
 
@@ -39,11 +40,13 @@ class NormalPass : public UtilityIntegrator {
 
 
 
-class AlbedoPass : public UtilityIntegrator {
+class AOVPass : public UtilityIntegrator {
 	public:
+		std::string target;
+
 		Integrator *clone() const override;
 
-		AlbedoPass(Sampler *_sampler);
+		AOVPass(Sampler *_sampler, const std::string &_target);
 
 		Colour P(const Ray &_ray, const Scene &_scene) const override;
 };

@@ -1,8 +1,7 @@
-#include <thread>
 #include <lambda/Lambda.h>
 
 void dummy_callback() {
-	printf("UPDATE");
+
 }
 
 int main() {
@@ -14,27 +13,18 @@ int main() {
 	LAMBDA_Film *film = lambdaCreateFilm(512, 512);
 
 	LAMBDA_RenderProperties *properties = lambdaCreateRenderProperties();
-	properties->lightStrategy = LAMBDA_LightStrategy::LAMBDA_LIGHT_STRATEGY_POWER;
-	LAMBDA_RenderDirective *directive = lambdaCreateRenderDirective(device, scene, film, camera, properties);
+	LAMBDA_RenderDirective *directive = lambdaCreateRenderDirective(device, film, camera, properties);
 
-	lambdaCommitScene(scene);
+	lambdaSetScene(directive, scene);
 
 	LAMBDA_ProgressiveRenderer *renderer = lambdaCreateProgressiveRenderer(directive);
 
 	lambdaSetProgressiveRendererCallback(renderer, &dummy_callback);
 
-
-
-
-	// render
-
 	lambdaStartProgressiveRenderer(renderer);
 
-	auto t = std::chrono::seconds(5);
-	std::this_thread::sleep_for(t);
 	
-	lambdaStopProgressiveRenderer(renderer);
 
-	lambdaReleaseDevice(device);
+
 	return 0;
 }

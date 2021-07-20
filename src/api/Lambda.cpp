@@ -17,6 +17,8 @@
 namespace sg = lambda::ShaderGraph;
 
 
+LAMBDA_API_NAMESPACE_BEGIN
+
 class ResourceMap {
 	private:
 		struct pair_hash {
@@ -27,39 +29,53 @@ class ResourceMap {
 		};
 
 	public:
-		std::unordered_map<std::pair<std::string, Lambda::LAMBDAType>, void*, pair_hash> pool;
+		typedef std::pair<std::string, LAMBDA_Type> ResKey;
+		typedef std::unordered_map<ResKey, void*, pair_hash> ResMap;
+		ResMap resMap;
 
 		ResourceMap() {}
 
-		~ResourceMap() {
-			for (auto &it : pool) delete it.second;
+		void Append(const std::string &_tag, const LAMBDA_Type _type, void *_item) {
+			resMap.insert({ {_tag, _type}, _item });
 		}
 
-		inline void Append(const std::string &_tag, const Lambda::LAMBDAType _type, void *_item) {
-			pool.insert({ {_tag, _type}, _item });
+		bool Remove(const std::string &_tag, const LAMBDA_Type _type) {
+			return resMap.erase({ _tag, _type }) == 1;
 		}
 
-		inline bool Remove(const std::string &_tag, const Lambda::LAMBDAType _type) {
-			return pool.erase({ _tag, _type }) == 1;
+		template<class T>
+		void DeleteObject(void *_ptr) {
+			T *typePtr = reinterpret_cast<T *>(_ptr);
+			delete typePtr;
+			typePtr = nullptr;
 		}
 
-		inline size_t Size() const {
-			return pool.size();
+		size_t Size() const {
+			return resMap.size();
 		}
 
-		inline void *Find(const std::string &_tag, const Lambda::LAMBDAType _type) const {
-			const std::unordered_map<std::pair<std::string, Lambda::LAMBDAType>, void *>::const_iterator it = pool.find({_tag, _type });
-			if (it != pool.end()) return it->second;
+		void *Find(const std::string &_tag, const LAMBDA_Type _type) const {
+			const std::unordered_map<ResKey, void *>::const_iterator it = resMap.find({_tag, _type });
+			if (it != resMap.end()) return it->second;
 			return nullptr;
 		}
 };
 
+class FreeFunc {
+	public:
+		void(*freeFunc)(void*);
+		void *ptr;
 
-
-LAMBDA_API_NAMESPACE_BEGIN
+		template<class T>
+		FreeFunc(void(*_func)(T*), T *_ptr) {
+			freeFunc = reinterpret_cast<void(*)(void *)>(_func);
+			ptr = _ptr;
+		}
+};
 
 struct LAMBDA_Device {
 	ResourceMap resourceMap;
+	std::vector<FreeFunc> freeFuncs;
 };
 
 struct LAMBDA_Scene {
@@ -113,30 +129,20 @@ void LoadStartupResources(LAMBDA_Device *_device) {
 		blueNoiseTexture
 	);
 
-	// default spectrum
-	sg::SpectralInput *white = new sg::SpectralInput(lambda::Spectrum(1));
-	resources.Append(
-		"default_spectrum",
-		LAMBDA_NODE,
-		white
-	);
-
-	// default bxdf
-	sg::LambertianBRDFNode *bxdf = new sg::LambertianBRDFNode(white->GetOutputSocket(sg::SocketType::TYPE_SPECTRUM));
-	resources.Append(
-		"default_bxdf",
-		LAMBDA_NODE,
-		bxdf
-	);
-
 	// default material
 	lambda::Material *material = new lambda::Material;
-	material->bxdf = bxdf;
 	resources.Append(
 		"default_material",
 		LAMBDA_MATERIAL,
 		material
 	);
+
+	// default spectrum
+	sg::SpectralInput *white = material->graphArena.New<sg::SpectralInput>(lambda::Spectrum(1));
+
+	// default bxdf
+	sg::LambertianBRDFNode *bxdf = material->graphArena.New<sg::LambertianBRDFNode>(white->GetOutputSocket(sg::SocketType::TYPE_SPECTRUM));
+	material->bxdf = bxdf;
 }
 
 LAMBDA_Device *lambdaCreateDevice() {
@@ -145,14 +151,29 @@ LAMBDA_Device *lambdaCreateDevice() {
 	return device;
 }
 
+/* Reduces leaking when using spontaneously destroyed device instance in dll. */
+static void FreeMonitoredObjects(LAMBDA_Device *_device) {
+	for (auto &it : _device->freeFuncs) it.freeFunc(it.ptr);
+}
+
 void lambdaReleaseDevice(LAMBDA_Device *_device) {
+	FreeMonitoredObjects(_device);
 	delete _device;
 }
 
-LAMBDA_Scene *lambdaCreateScene(LAMBDA_Device *_device, const char *_name) {
+void lambdaReleaseResource(LAMBDA_Device *_device, char *_name, LAMBDA_Type _type) {
+	_device->resourceMap.Remove(_name, _type);
+}
+
+LAMBDA_Scene *lambdaCreateScene(LAMBDA_Device *_device, char *_name) {
 	LAMBDA_Scene *scene = new LAMBDA_Scene();
 	_device->resourceMap.Append(_name, LAMBDA_SCENE, scene);
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseScene, scene));
 	return scene;
+}
+
+void lambdaCommitScene(LAMBDA_Scene *_scene) {
+	_scene->scene.Commit();
 }
 
 void lambdaReleaseScene(LAMBDA_Scene *_scene) {
@@ -171,9 +192,10 @@ static void AssignObjectDefaults(LAMBDA_Device *_device, lambda::Object *_obj) {
 	_obj->material = (lambda::Material*)_device->resourceMap.Find("default_material", LAMBDA_MATERIAL);
 }
 
-LAMBDA_TriangleMesh *lambdaCreateTriangleMesh(LAMBDA_Device *_device, const char *_name) {
+LAMBDA_TriangleMesh *lambdaCreateTriangleMesh(LAMBDA_Device *_device, char *_name) {
 	LAMBDA_TriangleMesh *mesh = new LAMBDA_TriangleMesh();
 	_device->resourceMap.Append(_name, LAMBDA_TRIANGLE_MESH, mesh);
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseTriangleMesh, mesh));
 	AssignObjectDefaults(_device, &mesh->mesh);
 	return mesh;
 }
@@ -221,16 +243,26 @@ void lambdaTriangleMeshSetBuffer(LAMBDA_TriangleMesh *_mesh, LAMBDA_Buffer _buff
 	}
 }
 
-LAMBDA_Proxy *lambdaCreateProxy(LAMBDA_TriangleMesh *_mesh) {
+LAMBDA_Proxy *lambdaCreateProxy(LAMBDA_Device *_device, LAMBDA_TriangleMesh *_mesh) {
 	LAMBDA_Proxy *proxy = new LAMBDA_Proxy();
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseProxy, proxy));
 	return proxy;
+}
+
+void lambdaReleaseProxy(LAMBDA_Proxy *_proxy) {
+	delete _proxy;
 }
 
 LAMBDA_Instance *lambdaCreateInstance(LAMBDA_Device *_device, LAMBDA_Proxy *_proxy) {
 	LAMBDA_Instance *instance = new LAMBDA_Instance();
 	instance->instance = lambda::Instance(&_proxy->proxy);
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseInstance, instance));
 	AssignObjectDefaults(_device, &instance->instance);
 	return instance;
+}
+
+void lambdaReleaseInstance(LAMBDA_Instance *_instance) {
+	delete _instance;
 }
 
 void lambdaMakeAffineTransform(float _xfm[12], float _position[3], float _scale[3], float _eulerAngles[3]) {
@@ -262,13 +294,14 @@ void lambdaSetEulerAngles(LAMBDA_Instance *_instance, float _eulerAngles[3]) {
 	_instance->instance.SetEulerAngles(Vec3(_eulerAngles[0], _eulerAngles[1], _eulerAngles[2]));
 }
 
-LAMBDA_Film *lambdaCreateFilm(int _width, int _height) {
+LAMBDA_Film *lambdaCreateFilm(LAMBDA_Device *_device, int _width, int _height) {
 	LAMBDA_Film *film = new LAMBDA_Film;
 	film->film = lambda::Film(_width, _height);
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseFilm, film));
 	return film;
 }
 
-LAMBDA_Camera *lambdaCreateCamera(LAMBDA_CameraType _cameraType, float _pos[3], float _phi, float _theta) {
+LAMBDA_Camera *lambdaCreateCamera(LAMBDA_Device *_device, LAMBDA_CameraType _cameraType, float _pos[3], float _phi, float _theta) {
 	LAMBDA_Camera *camera = new LAMBDA_Camera();
 	camera->type = _cameraType;
 	camera->aperture.reset(new lambda::CircularAperture(0));
@@ -280,6 +313,23 @@ LAMBDA_Camera *lambdaCreateCamera(LAMBDA_CameraType _cameraType, float _pos[3], 
 		camera->camera.reset(new lambda::SphericalCamera(Vec3(_pos)));
 		return camera;
 	}
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseCamera, camera));
+}
+
+void lambdaReleaseCamera(LAMBDA_Camera *_camera) {
+	delete _camera;
+}
+
+void lambdaSetCameraPosition(LAMBDA_Camera *_camera, float _pos[3]) {
+	_camera->camera->origin = Vec3(_pos);
+}
+
+void lambdaSetCameraAngles(LAMBDA_Camera *_camera, float _phi, float _theta) {
+	_camera->camera->SetRotation(_phi, _theta);
+}
+
+void lambdaSetCameraAxes(LAMBDA_Camera *_camera, float _xHat[3], float _yHat[3], float _zHat[3]) {
+	_camera->camera->SetAxes(Vec3(_xHat), Vec3(_yHat), Vec3(_zHat));
 }
 
 void lambdaSetCameraFocalLength(LAMBDA_Camera *_camera, float _focalLength) {
@@ -294,7 +344,7 @@ void lambdaSetCameraApertureSize(LAMBDA_Camera *_camera, float _size) {
 
 LAMBDA_RenderProperties *lambdaCreateRenderProperties() {
 	LAMBDA_RenderProperties *props = new LAMBDA_RenderProperties;
-	props->integrator = LAMBDA_INTEGRATOR_VOLPATH;
+	props->integrator = LAMBDA_INTEGRATOR_PATH;
 	props->lightStrategy = LAMBDA_LIGHT_STRATEGY_TREE;
 	props->numThreads = 0;
 	props->spp = 1;
@@ -304,32 +354,27 @@ LAMBDA_RenderProperties *lambdaCreateRenderProperties() {
 }
 
 static void SetIntegrator(LAMBDA_RenderDirective *_directive, LAMBDA_Integrator _integrator) {
-	auto setIntegrator = [&](lambda::Integrator *_intgtr) {
-		_directive->integrator.reset(_intgtr);
-	};
 	switch (_integrator) {
 	case LAMBDA_INTEGRATOR_PATH:
-		setIntegrator(new lambda::PathIntegrator(_directive->sampler.get()));
+		_directive->integrator.reset(new lambda::PathIntegrator(_directive->sampler.get()));
 		break;
 	case LAMBDA_INTEGRATOR_VOLPATH:
-		setIntegrator(new lambda::VolumetricPathIntegrator(_directive->sampler.get()));
+		_directive->integrator.reset(new lambda::VolumetricPathIntegrator(_directive->sampler.get()));
 		break;
 	case LAMBDA_INTEGRATOR_DIRECT:
-		setIntegrator(new lambda::DirectLightingIntegrator(_directive->sampler.get()));
-		break;
-	case LAMBDA_INTEGRATOR_ALBEDO:
-		setIntegrator(new lambda::AlbedoPass(_directive->sampler.get()));
+		_directive->integrator.reset(new lambda::DirectLightingIntegrator(_directive->sampler.get()));
 		break;
 	case LAMBDA_INTEGRATOR_NORMAL:
-		setIntegrator(new lambda::NormalPass(_directive->sampler.get()));
+		_directive->integrator.reset(new lambda::NormalPass(_directive->sampler.get()));
 		break;
 	case LAMBDA_INTEGRATOR_DEPTH:
-		setIntegrator(new lambda::DepthPass(_directive->sampler.get(), 100));
+		_directive->integrator.reset(new lambda::DepthPass(_directive->sampler.get(), 100));
 		break;
 	default:
-		setIntegrator(new lambda::PathIntegrator(_directive->sampler.get()));
+		_directive->integrator.reset(new lambda::PathIntegrator(_directive->sampler.get()));
 		break;
 	}
+	_directive->directive->integrator = _directive->integrator.get();
 }
 
 static void SetLightSampler(LAMBDA_RenderDirective *_directive, LAMBDA_LightStrategy _lightStrategy) {
@@ -343,14 +388,18 @@ static void SetLightSampler(LAMBDA_RenderDirective *_directive, LAMBDA_LightStra
 	default:
 		_directive->lightSampler.reset(new lambda::ManyLightSampler(*_directive->directive->scene));
 	}
+	_directive->directive->scene->lightSampler = _directive->lightSampler.get();
 }
 
-LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMBDA_Film *_film, LAMBDA_Camera *_camera, LAMBDA_RenderProperties *_properties) {
+LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMBDA_Scene *_scene, LAMBDA_Film *_film, LAMBDA_Camera *_camera, LAMBDA_RenderProperties *_properties) {
 	LAMBDA_RenderDirective *directive = new LAMBDA_RenderDirective;
 	directive->directive.reset(new lambda::RenderDirective());
-	directive->sampler.reset(new lambda::HaltonSampler());
 
-	lambda::Texture *blue_noise_tex = (lambda::Texture *)_device->resourceMap.Find("blue_noise_mask", LAMBDAType::LAMBDA_TEXTURE);
+	directive->sampler.reset(new lambda::HaltonSampler());
+	directive->directive->sampler = directive->sampler.get();
+
+	directive->directive->scene = &_scene->scene;
+	lambda::Texture *blue_noise_tex = (lambda::Texture *)_device->resourceMap.Find("blue_noise_mask", LAMBDA_Type::LAMBDA_TEXTURE);
 	directive->sampleShifter.reset(new lambda::SampleShifter(blue_noise_tex));
 	directive->sampleShifter->maskDimensionStart = 3;	// better output starting here
 	directive->directive->camera = _camera->camera.get();
@@ -360,10 +409,15 @@ LAMBDA_RenderDirective *lambdaCreateRenderDirective(LAMBDA_Device *_device, LAMB
 	directive->directive->spp = _properties->spp;
 	directive->directive->tileSizeX = _properties->tileSizeX;
 	directive->directive->tileSizeY = _properties->tileSizeY;
-	//directive->directive->numThreads = _properties->numThreads;
 	SetIntegrator(directive, _properties->integrator);
+	SetLightSampler(directive, _properties->lightStrategy);
 
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseRenderDirective, directive));
 	return directive;
+}
+
+void lambdaReleaseRenderDirective(LAMBDA_RenderDirective *_directive) {
+	delete _directive;
 }
 
 void lambdaSetCamera(LAMBDA_RenderDirective *_directive, LAMBDA_Camera *_camera) {
@@ -374,10 +428,15 @@ void lambdaSetScene(LAMBDA_RenderDirective *_directive, LAMBDA_Scene *_scene) {
 	_directive->directive->scene = &_scene->scene;
 }
 
-LAMBDA_ProgressiveRenderer *lambdaCreateProgressiveRenderer(LAMBDA_RenderDirective *_directive) {
+LAMBDA_ProgressiveRenderer *lambdaCreateProgressiveRenderer(LAMBDA_Device *_device, LAMBDA_RenderDirective *_directive) {
 	LAMBDA_ProgressiveRenderer *renderer = new LAMBDA_ProgressiveRenderer;
 	renderer->renderer.reset(new lambda::ProgressiveRender(*_directive->directive.get()));
+	_device->freeFuncs.push_back(FreeFunc(&lambdaReleaseProgressiveRenderer, renderer));
 	return renderer;
+}
+
+void lambdaReleaseProgressiveRenderer(LAMBDA_ProgressiveRenderer *_renderer) {
+	delete _renderer;
 }
 
 void lambdaSetProgressiveRendererCallback(LAMBDA_ProgressiveRenderer *_renderer, void(*_callback)()) {
@@ -388,6 +447,14 @@ void *lambdaGetProgressiveRendererData(LAMBDA_ProgressiveRenderer *_renderer, in
 	*_width = _renderer->renderer->outputTexture.GetWidth();
 	*_height = _renderer->renderer->outputTexture.GetHeight();
 	return _renderer->renderer->outputTexture.GetData();
+}
+
+void lambdaStartProgressiveRenderer(LAMBDA_ProgressiveRenderer *_renderer) {
+	_renderer->renderer->Init();
+}
+
+void lambdaStopProgressiveRenderer(LAMBDA_ProgressiveRenderer *_renderer) {
+	_renderer->renderer->Stop();
 }
 
 LAMBDA_API_NAMESPACE_END

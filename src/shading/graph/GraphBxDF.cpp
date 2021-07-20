@@ -5,7 +5,7 @@ LAMBDA_BEGIN
 namespace ShaderGraph {
 
 	MixBxDFNode::MixBxDFNode(Socket *_bxdfA, Socket *_bxdfB, Socket *_ratio)
-		: Node(3, 1, "Mix BSDF"), MixBSDF(&inputSockets[0].socket, &inputSockets[1].socket, &inputSockets[2].socket) {
+		: Node(3, 1, "Mix BSDF"), MixBSDF(&inputSockets[0], &inputSockets[1], &inputSockets[2]) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_BXDF, _bxdfA, "BxDF");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_BXDF, _bxdfB, "BxDF");
 		inputSockets[2] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _ratio, "Ratio");
@@ -18,7 +18,7 @@ namespace ShaderGraph {
 
 
 
-	LambertianBRDFNode::LambertianBRDFNode(Socket *_albedo) : Node(1, 1, "Lambertian BRDF"), LambertianBRDF(&inputSockets[0].socket) {
+	LambertianBRDFNode::LambertianBRDFNode(Socket *_albedo) : Node(1, 1, "Lambertian BRDF"), LambertianBRDF(&inputSockets[0]) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
 	}
@@ -30,7 +30,7 @@ namespace ShaderGraph {
 
 
 	OrenNayarBRDFNode::OrenNayarBRDFNode(Socket *_albedo, Socket *_roughness)
-		: Node(2, 1, "Oren-Nayar BRDF"), OrenNayarBRDF(&inputSockets[0].socket, &inputSockets[1].socket) {
+		: Node(2, 1, "Oren-Nayar BRDF"), OrenNayarBRDF(&inputSockets[0], &inputSockets[1]) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _roughness, "Roughness");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
@@ -43,7 +43,7 @@ namespace ShaderGraph {
 
 
 	OrenNayarBTDFNode::OrenNayarBTDFNode(Socket *_albedo, Socket *_roughness)
-		: Node(2, 1, "Oren-Nayar BTDF"), OrenNayarBTDF(&inputSockets[0].socket, &inputSockets[1].socket) {
+		: Node(2, 1, "Oren-Nayar BTDF"), OrenNayarBTDF(&inputSockets[0], &inputSockets[1]) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _roughness, "Roughness");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BTDF");
@@ -56,7 +56,7 @@ namespace ShaderGraph {
 
 
 	MicrofacetBRDFNode::MicrofacetBRDFNode(Socket *_albedo, Socket *_roughness, MicrofacetDistribution *_distribution, Fresnel *_fresnel)
-		: Node(2, 1, "Microfcet BRDF"), MicrofacetBRDF(&inputSockets[0].socket, &inputSockets[1].socket, _distribution, _fresnel) {
+		: Node(2, 1, "Microfcet BRDF"), MicrofacetBRDF(&inputSockets[0], &inputSockets[1], _distribution, _fresnel) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _roughness, "Roughness");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
@@ -68,7 +68,7 @@ namespace ShaderGraph {
 
 
 
-	GhostBTDFNode::GhostBTDFNode(Socket *_alpha) : Node(1, 1, "Ghost BTDF"), GhostBTDF(&inputSockets[0].socket) {
+	GhostBTDFNode::GhostBTDFNode(Socket *_alpha) : Node(1, 1, "Ghost BTDF"), GhostBTDF(&inputSockets[0]) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _alpha, "Alpha");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BTDF");
 	}
@@ -80,7 +80,7 @@ namespace ShaderGraph {
 
 
 	FresnelBSDFNode::FresnelBSDFNode(Socket *_albedo, Socket *_ior)
-		: Node(2, 1, "Fresnel BSDF"), FresnelBSDF(&inputSockets[0].socket, &inputSockets[1].socket) {
+		: Node(2, 1, "Fresnel BSDF"), FresnelBSDF(&inputSockets[0], &inputSockets[1]) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		inputSockets[1] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _ior, "IOR");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BSDF");
@@ -93,7 +93,7 @@ namespace ShaderGraph {
 
 
 	SpecularBRDFNode::SpecularBRDFNode(Socket *_albedo, Fresnel *_fresnel)
-		: Node(1, 1, "Specular BRDF"), SpecularBRDF(&inputSockets[0].socket, _fresnel) {
+		: Node(1, 1, "Specular BRDF"), SpecularBRDF(&inputSockets[0], _fresnel) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BRDF");
 	}
@@ -105,7 +105,7 @@ namespace ShaderGraph {
 
 
 	SpecularBTDFNode::SpecularBTDFNode(Socket *_albedo, const Real _etaT)
-		: Node(1, 1, "Specular BTDF"), SpecularBTDF(&inputSockets[0].socket, _etaT) {
+		: Node(1, 1, "Specular BTDF"), SpecularBTDF(&inputSockets[0], _etaT) {
 		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_COLOUR, _albedo, "Albedo");
 		outputSockets[0] = MAKE_BXDF_SOCKET(SocketType::TYPE_BXDF, BXDF_CALLBACK, "BTDF");
 	}

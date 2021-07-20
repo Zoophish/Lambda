@@ -23,46 +23,46 @@ Real BxDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) con
 
 
 
-LambertianBRDF::LambertianBRDF(ShaderGraph::Socket **_aledoSocket) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
+LambertianBRDF::LambertianBRDF(ShaderGraph::SocketRef *_aledoSocket) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
 	albedoSocket = _aledoSocket;
 }
 
 Spectrum LambertianBRDF::f(const ScatterEvent &_event) const {
-	return (*albedoSocket)->GetAsSpectrum(_event) * INV_PI;
+	return albedoSocket->GetAsSpectrum(_event) * INV_PI;
 }
 
 Spectrum LambertianBRDF::Rho(const ScatterEvent &_event, const unsigned _nSample, Vec2 *_smpls) const {
-	return (*albedoSocket)->GetAsSpectrum(_event);
+	return albedoSocket->GetAsSpectrum(_event);
 }
 
 
 
-MixBSDF::MixBSDF(ShaderGraph::Socket **_aSocket, ShaderGraph::Socket **_bSocket, ShaderGraph::Socket **_ratioSocket) : BxDF(BxDF_DIFFUSE) {
+MixBSDF::MixBSDF(ShaderGraph::SocketRef *_aSocket, ShaderGraph::SocketRef *_bSocket, ShaderGraph::SocketRef *_ratioSocket) : BxDF(BxDF_DIFFUSE) {
 	aSocket = _aSocket;
 	bSocket = _bSocket;
 	ratioSocket = _ratioSocket;
 }
 
 Spectrum MixBSDF::f(const ScatterEvent &_event) const {
-	const Real ratio = (*ratioSocket)->GetAs<Real>(_event);
-	return (*aSocket)->GetAs<BxDF *>(_event)->f(_event) * ((Real)1 - ratio) + (*bSocket)->GetAs<BxDF *>(_event)->f(_event) * ratio;
+	const Real ratio = ratioSocket->GetAs<Real>(_event);
+	return aSocket->GetAs<BxDF *>(_event)->f(_event) * ((Real)1 - ratio) + bSocket->GetAs<BxDF *>(_event)->f(_event) * ratio;
 }
 
 Spectrum MixBSDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
-	const Real ratio = (*ratioSocket)->GetAs<Real>(_event);
+	const Real ratio = ratioSocket->GetAs<Real>(_event);
 	if (_sampler.Get1D() > ratio) {
-		const Spectrum af = (*aSocket)->GetAs<BxDF *>(_event)->Sample_f(_event, _sampler, _pdf);
-		return af * ((Real)1 - ratio) + (*bSocket)->GetAs<BxDF *>(_event)->f(_event) * ratio;
+		const Spectrum af = aSocket->GetAs<BxDF *>(_event)->Sample_f(_event, _sampler, _pdf);
+		return af * ((Real)1 - ratio) + bSocket->GetAs<BxDF *>(_event)->f(_event) * ratio;
 	}
 	else { //use refs, bad code
-		const Spectrum bf = (*bSocket)->GetAs<BxDF *>(_event)->Sample_f(_event, _sampler, _pdf);
-		return bf * ratio + (*aSocket)->GetAs<BxDF *>(_event)->f(_event) * ((Real)1 - ratio);
+		const Spectrum bf = bSocket->GetAs<BxDF *>(_event)->Sample_f(_event, _sampler, _pdf);
+		return bf * ratio + aSocket->GetAs<BxDF *>(_event)->f(_event) * ((Real)1 - ratio);
 	}
 }
 
 Real MixBSDF::Pdf(const Vec3 &_wo, const Vec3 &_wi, const ScatterEvent &_event) const {
-	const Real ratio = (*ratioSocket)->GetAs<Real>(_event);
-	return (*aSocket)->GetAs<BxDF *>(_event)->Pdf(_wo, _wi, _event) * ((Real)1 - ratio) + (*bSocket)->GetAs<BxDF *>(_event)->Pdf(_wo, _wi, _event) * ratio;
+	const Real ratio = ratioSocket->GetAs<Real>(_event);
+	return aSocket->GetAs<BxDF *>(_event)->Pdf(_wo, _wi, _event) * ((Real)1 - ratio) + bSocket->GetAs<BxDF *>(_event)->Pdf(_wo, _wi, _event) * ratio;
 }
 
 LAMBDA_END

@@ -2,7 +2,7 @@
 
 LAMBDA_BEGIN
 
-OrenNayarBRDF::OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
+OrenNayarBRDF::OrenNayarBRDF(ShaderGraph::SocketRef *_albedo, ShaderGraph::SocketRef *_sigma) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_DIFFUSE)) {
 	albedoSocket = _albedo;
 	sigmaSocket = _sigma;
 }
@@ -21,8 +21,8 @@ static inline Real OrenNayarTerm(const ScatterEvent &_event, const Real _sigma) 
 }
 
 Spectrum OrenNayarBRDF::f(const ScatterEvent &_event) const {
-	const Real oN = OrenNayarTerm(_event, (*sigmaSocket)->GetAs<Real>(_event));
-	const Spectrum albedoSpec = (*albedoSocket)->GetAsSpectrum(_event);
+	const Real oN = OrenNayarTerm(_event, sigmaSocket->GetAs<Real>(_event));
+	const Spectrum albedoSpec = albedoSocket->GetAsSpectrum(_event);
 	return albedoSpec * INV_PI * oN;
 }
 
@@ -38,24 +38,23 @@ Spectrum OrenNayarBRDF::f(const ScatterEvent &_event) const {
 
 
 
-OrenNayarBTDF::OrenNayarBTDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma) : BxDF((BxDFType)(BxDF_TRANSMISSION | BxDF_DIFFUSE)) {
+OrenNayarBTDF::OrenNayarBTDF(ShaderGraph::SocketRef *_albedo, ShaderGraph::SocketRef *_sigma) : BxDF((BxDFType)(BxDF_TRANSMISSION | BxDF_DIFFUSE)) {
 	albedoSocket = _albedo;
 	sigmaSocket = _sigma;
 }
 
 Spectrum OrenNayarBTDF::f(const ScatterEvent &_event) const {
-	const Real oN = OrenNayarTerm(_event, (*sigmaSocket)->GetAs<Real>(_event));
-	const Spectrum albedoSpec = (*albedoSocket)->GetAsSpectrum(_event);
+	const Real oN = OrenNayarTerm(_event, sigmaSocket->GetAs<Real>(_event));
+	const Spectrum albedoSpec = albedoSocket->GetAsSpectrum(_event);
 	return albedoSpec * INV_PI * oN;
 }
 
 Spectrum OrenNayarBTDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_event.wiL = Sampling::SampleCosineHemisphere(_sampler.Get2D());
-	const bool entering = _event.woL.y > 0;
 	_pdf = CosineHemispherePdf(_event.woL, _event.wiL);
-	if (entering) _event.wiL.y *= -1;
+	_event.wiL.y *= -_event.sidedness;
 	_event.wi = _event.ToWorld(_event.wiL);
-	_event.hit->point += _event.hit->normalG * (entering ? -SURFACE_EPSILON : SURFACE_EPSILON);
+	_event.hit->point += _event.hit->normalG * -_event.sidedness * SURFACE_EPSILON;
 	return f(_event);
 }
 

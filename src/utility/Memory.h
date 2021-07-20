@@ -15,22 +15,25 @@ inline T *AllocAligned(const size_t _count) {
 
 void FreeAligned(void *_ptr);
 
-class MemoryArena {
+class alignas(L1_CACHE_LINE_SIZE) MemoryArena {
 	using byte_t = uint8_t;
 	private:
+		std::list<std::pair<size_t, byte_t *>> usedBlocks, availableBlocks;
+		byte_t *currentBlock = nullptr;
 		const size_t blockSize;
 		size_t currentBlockPos = 0, currentAllocSize = 0;
-		byte_t *currentBlock = nullptr;
-		std::list<std::pair<size_t, byte_t*>> usedBlocks, availableBlocks;
+
+		MemoryArena(const MemoryArena &) = delete;
+		MemoryArena &operator=(const MemoryArena &) = delete;
 
 	public:
 		MemoryArena(const size_t _blockSize = ALLOC_BLOCK_SIZE);
 
+		~MemoryArena();
+
 		void *Alloc(size_t _nBytes);
 
 		void Reset();
-
-		void FreeAll();
 
 		template<class T, typename... params>
 		inline T *New(params... _params) {

@@ -5,9 +5,9 @@ LAMBDA_BEGIN
 
 class OrenNayarBRDF : public BxDF {
 	public:
-		ShaderGraph::Socket **albedoSocket, **sigmaSocket;
+		ShaderGraph::SocketRef *albedoSocket, *sigmaSocket;
 
-		OrenNayarBRDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma);
+		OrenNayarBRDF(ShaderGraph::SocketRef *_albedo, ShaderGraph::SocketRef *_sigma);
 
 		Spectrum f(const ScatterEvent &_event) const override;
 
@@ -18,9 +18,9 @@ class OrenNayarBRDF : public BxDF {
 
 class OrenNayarBTDF : public BxDF {
 	public:
-		ShaderGraph::Socket **albedoSocket, **sigmaSocket;
+		ShaderGraph::SocketRef *albedoSocket, *sigmaSocket;
 
-		OrenNayarBTDF(ShaderGraph::Socket **_albedo, ShaderGraph::Socket **_sigma);
+		OrenNayarBTDF(ShaderGraph::SocketRef *_albedo, ShaderGraph::SocketRef *_sigma);
 
 		Spectrum f(const ScatterEvent &_event) const override;
 

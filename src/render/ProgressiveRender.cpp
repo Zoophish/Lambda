@@ -11,18 +11,22 @@ ProgressiveRender::ProgressiveRender(const RenderDirective &_renderDirective) {
 }
 
 void ProgressiveRender::Init() {
-	renderMosaic = RenderMosaic(renderDirective);
+	if (!isRunning) { // prevent multiple initialisation
+		isRunning = true;
 
-	tileTaskPackages.clear();
-	const unsigned numTiles = renderMosaic.tiles.size();
-	tileTaskPackages.reserve(numTiles);
-	for (unsigned i = 0; i < numTiles; ++i) {
-		tileTaskPackages.push_back({ &renderMosaic.tiles[i] });
+		renderMosaic = RenderMosaic(renderDirective);
+
+		tileTaskPackages.clear();
+		const unsigned numTiles = renderMosaic.tiles.size();
+		tileTaskPackages.reserve(numTiles);
+		for (unsigned i = 0; i < numTiles; ++i) {
+			tileTaskPackages.push_back({ &renderMosaic.tiles[i] });
+		}
+
+		std::function<void()> func = std::bind(&ProgressiveRender::RunPass, this);
+		SharedTask initTask(Task::MakeTask<void>(func));
+		threadPool.Enqueue(initTask);
 	}
-
-	std::function<void()> func = std::bind(&ProgressiveRender::RunPass, this);
-	SharedTask initTask(Task::MakeTask<void>(func));
-	threadPool.Enqueue(initTask);
 }
 
 void ProgressiveRender::Stop() {
@@ -54,6 +58,7 @@ void ProgressiveRender::RunPass() {
 
 void ProgressiveRender::UpdateOutputTexture() {
 	renderDirective.film->ToRGBTexture(&outputTexture);
+	if (updateCallback) updateCallback();
 }
 
 LAMBDA_END

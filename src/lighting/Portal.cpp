@@ -48,13 +48,18 @@ Real MeshPortal::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	return 0;
 }
 
-Vec3 MeshPortal::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
-	const unsigned i = triDistribution.SampleDiscrete(_sampler.Get1D(), _pdf);
+Spectrum MeshPortal::SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const {
+	const unsigned i = triDistribution.SampleDiscrete(_sampler.Get1D(), &_ls->pdf);
 	const Vec2 u = _sampler.Get2D();
 	Real area;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &area);
-	*_pdf /= area;
-	return mesh->SamplePointInTriangle(mesh->triangles[i], u);
+	_ls->pdf /= area;
+	_ls->point = mesh->SamplePointInTriangle(mesh->triangles[i], u);
+	return Spectrum(0);
+}
+
+Spectrum MeshPortal::Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const {
+	return 0;
 }
 
 Spectrum MeshPortal::L(const ScatterEvent &_event) const {

@@ -8,12 +8,12 @@ LAMBDA_BEGIN
 class MicrofacetBRDF : public BxDF {
 	public:
 		Real etaT = 0.00001;
-		ShaderGraph::Socket **albedoSocket, **roughnessSocket;
+		ShaderGraph::SocketRef *albedoSocket, *roughnessSocket;
 		MicrofacetDistribution *distribution;
 		Fresnel *fresnel;
 
 
-		MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_roughnessSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
+		MicrofacetBRDF(ShaderGraph::SocketRef *_albedoSocket, ShaderGraph::SocketRef *_roughnessSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel);
 
 		Spectrum f(const ScatterEvent &_event) const override;
 

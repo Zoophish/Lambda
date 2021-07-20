@@ -15,7 +15,7 @@ class MISVolumetricPathIntegrator : public Integrator {
 		/*
 			Evaluate direct lighting at point _p in medium.
 		*/
-		Spectrum LdMediumPoint(ScatterEvent &_event, const Vec3 &_p, const Light &_l, Real _lpdf, Real *_f) const;
+		Spectrum LdMediumPoint(ScatterEvent &_event, const Vec3 &_p, PartialLightSample *_ls, Vec3 *_wi, Real *_f) const;
 
 		Spectrum Li(Ray _r, const Scene &_scene) const override;
 };

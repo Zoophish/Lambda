@@ -32,6 +32,7 @@ class ProgressiveRender {
 		RenderMosaic renderMosaic;
 		std::vector<std::shared_ptr<Task>> tileTasks;
 		std::vector<TileTaskPackage> tileTaskPackages;
+		bool isRunning;
 		
 		void RunPass();
 

@@ -22,7 +22,9 @@ class MeshPortal : public Light {
 
 		Real PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const override;
 
-		Vec3 SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const override;
+		Spectrum SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const override;
+
+		Spectrum Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const override;
 
 		Spectrum L(const ScatterEvent &_event) const override;
 

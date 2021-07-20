@@ -6,6 +6,7 @@ Encapsulation of visual properties of a material. Shader graph's for material sh
 #include <unordered_map>
 #include <utility/Memory.h>
 #include "graph/ShaderGraph.h"
+#include "graph/GraphAOV.h"
 #include "media/Media.h"
 
 LAMBDA_BEGIN
@@ -14,9 +15,6 @@ class Light;
 class BxDF;
 struct Socket;
 
-/*
-	Used to find important specific sockets in a shader graph. E.g. to find albedo socket for albedo pass.
-*/
 class Material {
 	public:
 		std::string name;
@@ -24,13 +22,13 @@ class Material {
 		BxDF *bxdf;
 		Light *light;
 		MemoryArena graphArena;
-		std::unordered_map<std::string, ShaderGraph::Socket *> socketMap;
+		//std::unordered_map<std::string, ShaderGraph::AOVOutput*> aovMap;
 
 		Material();
 
-		void BuildSocketMap();
+		//void BuildAOVMap();
 
-		ShaderGraph::Socket *GetSocket(const std::string &_key) const;
+		//ShaderGraph::AOVOutput *GetAOV(const std::string &_key) const;
  };
 
 LAMBDA_END

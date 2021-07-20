@@ -5,9 +5,9 @@ LAMBDA_BEGIN
 
 class GhostBTDF : public BxDF {
 	public:
-	ShaderGraph::Socket **alphaSocket;
+	ShaderGraph::SocketRef *alphaSocket;
 
-	GhostBTDF(ShaderGraph::Socket **_alphaSocket);
+	GhostBTDF(ShaderGraph::SocketRef *_alphaSocket);
 
 	Spectrum f(const ScatterEvent &_event) const override;
 

@@ -30,6 +30,12 @@ void FreeAligned(void *_ptr) {
 
 MemoryArena::MemoryArena(const size_t _blockSize) : blockSize(_blockSize) {}
 
+MemoryArena::~MemoryArena() {
+	FreeAligned(currentBlock);
+	for (auto &it : usedBlocks) FreeAligned(it.second);
+	for (auto &it : availableBlocks) FreeAligned(it.second);
+}
+
 void *MemoryArena::Alloc(size_t _nBytes) {
 	_nBytes = (_nBytes + 15) & (~15);
 	if (currentBlockPos + _nBytes > currentAllocSize) {
@@ -59,12 +65,4 @@ void *MemoryArena::Alloc(size_t _nBytes) {
 void MemoryArena::Reset() {
 	currentBlockPos = 0;
 	availableBlocks.splice(availableBlocks.begin(), usedBlocks);
-}
-
-void MemoryArena::FreeAll() {
-	Reset();
-	for (auto &it : availableBlocks) FreeAligned(it.second);
-	FreeAligned(currentBlock);
-	currentAllocSize = 0;
-	currentBlock = nullptr;
 }

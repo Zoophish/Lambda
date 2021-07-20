@@ -17,6 +17,12 @@ void Camera::SetRotation(const Real _phi, const Real _theta) {
 	yHat = maths::Cross(xHat, zHat);
 }
 
+void Camera::SetAxes(const Vec3 &_xHat, const Vec3 &_yHat, const Vec3 &_zHat) {
+	xHat = _xHat;
+	yHat = _yHat;
+	zHat = _zHat;
+}
+
 void Camera::SetForwards(const Vec3 &_forwards) {
 	zHat = _forwards.Normalised();
 	xHat = maths::Cross(zHat, Vec3(0, 1, 0));

@@ -176,6 +176,24 @@ namespace ShaderGraph {
 		*reinterpret_cast<Vec3 *>(_out) = _event.hit->normalS;
 	}
 
+	/*
+		--------- Fresnel Input ---------
+	*/
+
+	FresnelInput::FresnelInput(Socket *_ior) : Node(1, 1, "Fresnel") {
+		inputSockets[0] = MAKE_INPUT_SOCKET(SocketType::TYPE_SCALAR, _ior, "IOR");
+		outputSockets[0] = MAKE_SOCKET(SocketType::TYPE_SCALAR, &FresnelInput::SchlickApprox, "Factor");
+	}
+
+	void FresnelInput::SchlickApprox(const ScatterEvent &_event, void *_out) const {
+		const Real n1 = _event.eta;
+		const Real n2 = inputSockets[0].GetAs<Real>(_event);
+		Real R0 = (n1 - n2) / (n1 + n2);
+		R0 *= R0;
+		const Real c = 1 - _event.woL.y;
+		const Real R = R0 + (1 - R0) * c * c * c * c * c;
+		*reinterpret_cast<Real *>(_out) = R;
+	}
 }
 
 LAMBDA_END

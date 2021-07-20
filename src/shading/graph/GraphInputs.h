@@ -110,6 +110,15 @@ namespace ShaderGraph {
 
 			void GetNormal(const ScatterEvent &_event, void *_out) const;
 	};
+
+
+
+	class FresnelInput : public Node {
+		public:
+			FresnelInput(Socket *_ior = nullptr);
+
+			void SchlickApprox(const ScatterEvent &_event, void *_out) const;
+	};
 }
 
 LAMBDA_END

@@ -2,12 +2,14 @@
 #include <core/Spectrum.h>
 #include <sampling/Sampler.h>
 
+
 LAMBDA_BEGIN
 
 class Ray;
 struct RayHit;
 struct ScatterEvent;
 class Scene;
+struct PartialLightSample;
 
 class Light {
 	public:
@@ -30,7 +32,12 @@ class Light {
 		/*
 			Samples a point on the light (ideally proportionally to influence on shading point).
 		*/
-		virtual Vec3 SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const = 0;
+		virtual Spectrum SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const = 0;
+
+		/*
+			Visibility term between shading point and point on this light. Also completes the pdf.
+		*/
+		virtual Spectrum Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const = 0;
 
 		/*
 			Returns radiance incoming along a ray that has escaped scene.
@@ -84,8 +91,7 @@ class Light {
 		static bool MutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEvent &_event, const Scene &_scene, Sampler &_sampler, Spectrum *_Tr = nullptr);
 
 		/*
-			See MutualVisibility().
-			Version of MutualVisibility() that accounts for correct transmittance between points that aren't intersectable.
+			Accounts for correct transmittance between points that aren't intersectable.
 		*/
 		static bool PointMutualVisibility(const Vec3 &_p1, const Vec3 &_p2, ScatterEvent &_event, const Scene &_scene, Sampler &_sampler, Spectrum *_Tr = nullptr);
 
@@ -93,6 +99,16 @@ class Light {
 			Returns true if ray, _r, escapes the scene.
 		*/
 		static bool RayEscapes(const Ray &_r, const ScatterEvent &_event, Sampler &_sampler, Spectrum *_Tr = nullptr);
+};
+
+/*
+	For sampling a point on a light, then completing the full contribution and pdf terms to a shading point at some later stage.
+*/
+struct PartialLightSample {
+	Vec3 point, normal;
+	Spectrum Le;
+	Light *light;
+	Real pdf;
 };
 
 LAMBDA_END

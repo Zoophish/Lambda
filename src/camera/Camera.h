@@ -19,6 +19,11 @@ class Camera {
 		void SetRotation(const Real _phi, const Real _theta);
 
 		/*
+			Directly set camera view axes.
+		*/
+		void SetAxes(const Vec3 &_xHat, const Vec3 &_yHat, const Vec3 &_zHat);
+
+		/*
 			Sets camera look direction to vector _forwards.
 				- _forwards can be non-unit in magnitude.
 		*/

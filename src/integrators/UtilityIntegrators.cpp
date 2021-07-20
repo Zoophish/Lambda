@@ -54,29 +54,28 @@ Colour NormalPass::P(const Ray &_ray, const Scene &_scene) const {
 
 
 
-Integrator *AlbedoPass::clone() const {
-	return new AlbedoPass(*this);
+Integrator *AOVPass::clone() const {
+	return new AOVPass(*this);
 }
 
-AlbedoPass::AlbedoPass(Sampler *_sampler) {
+AOVPass::AOVPass(Sampler *_sampler, const std::string &_target) {
 	sampler = _sampler;
+	target = _target;
 }
 
-Colour AlbedoPass::P(const Ray &_ray, const Scene &_scene) const {
+Colour AOVPass::P(const Ray &_ray, const Scene &_scene) const {
 	RayHit hit;
+	Colour c = { 0,0,0,1 };
 	if (_scene.Intersect(_ray, hit)) {
-		if (ShaderGraph::Socket *albedoSocket = hit.object->material->GetSocket("albedo")) {
-			ScatterEvent event;
-			event.hit = &hit;
-			return albedoSocket->GetAs<Colour>(event);
-		}
+		ScatterEvent event;
+		event.hit = &hit;
+		//if (ShaderGraph::AOVOutput * aov = hit.object->material->GetAOV(target)) {
+		//	Spectrum s = aov->inputSockets[0].GetAsSpectrum(event);
+		//	s.ToRGB((Real*)&c);
+		//}
 	}
-	else {
-		const Spectrum bck = _scene.envLight->Le(_ray.d);
-		Real c[3];
-		bck.ToRGB(c);
-		return Colour(c);
-	}
+	return c;
 }
+
 
 LAMBDA_END

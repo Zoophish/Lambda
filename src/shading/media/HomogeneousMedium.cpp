@@ -57,20 +57,24 @@ Spectrum HomogeneousMedium::SampleEquiangular(const Ray &_ray, Sampler &_sampler
 	/*
 		TODO: Account for cone of influence of lights (mesh lights and spotlights)
 	*/
-	const Real thetaA = std::atan2(l, D);	//Angles representing light's subtention of ray segment (might be smaller for spotlights).
+	const Real thetaA = -std::atan2(l, D);	//Angles representing light's subtention of ray segment (might be smaller for spotlights).
 	const Real thetaB = std::atan2(_event.hit->tFar - l, D);
 
 	const Real epsilon = _sampler.Get1D();
-	const Real t = D * std::tan(maths::Lerp(thetaB, thetaA, epsilon));
+	const Real dist = D * std::tan(maths::Lerp(thetaB, thetaA, epsilon));
+	const Real t = std::min(t, _event.hit->tFar);
 	*_t = t;
 
 	_event.mediumInteraction = t < _event.hit->tFar;
+
+	const Vec2 u = _sampler.Get2D();
+	const unsigned channel = std::min((unsigned)(u.x * Spectrum::nSamples), Spectrum::nSamples - 1);
 
 	const Real pdf = D / ((thetaB - thetaA) * (D * D + t * t));
 	*_pdf = pdf;
 	const Spectrum sigmaT = sigmaA + sigmaS;
 	const Spectrum Tr = Spectrum::Exp(-sigmaT * std::min(t, MAX_REAL));
-	return Tr;
+	return Tr * sigmaS / pdf;
 }
 
 Real HomogeneousMedium::PDFEquiangular(const Ray &_ray, const Vec3 &_lightPoint, const Real _tFar, const Real _t) const {
@@ -80,7 +84,7 @@ Real HomogeneousMedium::PDFEquiangular(const Ray &_ray, const Vec3 &_lightPoint,
 	/*
 		TODO: Account for light cone of influence
 	*/
-	const Real thetaA = std::atan2(l, D);
+	const Real thetaA = -std::atan2(l, D);
 	const Real thetaB = std::atan2(_tFar - l, D);
 
 	const Real pdf = D / ((thetaB - thetaA) * (D * D + _t * _t));

@@ -38,7 +38,7 @@ void ManyLightSampler::Commit() {
 	std::cout << std::endl << "Building light tree...";
 	InitLights(scene->lights);
 	treePower = 0;
-	infPower = infiniteLight->Power() * .1;
+	if(infiniteLight) infPower = infiniteLight->Power() * .1;
 	if(lights.size() > 0) RecursiveBuild(root.get());
 	std::cout << std::endl << "Done.";
 }

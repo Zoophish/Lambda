@@ -29,10 +29,10 @@ Spectrum MeshLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real &_pd
 		Real triArea;
 		Vec3 normal;
 		mesh->GetTriangleAreaAndNormal(&mesh->triangles[i], &triArea, &normal);
-		const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
-		if (denom > 0) {
+		const Real cosTheta = std::abs(maths::Dot(normal, -_event.wi));
+		if (cosTheta > 0) {
 			_event.wiL = _event.ToLocal(_event.wi);
-			_pdf *= maths::DistSq(_event.hit->point, pL) / denom;
+			_pdf *= maths::DistSq(_event.hit->point, pL) / (cosTheta * triArea);
 			return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * Tr * intensity * INV_PI;
 		}
 	}
@@ -48,8 +48,8 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event, Sampler &_sampler) const {
 	Real triArea;
 	Vec3 normal;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[hit.primId], &triArea, &normal);
-	const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
-	if (denom > 0) return maths::DistSq(_event.hit->point, hit.point) / denom;
+	const Real cosTheta = std::abs(maths::Dot(normal, -_event.wi));
+	if (cosTheta > 0) return maths::DistSq(_event.hit->point, hit.point) / (cosTheta * triArea);
 	return 0;
 }
 
@@ -59,23 +59,36 @@ Real MeshLight::PDF_Li(const ScatterEvent &_event) const {
 	const Real distSq = _event.hit->tFar * _event.hit->tFar;
 	Real triArea;
 	mesh->GetTriangleAreaAndNormal(&mesh->triangles[_event.hit->primId], &triArea);
-	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for double sided
+	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, -_event.wi));	//abs for double sided
 	return triPdf * distSq / (cosTheta * triArea);
 }
 
-Vec3 MeshLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
-	const unsigned i = triDistribution.SampleDiscrete(_sampler.Get1D(), _pdf);
+Spectrum MeshLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const {
+	Real distPDF;
+	const unsigned i = triDistribution.SampleDiscrete(_sampler.Get1D(), &distPDF);
 	Real area;
 	const Triangle &t = mesh->triangles[i];
-	mesh->GetTriangleAreaAndNormal(&t, &area);
-	*_pdf /= area;
+	mesh->GetTriangleAreaAndNormal(&t, &area, &_ls->normal);
+	_ls->pdf *= distPDF / area;
 	const Vec2 u = _sampler.Get2D();
 	_event.hit->uvCoords = maths::BarycentricInterpolation(
 		mesh->textureCoordinates[t.v0],
 		mesh->textureCoordinates[t.v1],
 		mesh->textureCoordinates[t.v2],
 		u.x, u.y);
-	return mesh->SamplePointInTriangle(mesh->triangles[i], u);	//Maybe add normal * epsilon?
+	_ls->point = mesh->SamplePointInTriangle(mesh->triangles[i], u);	//Maybe add normal * epsilon?
+	return emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * intensity * INV_PI;
+}
+
+Spectrum MeshLight::Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const {
+	Spectrum Tr(1);
+	if (MutualVisibility(_shadingPoint, _ls->point, _event, *_event.scene, _sampler, &Tr)) {
+		const Real cosTheta = std::abs(maths::Dot(_ls->normal, -_event.wi));
+		_ls->pdf *= maths::DistSq(_shadingPoint, _ls->point) / cosTheta;
+		return Tr;
+	}
+	_ls->pdf = 0;
+	return Spectrum(0);
 }
 
 Spectrum MeshLight::L(const ScatterEvent &_event) const {
@@ -126,11 +139,11 @@ Spectrum TriangleLight::Sample_Li(ScatterEvent &_event, Sampler *_sampler, Real 
 		Real triArea;
 		Vec3 normal;
 		meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[triIndex], &triArea, &normal);
-		const Real denom = -maths::Dot(normal, _event.wi) * triArea;	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
-		if (denom > 0) {
+		const Real cosTheta = std::abs(maths::Dot(normal, -_event.wi));	//Pdf to solid angle measure: wi is reversed, changing sign of dot is faster than the Vec3.
+		if (cosTheta > 0) {
 			_event.wiL = _event.ToLocal(_event.wi);
-			_pdf = maths::DistSq(_event.hit->point, pL) / denom;
-			return meshLight->emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * meshLight->intensity * INV_PI;
+			_pdf = maths::DistSq(_event.hit->point, pL) * (cosTheta * triArea);
+			return meshLight->emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * Tr * meshLight->intensity * INV_PI;
 		}
 	}
 	_pdf = 0;
@@ -146,17 +159,35 @@ Real TriangleLight::PDF_Li(const ScatterEvent &_event) const {
 	const Real distSq = _event.hit->tFar * _event.hit->tFar;
 	Real triArea;
 	meshLight->mesh->GetTriangleAreaAndNormal(&meshLight->mesh->triangles[_event.hit->primId], &triArea);
-	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, _event.wi));	//abs for doubles sided
+	const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, -_event.wi));	//abs for double sided
 	return distSq / (cosTheta * triArea);
 }
 
-Vec3 TriangleLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
-	const TriangleMesh *mesh = meshLight->mesh;
+Spectrum TriangleLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const {
+	const TriangleMesh &mesh = *meshLight->mesh;
+	const Triangle &t = mesh.triangles[triIndex];
 	Real area;
-	mesh->GetTriangleAreaAndNormal(&mesh->triangles[triIndex], &area);
-	*_pdf = 1 / area;
+	mesh.GetTriangleAreaAndNormal(&t, &area);
+	_ls->pdf /= area;
 	const Vec2 u = _sampler.Get2D();
-	return mesh->SamplePointInTriangle(mesh->triangles[triIndex], u);
+	_event.hit->uvCoords = maths::BarycentricInterpolation(
+		mesh.textureCoordinates[t.v0],
+		mesh.textureCoordinates[t.v1],
+		mesh.textureCoordinates[t.v2],
+		u.x, u.y);
+	_ls->point = mesh.SamplePointInTriangle(t, u);
+	return meshLight->emission->GetAsSpectrum(_event, SpectrumType::Illuminant) * meshLight->intensity * INV_PI;
+}
+
+Spectrum TriangleLight::Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const {
+	Spectrum Tr(1);
+	if (MutualVisibility(_shadingPoint, _ls->point, _event, *_event.scene, _sampler, &Tr)) {
+		const Real cosTheta = std::abs(maths::Dot(_event.hit->normalG, -_event.wi));
+		_ls->pdf *= maths::DistSq(_shadingPoint, _ls->point) / cosTheta;
+		return Tr;
+	}
+	_ls->pdf = 0;
+	return Spectrum(0);
 }
 
 Spectrum TriangleLight::L(const ScatterEvent &_event) const {

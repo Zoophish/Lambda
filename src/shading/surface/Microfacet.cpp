@@ -2,7 +2,7 @@
 
 LAMBDA_BEGIN
 
-MicrofacetBRDF::MicrofacetBRDF(ShaderGraph::Socket **_albedoSocket, ShaderGraph::Socket **_roughnesSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_GLOSSY)) {
+MicrofacetBRDF::MicrofacetBRDF(ShaderGraph::SocketRef *_albedoSocket, ShaderGraph::SocketRef *_roughnesSocket, MicrofacetDistribution *_distribution, Fresnel *_fresnel) : BxDF((BxDFType)(BxDF_REFLECTION | BxDF_GLOSSY)) {
 	albedoSocket = _albedoSocket;
 	roughnessSocket = _roughnesSocket;
 	distribution = _distribution;
@@ -20,7 +20,7 @@ Spectrum MicrofacetBRDF::f(const ScatterEvent &_event) const {
 	const Vec2 alpha = RoughnessToAlpha(_event);
 	const Real D = distribution->D(wh, alpha);
 	const Real G = distribution->G(_event.woL, wiL, alpha);
-	const Spectrum albedoSpec = (*albedoSocket)->GetAsSpectrum(_event);
+	const Spectrum albedoSpec = albedoSocket->GetAsSpectrum(_event);
 	return albedoSpec * D * G * F / (4 * cosThetaI * cosThetaO);
 }
 
@@ -54,15 +54,15 @@ static inline Real ToAlpha(Real _roughness) {
 }
 
 inline Vec2 MicrofacetBRDF::RoughnessToAlpha(const ScatterEvent &_event) const {
-	switch ((*roughnessSocket)->socketType) {
+	switch (roughnessSocket->socketType) {
 		case ShaderGraph::SocketType::TYPE_SCALAR:	//Isotropic distribution
 		{
-			const Real roughness = ToAlpha((*roughnessSocket)->GetAs<Real>(_event));
+			const Real roughness = ToAlpha(roughnessSocket->GetAs<Real>(_event));
 			return Vec2(roughness, roughness);
 		}
 		case ShaderGraph::SocketType::TYPE_VEC2:	//Anisotropic distribution
 		{
-			const Vec2 roughness = (*roughnessSocket)->GetAs<Vec2>(_event);
+			const Vec2 roughness = roughnessSocket->GetAs<Vec2>(_event);
 			return Vec2(ToAlpha(roughness.x), ToAlpha(roughness.y));
 		}
 	}

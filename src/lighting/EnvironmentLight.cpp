@@ -66,9 +66,21 @@ Real EnvironmentLight::PDF_Li(const ScatterEvent &_event) const {
 	return distribution->PDF(maths::Fract(Vec2(phi * INV_PI2, theta * INV_PI))) / ((Real)2 * PI * PI * sinTheta);
 }
 
-Vec3 EnvironmentLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, Real *_pdf) const {
+Spectrum EnvironmentLight::SamplePoint(Sampler &_sampler, ScatterEvent &_event, PartialLightSample *_ls) const {
 	//TODO
-	return Vec3(0, 0, 0);
+	_ls->pdf *= 0;
+	_ls->point = Vec3(0, 0, 0);	// unit vector in direction of ray
+	return Spectrum(0);
+}
+
+Spectrum EnvironmentLight::Visibility(const Vec3 &_shadingPoint, ScatterEvent &_event, Sampler &_sampler, PartialLightSample *_ls) const {
+	const Vec3 wi = (_ls->point - _shadingPoint).Normalised();
+	Spectrum Tr(1);
+	if (RayEscapes(Ray(_shadingPoint, wi), _event, _sampler, &Tr)) {
+		return Tr;
+	}
+	_ls->pdf = 0;
+	return Spectrum(0);
 }
 
 Spectrum EnvironmentLight::Le(const Ray &_r) const {

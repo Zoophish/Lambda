@@ -2,7 +2,7 @@
 
 LAMBDA_BEGIN
 
-GhostBTDF::GhostBTDF(ShaderGraph::Socket **_alphaSocket) : BxDF(BxDF_TRANSMISSION) {
+GhostBTDF::GhostBTDF(ShaderGraph::SocketRef *_alphaSocket) : BxDF(BxDF_TRANSMISSION) {
 	alphaSocket = _alphaSocket;
 }
 
@@ -12,7 +12,7 @@ Spectrum GhostBTDF::f(const ScatterEvent &_event) const {
 
 Spectrum GhostBTDF::Sample_f(ScatterEvent &_event, Sampler &_sampler, Real &_pdf) const {
 	_pdf = 1;
-	const Real alpha = (*alphaSocket)->GetAs<Real>(_event);
+	const Real alpha = alphaSocket->GetAs<Real>(_event);
 	const bool isInside = _event.woL.y < 0;
 	if (alpha > 0) {
 		_pdf = 1;
